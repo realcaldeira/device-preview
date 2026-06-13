@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Device Preview",
+  "version": "1.1.0",
+  "description": "Visualize qualquer site em resoluções reais de celulares, tablets e Smart TVs, com moldura de dispositivo realista.",
+  "author": "Lucas Caldeira",
+  "minimum_chrome_version": "116",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Device Preview — abrir painel de dispositivos",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "sidepanel/sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "permissions": [
+    "sidePanel",
+    "declarativeNetRequest",
+    "storage",
+    "tabs",
+    "webNavigation",
+    "debugger"
+  ],
+  "host_permissions": ["<all_urls>"]
+}

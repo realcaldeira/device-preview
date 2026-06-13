@@ -1,0 +1,744 @@
+/* ============ Tema ============ */
+body[data-theme="dark"] {
+  --bg: #0f1115;
+  --stage-bg: radial-gradient(circle at 50% 28%, #1a1e27 0%, #0b0d11 75%);
+  --panel: #171a21;
+  --border: #262b36;
+  --text: #e8eaf0;
+  --muted: #9aa3b2;
+  --accent: #6366f1;
+  --accent-text: #ffffff;
+  --dot: rgba(255, 255, 255, 0.05);
+}
+body[data-theme="light"] {
+  --bg: #eef0f4;
+  --stage-bg: radial-gradient(circle at 50% 28%, #f8f9fc 0%, #d9dde6 75%);
+  --panel: #ffffff;
+  --border: #d7dbe4;
+  --text: #1b2130;
+  --muted: #66707f;
+  --accent: #4f46e5;
+  --accent-text: #ffffff;
+  --dot: rgba(0, 0, 0, 0.06);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+}
+
+.hidden { display: none !important; }
+
+/* ============ Barra de ferramentas ============ */
+#toolbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.tb-group { display: flex; align-items: center; gap: 6px; }
+.tb-group.grow { flex: 1; min-width: 120px; }
+
+.tb-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+
+#deviceSelect {
+  max-width: 230px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12.5px;
+  outline: none;
+}
+#deviceSelect:focus { border-color: var(--accent); }
+
+.icon-btn, .text-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+.icon-btn { width: 32px; padding: 0; }
+.icon-btn svg, .text-btn svg { width: 16px; height: 16px; }
+.icon-btn:hover, .text-btn:hover { border-color: var(--accent); }
+.icon-btn:disabled { opacity: 0.4; cursor: default; }
+.icon-btn:disabled:hover { border-color: var(--border); }
+
+/* Estado em destaque: botão primário (Capturar) e botões "ligados"
+   (Emulação profunda, Tela cheia, Esticar). */
+.text-btn.primary,
+.text-btn.on,
+.icon-btn.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+.text-btn.primary,
+.text-btn.on { font-weight: 600; }
+.text-btn.primary:hover,
+.text-btn.on:hover,
+.icon-btn.on:hover { filter: brightness(1.1); border-color: var(--accent); }
+
+#addressInput {
+  flex: 1;
+  min-width: 80px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12.5px;
+  outline: none;
+}
+#addressInput:focus { border-color: var(--accent); }
+
+#zoomLabel {
+  min-width: 42px;
+  text-align: center;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/* ============ Palco ============ */
+#stage {
+  flex: 1;
+  display: flex;
+  overflow: auto;
+  padding: 28px;
+  background:
+    radial-gradient(var(--dot) 1px, transparent 1.5px) 0 0 / 22px 22px,
+    var(--stage-bg);
+}
+
+#zoomBox { margin: auto; flex: none; }
+
+#mockup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: fit-content;
+  transform-origin: 0 0;
+}
+
+/* ============ Moldura: corpo ============ */
+.device-frame {
+  position: relative;
+  background: linear-gradient(150deg, #1d2026 0%, #0f1116 55%, #171a20 100%);
+  border-radius: var(--frame-radius, 48px);
+  padding: var(--pad-top, 14px) var(--pad-right, 14px) var(--pad-bottom, 14px) var(--pad-left, 14px);
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.45),
+    0 8px 22px rgba(0, 0, 0, 0.35),
+    inset 0 0 14px rgba(0, 0, 0, 0.6);
+}
+
+/* Aro metálico (gradiente em anel via máscara) */
+.device-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 3.5px;
+  background: linear-gradient(155deg,
+    #6c727d 0%, #2b2e35 22%, #989ea9 42%,
+    #23262c 58%, #7d838e 78%, #32353c 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.65;
+}
+
+/* Aço inox polido nos aparelhos Apple */
+[data-brand="iphone"] .device-frame::before,
+[data-brand="ipad"] .device-frame::before {
+  background: linear-gradient(155deg,
+    #c8ccd3 0%, #4a4e56 18%, #eef0f3 38%,
+    #3a3d44 55%, #d4d8de 75%, #565b63 92%, #aab0b8 100%);
+  opacity: 0.8;
+}
+
+[data-kind="tv"] .device-frame {
+  background: linear-gradient(180deg, #16181d 0%, #0a0c10 100%);
+  box-shadow:
+    0 40px 90px rgba(0, 0, 0, 0.55),
+    0 10px 26px rgba(0, 0, 0, 0.4);
+}
+[data-kind="tv"] .device-frame::before {
+  padding: 2px;
+  background: linear-gradient(180deg, #3a3f48, #16181d 60%, #2a2e36);
+  opacity: 0.7;
+}
+
+/* ============ Tela ============ */
+.screen {
+  position: relative;
+  width: var(--vw, 390px);
+  background: #000;
+  border-radius: var(--screen-radius, 36px);
+  overflow: hidden;
+}
+
+#viewport {
+  display: block;
+  width: var(--vw, 390px);
+  height: var(--vh, 844px);
+  border: 0;
+  background: #fff;
+}
+
+/* Vidro: leve brilho diagonal + profundidade nas bordas */
+.screen-glare {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0) 24%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.045),
+    inset 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* ============ Status bar ============ */
+.status-bar {
+  position: relative;
+  z-index: 5;
+  height: var(--sb-h, 34px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  background: #050608;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+[data-kind="tv"] .status-bar,
+[data-platform="windows"] .status-bar { display: none; }
+
+[data-platform="ios"] .status-bar { font-size: 13px; font-weight: 700; padding: 0 24px; }
+[data-platform="android"] .status-bar { font-size: 12px; font-weight: 500; padding: 0 14px; }
+[data-cutout="home"] .status-bar { font-size: 11px; padding: 0 10px; }
+[data-cutout="island"] .status-bar { align-items: flex-start; padding-top: 14px; }
+
+.sb-left, .sb-right { display: flex; align-items: center; gap: 6px; }
+.sb-set { display: flex; align-items: center; gap: 6px; }
+[data-platform="ios"] .sb-and { display: none; }
+[data-platform="android"] .sb-ios { display: none; }
+
+.sb-net { font-size: 10px; font-weight: 700; letter-spacing: 0.03em; }
+.sb-pct { font-size: 10.5px; }
+.sb-ic { display: block; }
+
+/* ============ Recortes (notch / ilha / furo / gota) ============ */
+.cutout {
+  position: absolute;
+  z-index: 6;
+  background: #000;
+  display: none;
+}
+.cutout .speaker, .cutout .cam { display: none; position: absolute; }
+
+/* Lente de câmera (brilho azulado realista) */
+.cutout .cam {
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #34507c 0%, #1b2a45 35%, #060a13 72%);
+  box-shadow: 0 0 0 1.5px #0b0d12, 0 0 3px rgba(80, 140, 255, 0.35);
+}
+
+/* — Notch (iPhone X–14) — */
+[data-cutout="notch"] .cutout {
+  display: block;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 52%;
+  max-width: 210px;
+  height: calc(var(--sb-h, 40px) - 7px);
+  border: 1px solid #15171c;
+  border-top: none;
+  border-radius: 0 0 19px 19px;
+}
+[data-cutout="notch"] .cutout .speaker {
+  display: block;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 34%;
+  height: 5px;
+  border-radius: 3px;
+  background: #15181e;
+  box-shadow: inset 0 1px 2px #000;
+}
+[data-cutout="notch"] .cutout .cam {
+  display: block;
+  top: 50%;
+  right: 13%;
+  transform: translateY(-50%);
+  width: 9px;
+  height: 9px;
+}
+
+/* — Dynamic Island (iPhone 15/16) — */
+[data-cutout="island"] .cutout {
+  display: block;
+  top: 11px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32%;
+  max-width: 126px;
+  height: 30px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.9), 0 0 0 1px #121419;
+}
+[data-cutout="island"] .cutout .cam {
+  display: block;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+}
+
+/* — Furo central / lateral (Android) — */
+[data-cutout="punch"] .cutout,
+[data-cutout="punch-left"] .cutout {
+  display: block;
+  top: 7px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #2f4a73 0%, #182740 38%, #05080f 72%);
+  box-shadow: 0 0 0 2.5px #000, 0 0 3px rgba(80, 140, 255, 0.3);
+}
+[data-cutout="punch"] .cutout { left: 50%; transform: translateX(-50%); }
+[data-cutout="punch-left"] .cutout { left: 18px; }
+
+/* — Gota (A12, P30 Pro) — */
+[data-cutout="drop"] .cutout {
+  display: block;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 18px;
+  border: 1px solid #15171c;
+  border-top: none;
+  border-radius: 0 0 15px 15px;
+}
+[data-cutout="drop"] .cutout .cam {
+  display: block;
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+}
+
+/* Recortes em paisagem: migram para a borda esquerda, como nos aparelhos reais */
+[data-orientation="landscape"][data-cutout="notch"] .cutout {
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: calc(var(--sb-h, 40px) - 7px);
+  height: 52%;
+  max-height: 210px;
+  max-width: none;
+  border: 1px solid #15171c;
+  border-left: none;
+  border-radius: 0 19px 19px 0;
+}
+[data-orientation="landscape"][data-cutout="notch"] .cutout .speaker {
+  width: 5px;
+  height: 34%;
+}
+[data-orientation="landscape"][data-cutout="notch"] .cutout .cam {
+  top: auto;
+  right: auto;
+  bottom: 13%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+[data-orientation="landscape"][data-cutout="island"] .cutout {
+  top: 50%;
+  left: 11px;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 32%;
+  max-height: 126px;
+  max-width: none;
+}
+[data-orientation="landscape"][data-cutout="island"] .cutout .cam {
+  top: auto;
+  right: auto;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+[data-orientation="landscape"][data-cutout="punch"] .cutout {
+  top: 50%;
+  left: 7px;
+  transform: translateY(-50%);
+}
+[data-orientation="landscape"][data-cutout="punch-left"] .cutout {
+  top: 18px;
+  left: 7px;
+  transform: none;
+}
+[data-orientation="landscape"][data-cutout="drop"] .cutout {
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 30px;
+  border: 1px solid #15171c;
+  border-left: none;
+  border-radius: 0 15px 15px 0;
+}
+[data-orientation="landscape"][data-cutout="drop"] .cutout .cam {
+  top: 50%;
+  left: 3px;
+  transform: translateY(-50%);
+}
+
+/* ============ Indicador de gesto (home indicator) ============ */
+.home-indicator {
+  display: none;
+  position: absolute;
+  z-index: 9;
+  bottom: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 34%;
+  max-width: 140px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.3);
+}
+[data-platform="ios"] .home-indicator,
+[data-platform="android"] .home-indicator { display: block; }
+[data-platform="android"] .home-indicator { width: 24%; height: 4px; }
+[data-kind="tablet"] .home-indicator { max-width: 220px; }
+[data-cutout="home"] .home-indicator,
+[data-platform="windows"] .home-indicator,
+[data-kind="tv"] .home-indicator { display: none; }
+
+/* ============ Botões físicos ============ */
+.hw-btn {
+  display: none;
+  position: absolute;
+  background: linear-gradient(90deg, #565b66, #22252b 45%, #454a54);
+  border-radius: 3px;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.7);
+}
+
+/* Samsung / Xiaomi / Huawei / OPPO / OnePlus: volume + power à direita */
+[data-buttons="right"] .btn-volup   { display: block; right: -4.5px; top: 17%; width: 4.5px; height: 40px; }
+[data-buttons="right"] .btn-voldown { display: block; right: -4.5px; top: calc(17% + 48px); width: 4.5px; height: 40px; }
+[data-buttons="right"] .btn-power   { display: block; right: -4.5px; top: calc(17% + 108px); width: 4.5px; height: 46px; }
+
+/* Pixel: power acima do volume */
+[data-buttons="pixel"] .btn-power   { display: block; right: -4.5px; top: 16%; width: 4.5px; height: 46px; }
+[data-buttons="pixel"] .btn-volup   { display: block; right: -4.5px; top: calc(16% + 58px); width: 4.5px; height: 38px; }
+[data-buttons="pixel"] .btn-voldown { display: block; right: -4.5px; top: calc(16% + 104px); width: 4.5px; height: 38px; }
+
+/* iPhone: mute + volume à esquerda, power à direita */
+[data-buttons="iphone"] .btn-power   { display: block; right: -4.5px; top: 25%; width: 4.5px; height: 74px; }
+[data-buttons="iphone"] .btn-mute    { display: block; left: -4.5px; top: calc(25% - 42px); width: 4.5px; height: 24px; }
+[data-buttons="iphone"] .btn-volup   { display: block; left: -4.5px; top: 25%; width: 4.5px; height: 36px; }
+[data-buttons="iphone"] .btn-voldown { display: block; left: -4.5px; top: calc(25% + 46px); width: 4.5px; height: 36px; }
+
+/* OnePlus: alert slider extra */
+[data-brand="oneplus"] .btn-mute {
+  display: block;
+  right: -4.5px;
+  left: auto;
+  top: 8%;
+  width: 4.5px;
+  height: 26px;
+  background: linear-gradient(90deg, #3b414c, #1d2026);
+}
+
+/* iPad: power no topo, volume na lateral direita */
+[data-buttons="ipad"] .btn-power   { display: block; top: -4.5px; right: 10%; width: 46px; height: 4.5px; }
+[data-buttons="ipad"] .btn-volup   { display: block; right: -4.5px; top: 3%; width: 4.5px; height: 32px; }
+[data-buttons="ipad"] .btn-voldown { display: block; right: -4.5px; top: calc(3% + 40px); width: 4.5px; height: 32px; }
+
+/* Surface: power + volume no topo, à esquerda */
+[data-buttons="top"] .btn-power { display: block; top: -4.5px; left: 7%; width: 42px; height: 4.5px; }
+[data-buttons="top"] .btn-volup { display: block; top: -4.5px; left: calc(7% + 54px); width: 64px; height: 4.5px; }
+
+/* Telefones em paisagem: botões giram para as bordas superior/inferior */
+[data-orientation="landscape"][data-kind="phone"] .hw-btn { right: auto; bottom: auto; }
+
+[data-orientation="landscape"][data-buttons="right"] .btn-volup   { top: -4.5px; left: 17%; width: 40px; height: 4.5px; }
+[data-orientation="landscape"][data-buttons="right"] .btn-voldown { top: -4.5px; left: calc(17% + 48px); width: 40px; height: 4.5px; }
+[data-orientation="landscape"][data-buttons="right"] .btn-power   { top: -4.5px; left: calc(17% + 108px); width: 46px; height: 4.5px; }
+
+[data-orientation="landscape"][data-buttons="pixel"] .btn-power   { top: -4.5px; left: 16%; width: 46px; height: 4.5px; }
+[data-orientation="landscape"][data-buttons="pixel"] .btn-volup   { top: -4.5px; left: calc(16% + 58px); width: 38px; height: 4.5px; }
+[data-orientation="landscape"][data-buttons="pixel"] .btn-voldown { top: -4.5px; left: calc(16% + 104px); width: 38px; height: 4.5px; }
+
+[data-orientation="landscape"][data-buttons="iphone"] .btn-power   { top: -4.5px; left: auto; right: 25%; width: 74px; height: 4.5px; }
+[data-orientation="landscape"][data-buttons="iphone"] .btn-mute    { top: auto; bottom: -4.5px; left: calc(25% - 42px); width: 24px; height: 4.5px; }
+[data-orientation="landscape"][data-buttons="iphone"] .btn-volup   { top: auto; bottom: -4.5px; left: 25%; width: 36px; height: 4.5px; }
+[data-orientation="landscape"][data-buttons="iphone"] .btn-voldown { top: auto; bottom: -4.5px; left: calc(25% + 46px); width: 36px; height: 4.5px; }
+
+[data-orientation="landscape"][data-brand="oneplus"] .btn-mute { top: -4.5px; bottom: auto; left: 8%; width: 26px; height: 4.5px; }
+
+/* ============ iPhone clássico (botão home) ============ */
+.earpiece, .front-cam, .home-btn { display: none; }
+
+[data-cutout="home"] .earpiece {
+  display: block;
+  position: absolute;
+  top: calc(var(--pad-top, 80px) * 0.52);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 58px;
+  height: 7px;
+  border-radius: 4px;
+  background: #0b0d11;
+  box-shadow: inset 0 1px 3px #000, 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+
+[data-cutout="home"] .front-cam,
+[data-cutout="tablet"] .front-cam {
+  display: block;
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #34507c 0%, #1b2a45 40%, #060a13 75%);
+  box-shadow: 0 0 0 1.5px #0a0c10;
+}
+[data-cutout="home"] .front-cam {
+  top: calc(var(--pad-top, 80px) * 0.24);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+}
+[data-cutout="tablet"] .front-cam {
+  top: calc(var(--pad-top, 32px) / 2 - 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+}
+
+[data-cutout="home"] .home-btn {
+  display: block;
+  position: absolute;
+  bottom: calc((var(--pad-bottom, 86px) - 48px) / 2);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #20242c, #0c0e12 70%);
+  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.1), inset 0 -1px 3px #000;
+}
+.home-btn .home-square {
+  position: absolute;
+  inset: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.26);
+  border-radius: 8px;
+}
+
+/* Em paisagem os bezels giram junto (topo → esquerda, base → direita),
+   então os elementos usam --pad-left / --pad-right. */
+[data-orientation="landscape"][data-cutout="home"] .earpiece {
+  top: 50%;
+  left: calc(var(--pad-left, 80px) * 0.52);
+  transform: translateY(-50%);
+  width: 7px;
+  height: 58px;
+}
+[data-orientation="landscape"][data-cutout="home"] .front-cam {
+  top: 50%;
+  left: calc(var(--pad-left, 80px) * 0.24);
+  transform: translateY(-50%);
+}
+[data-orientation="landscape"][data-cutout="home"] .home-btn {
+  bottom: auto;
+  top: 50%;
+  left: auto;
+  right: calc((var(--pad-right, 86px) - 48px) / 2);
+  transform: translateY(-50%);
+}
+[data-orientation="landscape"][data-cutout="tablet"] .front-cam {
+  top: 50%;
+  left: calc(var(--pad-left, 32px) / 2 - 4px);
+  transform: translateY(-50%);
+}
+
+/* ============ Smart TV: chin, logo, LED, suporte ============ */
+.tv-chin { display: none; }
+[data-kind="tv"] .tv-chin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 30px;
+}
+.tv-logo {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.45em;
+  padding-left: 0.45em;
+  text-transform: uppercase;
+  color: #4b525e;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+}
+.tv-led {
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 7px 1.5px rgba(52, 211, 153, 0.75);
+}
+
+.tv-stand { display: none; flex-direction: column; align-items: center; }
+[data-kind="tv"] .tv-stand { display: flex; }
+
+.tv-neck {
+  width: 110px;
+  height: 30px;
+  background: linear-gradient(180deg, #15171c, #0a0c10);
+  clip-path: polygon(20% 0, 80% 0, 96% 100%, 4% 100%);
+}
+.tv-base {
+  width: 44%;
+  min-width: 260px;
+  max-width: 460px;
+  height: 13px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #2b303a, #11141a);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.12),
+    0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* ============ Modo tela cheia (sem moldura) ============
+   Oculta moldura, status bar, recortes, botões e suporte, mantendo apenas
+   o iframe na resolução (var(--vw) × var(--vh)) do dispositivo. O seletor
+   inclui #mockup para vencer a especificidade das regras de TV/marca. */
+#mockup.frameless .device-frame {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+#mockup.frameless .device-frame::before { display: none; }
+#mockup.frameless .screen { border-radius: 0; }
+#mockup.frameless .status-bar,
+#mockup.frameless .cutout,
+#mockup.frameless .home-indicator,
+#mockup.frameless .screen-glare,
+#mockup.frameless .hw-btn,
+#mockup.frameless .earpiece,
+#mockup.frameless .front-cam,
+#mockup.frameless .home-btn,
+#mockup.frameless .tv-chin,
+#mockup.frameless .tv-stand,
+#mockup.frameless .ground {
+  display: none !important;
+}
+
+/* Tela cheia preenche o palco (folga mínima) e encolhe os controles para
+   liberar área de visualização. */
+body.frameless #stage { padding: 8px; }
+
+body.frameless #toolbar { padding: 4px 8px; gap: 8px; }
+body.frameless #toolbar .tb-group { gap: 4px; }
+body.frameless .icon-btn,
+body.frameless .text-btn { height: 26px; font-size: 11.5px; }
+body.frameless .icon-btn { width: 26px; }
+body.frameless .icon-btn svg,
+body.frameless .text-btn svg { width: 14px; height: 14px; }
+body.frameless .tb-sep { height: 16px; }
+body.frameless #deviceSelect { max-width: 190px; padding: 4px 6px; font-size: 11.5px; }
+body.frameless #addressInput { height: 26px; font-size: 11.5px; }
+body.frameless #zoomLabel { min-width: 38px; font-size: 11px; }
+body.frameless #infoBar { padding: 3px 10px; font-size: 10.5px; }
+
+/* ============ Sombra de chão ============ */
+.ground {
+  width: 74%;
+  max-width: 560px;
+  height: 24px;
+  margin-top: 20px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0) 70%);
+}
+[data-kind="tv"] .ground { margin-top: 8px; width: 64%; max-width: none; }
+body[data-theme="light"] .ground { opacity: 0.5; }
+
+/* ============ Rodapé de informações ============ */
+#infoBar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+#infoBar .sep { opacity: 0.5; }
+#infoName { color: var(--text); font-weight: 600; }
+#infoUa { overflow: hidden; text-overflow: ellipsis; }
+
+/* ============ Toast ============ */
+#toast {
+  position: fixed;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 12.5px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  animation: toast-in 0.18s ease-out;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
