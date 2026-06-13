@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Gera os ícones PNG da extensão usando apenas a biblioteca padrão.
 
 Uso:
@@ -10,11 +9,9 @@ import os
 import struct
 import zlib
 
-
 def chunk(tag, data):
     c = struct.pack('>I', len(data)) + tag + data
     return c + struct.pack('>I', zlib.crc32(tag + data) & 0xFFFFFFFF)
-
 
 def write_png(path, size, rows):
     raw = b''.join(b'\x00' + bytes(row) for row in rows)
@@ -24,7 +21,6 @@ def write_png(path, size, rows):
            + chunk(b'IEND', b''))
     with open(path, 'wb') as f:
         f.write(png)
-
 
 def in_rrect(x, y, x0, y0, x1, y1, r):
     """Ponto dentro de um retângulo de cantos arredondados."""
@@ -36,11 +32,10 @@ def in_rrect(x, y, x0, y0, x1, y1, r):
         return dx * dx + dy * dy <= r * r
     return True
 
-
 S = 128
-BG = (79, 70, 229, 255)      # índigo
-BODY = (255, 255, 255, 255)  # corpo do telefone
-SCREEN = (23, 20, 70, 255)   # tela
+BG = (79, 70, 229, 255)
+BODY = (255, 255, 255, 255)
+SCREEN = (23, 20, 70, 255)
 
 rows = []
 for y in range(S):
@@ -53,9 +48,9 @@ for y in range(S):
             px = BODY
         if in_rrect(x, y, 47, 30, 81, 92, 5):
             px = SCREEN
-        if in_rrect(x, y, 56, 28, 72, 33, 2):  # notch
+        if in_rrect(x, y, 56, 28, 72, 33, 2):
             px = BODY
-        if (x - 64) ** 2 + (y - 99) ** 2 <= 12:  # botão home
+        if (x - 64) ** 2 + (y - 99) ** 2 <= 12:
             px = SCREEN
         row.extend(px)
     rows.append(row)
