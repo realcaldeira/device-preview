@@ -1,21 +1,27 @@
-// Service worker do Device Preview.
-// Responsável por: abrir a página de prévia, aplicar regras de rede por aba
-// (User-Agent + remoção de cabeçalhos anti-iframe) e capturar screenshots.
-
 const PREVIEW_PATH = 'preview/preview.html';
 const previewBase = () => chrome.runtime.getURL(PREVIEW_PATH);
 
-// Clicar no ícone da extensão abre o side panel.
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
 
-// IDs de regra determinísticos por aba (2 regras por aba de prévia).
 function ruleIds(tabId) {
   const base = (tabId % 100000000) * 10;
   return { ua: base + 1, frame: base + 2 };
 }
 
-// Aplica o User-Agent do dispositivo e libera o carregamento em <iframe>
-// apenas para a aba de prévia (regras de sessão com condição tabIds).
+const RULE_TABS_KEY = 'ruleTabs';
+
+async function getRuleTabs() {
+  const data = await chrome.storage.session.get(RULE_TABS_KEY);
+  return new Set(Array.isArray(data[RULE_TABS_KEY]) ? data[RULE_TABS_KEY] : []);
+}
+
+async function rememberRuleTab(tabId) {
+  const set = await getRuleTabs();
+  if (set.has(tabId)) return;
+  set.add(tabId);
+  await chrome.storage.session.set({ [RULE_TABS_KEY]: [...set] });
+}
+
 async function applyDevice(tabId, { userAgent, platform = 'Android', mobile = true }) {
   const ids = ruleIds(tabId);
   await chrome.declarativeNetRequest.updateSessionRules({
@@ -59,35 +65,34 @@ async function applyDevice(tabId, { userAgent, platform = 'Android', mobile = tr
       }
     ]
   });
+  await rememberRuleTab(tabId);
 }
 
 async function clearRules(tabId) {
+  const set = await getRuleTabs();
+  if (!set.delete(tabId)) return;
   const ids = ruleIds(tabId);
   try {
     await chrome.declarativeNetRequest.updateSessionRules({
       removeRuleIds: [ids.ua, ids.frame]
     });
-  } catch (_) { /* aba sem regras */ }
+  } catch (_) {  }
+  await chrome.storage.session.set({ [RULE_TABS_KEY]: [...set] });
 }
 
-// Abre a prévia com o dispositivo escolhido NA PRÓPRIA aba ativa (o site que
-// está aberto), sem criar uma nova guia. Se já houver uma aba de prévia, ela é
-// reaproveitada trocando apenas o dispositivo.
 async function openPreview(deviceId) {
   const [active] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
 
-  // Já existe uma prévia aberta: reaproveita-a (sem abrir nada novo).
   const existing = await chrome.tabs.query({ url: previewBase() + '*' });
   if (existing.length) {
     const tab = existing[0];
     await chrome.tabs.update(tab.id, { active: true });
     await chrome.windows.update(tab.windowId, { focused: true });
     try {
-      // Troca o dispositivo sem recarregar a página (preserva a URL navegada).
+
       await chrome.runtime.sendMessage({ type: 'set-device', deviceId, tabId: tab.id });
     } catch (_) {
-      // Página de prévia ainda não está ouvindo: recarrega na própria aba
-      // (o último estado salvo restaura a URL que estava sendo navegada).
+
       await chrome.tabs.update(tab.id, {
         url: `${previewBase()}?device=${encodeURIComponent(deviceId)}`
       });
@@ -95,17 +100,15 @@ async function openPreview(deviceId) {
     return;
   }
 
-  // Carrega o site da aba ativa dentro da moldura; sem URL utilizável, usa um padrão.
   let url = 'https://www.wikipedia.org/';
   if (active && active.url && /^https?:/i.test(active.url)) url = active.url;
   const previewUrl =
     `${previewBase()}?device=${encodeURIComponent(deviceId)}&url=${encodeURIComponent(url)}`;
 
-  // Substitui o conteúdo da própria aba ativa pela prévia (sem nova guia).
   if (active && typeof active.id === 'number') {
     await chrome.tabs.update(active.id, { url: previewUrl });
   } else {
-    // Caso raro sem aba ativa utilizável: cai para criar uma aba.
+
     await chrome.tabs.create({ url: previewUrl });
   }
 }
@@ -134,10 +137,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse({ ok: false, error: String((e && e.message) || e) });
     }
   })();
-  return true; // resposta assíncrona
+  return true;
 });
 
-// Limpeza das regras quando a aba de prévia fecha ou navega para fora.
 chrome.tabs.onRemoved.addListener((tabId) => { clearRules(tabId); });
 chrome.tabs.onUpdated.addListener((tabId, info) => {
   if (info.url && !info.url.startsWith(previewBase())) clearRules(tabId);

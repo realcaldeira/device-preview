@@ -38,7 +38,7 @@ Extensão para **Chrome/Edge (Manifest V3)** que abre uma prévia fiel de qualqu
 
 ## 🚀 Como usar
 
-Com qualquer site aberto, clique no ícone da extensão e escolha um dispositivo no painel lateral — a prévia abre em uma nova guia já com a URL da aba atual.
+Com qualquer site aberto, clique no ícone da extensão e escolha um dispositivo no painel lateral — a prévia abre na própria aba atual, já com a URL que estava aberta. Uma aba de prévia já existente é reaproveitada, trocando apenas o dispositivo.
 
 Na tela de prévia você pode:
 

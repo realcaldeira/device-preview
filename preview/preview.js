@@ -1,7 +1,3 @@
-// Página de prévia: renderiza o mockup com moldura realista e controla
-// navegação, orientação, zoom, tema e captura de tela.
-
-// Parâmetros visuais da moldura por tipo de recorte.
 const FRAME_PRESETS = {
   'notch':      { padTop: 16, padSide: 16, padBottom: 16, radius: 54, screenRadius: 40, sb: 40, kind: 'phone' },
   'island':     { padTop: 14, padSide: 14, padBottom: 14, radius: 56, screenRadius: 44, sb: 54, kind: 'phone' },
@@ -13,7 +9,6 @@ const FRAME_PRESETS = {
   'tv':         { padTop: 10, padSide: 10, padBottom: 6,  radius: 12, screenRadius: 3,  sb: 0,  kind: 'tv' }
 };
 
-// Marca (para acabamento da moldura) e layout dos botões físicos.
 function brandOf(d) {
   if (d.frame === 'tv') return 'tv';
   if (d.platform === 'iOS') return d.frame === 'tablet' ? 'ipad' : 'iphone';
@@ -41,18 +36,16 @@ let categories = [];
 let deviceMap = {};
 let device = null;
 let myTabId = null;
-// Profundidade aproximada do histórico de navegação do iframe; o "Voltar"
-// só é habilitado quando há para onde voltar DENTRO do iframe, para nunca
-// sair da página de prévia.
+
 let frameNavs = 0;
 
 const state = {
   orientation: 'portrait',
-  zoom: 'fit',        // 'fit' ou número (porcentagem)
+  zoom: 'fit',
   currentUrl: '',
   theme: 'dark',
-  frameless: false,   // tela cheia: só o iframe, sem a moldura do aparelho
-  stretch: false      // esticar: preenche a janela distorcendo a proporção
+  frameless: false,
+  stretch: false
 };
 
 const $ = (id) => document.getElementById(id);
@@ -63,21 +56,17 @@ const els = {
   zoomIn: $('zoomInBtn'), zoomOut: $('zoomOutBtn'), zoomFit: $('zoomFitBtn'), zoomLabel: $('zoomLabel'),
   theme: $('themeBtn'), iconMoon: $('iconMoon'), iconSun: $('iconSun'), shot: $('shotBtn'),
   deep: $('deepBtn'),
-  stage: $('stage'), zoomBox: $('zoomBox'), mockup: $('mockup'), frame: $('frame'),
+  stage: $('stage'), zoomBox: $('zoomBox'), mockup: $('mockup'),
   viewport: $('viewport'), sbTime: $('sbTime'),
   infoName: $('infoName'), infoViewport: $('infoViewport'), infoDpr: $('infoDpr'),
   infoPhysical: $('infoPhysical'), infoUa: $('infoUa'), toast: $('toast')
 };
 
-// A página só tem acesso às APIs quando aberta como página da extensão
-// (chrome-extension://...), não como arquivo local.
 const hasExtensionApis =
   typeof chrome !== 'undefined' && !!(chrome.tabs && chrome.runtime && chrome.runtime.id);
 
-/* ---------- Inicialização ---------- */
-
 async function init() {
-  // Eventos de UI primeiro: os botões funcionam mesmo se algo falhar adiante.
+
   bindUiEvents();
   startClock();
 
@@ -101,16 +90,12 @@ async function init() {
 
     bindExtensionEvents();
 
-    // Parâmetros da URL (abertura pelo painel) têm prioridade; na ausência
-    // deles, retoma o último estado salvo.
     const params = new URLSearchParams(location.search);
     const requested = params.get('device');
     const deviceId = deviceMap[requested] ? requested
       : (deviceMap[last.deviceId] ? last.deviceId : categories[0].devices[0].id);
     state.currentUrl = params.get('url') || last.url || 'https://www.wikipedia.org/';
 
-    // Zoom independe do aparelho; a orientação só é retomada para o mesmo
-    // aparelho do último uso (cada modelo tem sua orientação natural).
     if (last.zoom === 'fit' || typeof last.zoom === 'number') state.zoom = last.zoom;
     const keepOrientation = deviceId === last.deviceId ? last.orientation : null;
 
@@ -136,9 +121,6 @@ function populateSelect() {
   }
 }
 
-/* ---------- Eventos ---------- */
-
-// Eventos que dependem só do DOM: registrados incondicionalmente.
 function bindUiEvents() {
   els.select.addEventListener('change', () => {
     if (deviceMap[els.select.value]) setDevice(els.select.value, { navigate: true });
@@ -159,7 +141,7 @@ function bindUiEvents() {
 
   els.back.addEventListener('click', () => {
     if (frameNavs < 2) return;
-    frameNavs -= 2; // a navegação de volta re-incrementa no onNav
+    frameNavs -= 2;
     updateBackButton();
     history.back();
   });
@@ -189,13 +171,12 @@ function bindUiEvents() {
   });
 }
 
-// Eventos que dependem das APIs da extensão.
 function bindExtensionEvents() {
-  // Acompanha a navegação dentro do iframe para manter a barra de endereço correta.
+
   const onNav = (details) => {
     if (details.tabId !== myTabId || details.frameId === 0 || details.parentFrameId !== 0) return;
     if (details.url === 'about:blank') return;
-    // Recarregamentos não criam entrada nova no histórico.
+
     if (details.transitionType !== 'reload') {
       frameNavs++;
       updateBackButton();
@@ -209,7 +190,6 @@ function bindExtensionEvents() {
   chrome.webNavigation.onHistoryStateUpdated.addListener(onNav);
   chrome.webNavigation.onReferenceFragmentUpdated.addListener(onNav);
 
-  // Permite que o side panel troque o dispositivo sem recarregar a página.
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg && msg.type === 'set-device' && msg.tabId === myTabId) {
       setDevice(msg.deviceId, { navigate: true });
@@ -217,8 +197,6 @@ function bindExtensionEvents() {
     }
   });
 
-  // Emulação profunda: reage ao desanexo do depurador (aviso do Chrome
-  // cancelado pelo usuário, ou alvo destruído por navegação).
   if (chrome.debugger && chrome.debugger.onDetach) {
     chrome.debugger.onDetach.addListener((source, reason) => {
       if (!deepTarget || source.targetId !== deepTarget.targetId) return;
@@ -229,14 +207,12 @@ function bindExtensionEvents() {
         updateDeepButton();
         toast('Emulação profunda desativada pelo aviso do Chrome');
       } else if (deepOn) {
-        // Alvo destruído (navegação para outro site): re-anexa ao novo alvo.
+
         scheduleDeepReattach();
       }
     });
   }
 }
-
-/* ---------- Dispositivo e moldura ---------- */
 
 function dims() {
   const small = Math.min(device.width, device.height);
@@ -250,12 +226,9 @@ async function setDevice(id, { navigate: doNavigate = false, orientation = null 
   device = next;
   els.select.value = id;
 
-  // TVs nascem em paisagem; demais dispositivos, em retrato — salvo quando uma
-  // orientação lembrada do último uso deste aparelho é informada.
   const natural = device.width > device.height ? 'landscape' : 'portrait';
   state.orientation = orientation === 'portrait' || orientation === 'landscape' ? orientation : natural;
 
-  // Aplica UA + liberação de iframe ANTES de carregar o site.
   if (hasExtensionApis) {
     try {
       const res = await chrome.runtime.sendMessage({
@@ -301,8 +274,6 @@ function buildFrame() {
     device.platform === 'Android' ? 'android' :
     device.platform === 'Windows' ? 'windows' : 'tv';
 
-  // Quando o aparelho está girado em relação à orientação natural,
-  // os bezels giram junto: topo → esquerda, base → direita.
   const natural = device.width > device.height ? 'landscape' : 'portrait';
   const rotated = state.orientation !== natural;
   const pads = rotated
@@ -335,16 +306,13 @@ function updateBackButton() {
   els.back.disabled = frameNavs < 2;
 }
 
-// Tela cheia: alterna a exibição apenas do iframe (sem moldura), preservando
-// a resolução do dispositivo. O zoom é reaplicado porque o mockup muda de tamanho.
 function setFrameless(on, persist) {
   state.frameless = on;
   els.mockup.classList.toggle('frameless', on);
   document.body.classList.toggle('frameless', on);
   els.frameless.classList.toggle('on', on);
   els.frameless.setAttribute('aria-pressed', String(on));
-  // Esticar só existe dentro da tela cheia: ao sair dela, também sai do esticar
-  // (restaurando o zoom manual anterior, se houver).
+
   if (!on && state.stretch) disableStretch(true);
   applyZoom();
   if (persist) {
@@ -353,7 +321,6 @@ function setFrameless(on, persist) {
   }
 }
 
-// Atualiza apenas o estado/visual do esticar (sem reaplicar o zoom).
 function applyStretchState(on) {
   state.stretch = on;
   document.body.classList.toggle('stretch', on);
@@ -361,21 +328,18 @@ function applyStretchState(on) {
   els.stretch.setAttribute('aria-pressed', String(on));
 }
 
-let zoomBeforeStretch = null;   // zoom manual salvo ao entrar no esticar
+let zoomBeforeStretch = null;
 
-// Desliga o esticar; opcionalmente restaura o zoom manual que havia antes.
 function disableStretch(restoreZoom) {
   applyStretchState(false);
   if (restoreZoom && zoomBeforeStretch !== null) state.zoom = zoomBeforeStretch;
   zoomBeforeStretch = null;
 }
 
-// Esticar: preenche toda a janela distorcendo a proporção. Exige a tela cheia
-// (ligá-lo ativa a tela cheia) e opera sempre no modo "ajustar à janela".
 function setStretch(on, persist) {
   if (on && !state.frameless) setFrameless(true, false);
   if (on) {
-    if (state.zoom !== 'fit') zoomBeforeStretch = state.zoom; // lembra o zoom manual
+    if (state.zoom !== 'fit') zoomBeforeStretch = state.zoom;
     state.zoom = 'fit';
     applyStretchState(true);
   } else {
@@ -388,14 +352,18 @@ function setStretch(on, persist) {
   }
 }
 
-/* ---------- Navegação ---------- */
+function schemeFor(value) {
+  return /^(localhost|127\.0\.0\.1|\[::1\])(?=[:/?#]|$)/i.test(value) ||
+         /^[\w-]+(\.[\w-]+)*\.local(?=[:/?#]|$)/i.test(value)
+    ? 'http://' : 'https://';
+}
 
 function normalizeUrl(input) {
   const value = (input || '').trim();
   if (!value) return null;
   if (/^https?:\/\//i.test(value)) return value;
   if (/^[\w-]+(\.[\w-]+)+([/:?#]|$)/.test(value) || value.startsWith('localhost')) {
-    return 'https://' + value;
+    return schemeFor(value) + value;
   }
   return 'https://www.google.com/search?q=' + encodeURIComponent(value);
 }
@@ -409,15 +377,12 @@ function navigate(input) {
   saveState();
 }
 
-/* ---------- Zoom ---------- */
-
 function currentScale() {
   if (state.zoom !== 'fit') return state.zoom / 100;
   const mw = els.mockup.offsetWidth;
   const mh = els.mockup.offsetHeight;
   if (!mw || !mh) return 1;
-  // Tela cheia: folga mínima e permite ampliar acima de 100% para preencher
-  // o palco; com moldura, mantém a folga e o teto de 100%.
+
   const margin = state.frameless ? 16 : 48;
   const maxScale = state.frameless ? 6 : 1;
   const availW = els.stage.clientWidth - margin;
@@ -429,8 +394,6 @@ function applyZoom() {
   const mw = els.mockup.offsetWidth;
   const mh = els.mockup.offsetHeight;
 
-  // Esticar: escala não-uniforme que preenche a área disponível em ambos os
-  // eixos (distorce a proporção). Só no modo tela cheia + ajustar à janela.
   if (state.frameless && state.stretch && state.zoom === 'fit' && mw && mh) {
     const margin = 16;
     const sx = Math.max((els.stage.clientWidth - margin) / mw, 0.04);
@@ -454,9 +417,7 @@ function applyZoom() {
 function stepZoom(delta) {
   let current;
   if (state.stretch) {
-    // Zoom manual é incompatível com o esticar (escala não-uniforme). Sai do
-    // esticar a partir do tamanho REALMENTE exibido, evitando um salto; o
-    // usuário está ajustando, então não restaura o zoom anterior.
+
     const mw = els.mockup.offsetWidth;
     const rendered = els.mockup.getBoundingClientRect().width;
     current = mw ? Math.round((rendered / mw) * 100) : Math.round(currentScale() * 100);
@@ -469,8 +430,6 @@ function stepZoom(delta) {
   saveState();
 }
 
-/* ---------- Tema ---------- */
-
 function setTheme(theme, persist) {
   state.theme = theme;
   document.body.dataset.theme = theme;
@@ -479,10 +438,6 @@ function setTheme(theme, persist) {
   if (persist && hasExtensionApis) chrome.storage.local.set({ theme });
 }
 
-/* ---------- Persistência do último estado ---------- */
-
-// Salva dispositivo, URL, orientação e zoom para retomar ao reabrir a prévia.
-// Debounce evita gravações em rajada (ex.: navegações encadeadas).
 let saveTimer = null;
 function saveState() {
   if (!hasExtensionApis) return;
@@ -501,8 +456,6 @@ function saveState() {
   }, 250);
 }
 
-/* ---------- Captura de tela ---------- */
-
 async function captureShot() {
   if (!device) { toast('Escolha um dispositivo primeiro.'); return; }
   if (!hasExtensionApis) { toast('Captura disponível apenas pela extensão.'); return; }
@@ -511,7 +464,6 @@ async function captureShot() {
   const fits = before.top >= 0 && before.left >= 0 &&
                before.bottom <= window.innerHeight && before.right <= window.innerWidth;
 
-  // Garante o mockup inteiro visível antes de capturar.
   let restoreZoom = null;
   if (!fits) {
     restoreZoom = state.zoom;
@@ -528,7 +480,6 @@ async function captureShot() {
     const img = new Image();
     await new Promise((ok, err) => { img.onload = ok; img.onerror = err; img.src = res.dataUrl; });
 
-    // Converte o retângulo do mockup (px CSS) para px da imagem capturada.
     const ratio = img.width / window.innerWidth;
     const r = els.mockup.getBoundingClientRect();
     const sx = Math.max(r.left, 0) * ratio;
@@ -536,10 +487,6 @@ async function captureShot() {
     const sw = Math.min(r.width, window.innerWidth - Math.max(r.left, 0)) * ratio;
     const sh = Math.min(r.height, window.innerHeight - Math.max(r.top, 0)) * ratio;
 
-    // Saída sempre na resolução física do dispositivo (width×height × DPR),
-    // limitada a 8192 px por lado. O drawImage mapeia a região capturada para
-    // esse tamanho com eixos independentes, então a imagem sai na proporção
-    // correta do aparelho mesmo quando a visualização está esticada.
     const { w, h } = dims();
     const physW = Math.round(w * device.dpr);
     const physH = Math.round(h * device.dpr);
@@ -574,16 +521,10 @@ async function captureShot() {
   }
 }
 
-/* ---------- Emulação profunda (chrome.debugger) ----------
-   Anexa o protocolo de depuração ao alvo do PRÓPRIO IFRAME (sites em
-   iframe cross-origin rodam em processo separado e aparecem como alvo
-   individual), aplicando: User-Agent via JavaScript, devicePixelRatio
-   real e emulação de toque. A interface da prévia não é afetada. */
-
 let deepOn = false;
-let deepTarget = null;   // { targetId }
-let deepOrigin = null;   // último origin com overrides aplicados
-let deepLastUa = null;   // último UA aplicado (força reload ao trocar de aparelho)
+let deepTarget = null;
+let deepOrigin = null;
+let deepLastUa = null;
 let deepTimer = null;
 
 function uaPlatformFor(d) {
@@ -593,7 +534,6 @@ function uaPlatformFor(d) {
   return 'Linux';
 }
 
-// Client hints via JS (navigator.userAgentData): só para plataformas Chromium.
 function uaMetadataFor(d) {
   if (d.platform !== 'Android' && d.platform !== 'Windows') return null;
   return {
@@ -615,8 +555,6 @@ function sendCdp(cmd, params) {
   return chrome.debugger.sendCommand(deepTarget, cmd, params || {});
 }
 
-// Localiza o alvo de depuração do iframe (heurística por URL; o alvo de
-// um subframe cross-origin não é do tipo 'page').
 async function findFrameTarget() {
   const targets = await chrome.debugger.getTargets();
   let t = targets.find((x) => x.type !== 'page' && x.url === state.currentUrl);
@@ -624,7 +562,7 @@ async function findFrameTarget() {
     try {
       const origin = new URL(state.currentUrl).origin;
       t = targets.find((x) => x.type !== 'page' && x.url && x.url.startsWith(origin));
-    } catch (_) { /* URL inválida */ }
+    } catch (_) {  }
   }
   return t || null;
 }
@@ -641,8 +579,6 @@ async function applyDeepOverrides() {
   await sendCdp('Emulation.setUserAgentOverride', params);
   deepLastUa = device.ua;
 
-  // Métricas e toque podem não ser aceitos por todos os alvos;
-  // o UA via JS continua valendo mesmo se falharem.
   try {
     await sendCdp('Emulation.setDeviceMetricsOverride', {
       width: w,
@@ -707,9 +643,6 @@ function updateDeepButton() {
   els.deep.setAttribute('aria-pressed', String(deepOn));
 }
 
-// Após cada navegação do iframe: re-anexa ao alvo (que pode ter sido
-// recriado) e recarrega uma única vez quando o origin ou o UA mudou,
-// para que os scripts da página vejam os valores certos desde o início.
 function scheduleDeepReattach() {
   clearTimeout(deepTimer);
   deepTimer = setTimeout(async () => {
@@ -720,11 +653,9 @@ function scheduleDeepReattach() {
     try {
       await deepAttach({ reloadAfter: needsReload });
       deepOrigin = origin;
-    } catch (_) { /* alvo ainda não existe; nova tentativa na próxima navegação */ }
+    } catch (_) {  }
   }, 350);
 }
-
-/* ---------- Relógio e bateria da status bar ---------- */
 
 function renderClock() {
   const now = new Date();
@@ -740,12 +671,11 @@ function startClock() {
   updateBattery();
 }
 
-// Reflete o nível real de bateria do computador nos ícones da status bar.
 async function updateBattery() {
   let level = 1;
   try {
     if (navigator.getBattery) level = (await navigator.getBattery()).level;
-  } catch (_) { /* API de bateria indisponível */ }
+  } catch (_) {  }
   const fillIos = document.getElementById('battFillIos');
   const fillAnd = document.getElementById('battFillAnd');
   const pct = document.getElementById('battPct');
@@ -753,8 +683,6 @@ async function updateBattery() {
   if (fillAnd) fillAnd.setAttribute('width', String(Math.max(2, Math.round(16 * level))));
   if (pct) pct.textContent = Math.round(level * 100) + '%';
 }
-
-/* ---------- Toast ---------- */
 
 let toastTimer = null;
 function toast(message) {

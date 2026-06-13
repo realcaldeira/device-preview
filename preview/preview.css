@@ -1,4 +1,3 @@
-/* ============ Tema ============ */
 body[data-theme="dark"] {
   --bg: #0f1115;
   --stage-bg: radial-gradient(circle at 50% 28%, #1a1e27 0%, #0b0d11 75%);
@@ -37,7 +36,6 @@ body {
 
 .hidden { display: none !important; }
 
-/* ============ Barra de ferramentas ============ */
 #toolbar {
   flex: none;
   display: flex;
@@ -87,8 +85,6 @@ body {
 .icon-btn:disabled { opacity: 0.4; cursor: default; }
 .icon-btn:disabled:hover { border-color: var(--border); }
 
-/* Estado em destaque: botão primário (Capturar) e botões "ligados"
-   (Emulação profunda, Tela cheia, Esticar). */
 .text-btn.primary,
 .text-btn.on,
 .icon-btn.on {
@@ -124,7 +120,6 @@ body {
   color: var(--muted);
 }
 
-/* ============ Palco ============ */
 #stage {
   flex: 1;
   display: flex;
@@ -145,7 +140,6 @@ body {
   transform-origin: 0 0;
 }
 
-/* ============ Moldura: corpo ============ */
 .device-frame {
   position: relative;
   background: linear-gradient(150deg, #1d2026 0%, #0f1116 55%, #171a20 100%);
@@ -157,7 +151,6 @@ body {
     inset 0 0 14px rgba(0, 0, 0, 0.6);
 }
 
-/* Aro metálico (gradiente em anel via máscara) */
 .device-frame::before {
   content: '';
   position: absolute;
@@ -175,7 +168,6 @@ body {
   opacity: 0.65;
 }
 
-/* Aço inox polido nos aparelhos Apple */
 [data-brand="iphone"] .device-frame::before,
 [data-brand="ipad"] .device-frame::before {
   background: linear-gradient(155deg,
@@ -196,7 +188,6 @@ body {
   opacity: 0.7;
 }
 
-/* ============ Tela ============ */
 .screen {
   position: relative;
   width: var(--vw, 390px);
@@ -213,7 +204,6 @@ body {
   background: #fff;
 }
 
-/* Vidro: leve brilho diagonal + profundidade nas bordas */
 .screen-glare {
   position: absolute;
   inset: 0;
@@ -226,7 +216,6 @@ body {
     inset 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 
-/* ============ Status bar ============ */
 .status-bar {
   position: relative;
   z-index: 5;
@@ -256,7 +245,6 @@ body {
 .sb-pct { font-size: 10.5px; }
 .sb-ic { display: block; }
 
-/* ============ Recortes (notch / ilha / furo / gota) ============ */
 .cutout {
   position: absolute;
   z-index: 6;
@@ -265,14 +253,12 @@ body {
 }
 .cutout .speaker, .cutout .cam { display: none; position: absolute; }
 
-/* Lente de câmera (brilho azulado realista) */
 .cutout .cam {
   border-radius: 50%;
   background: radial-gradient(circle at 35% 32%, #34507c 0%, #1b2a45 35%, #060a13 72%);
   box-shadow: 0 0 0 1.5px #0b0d12, 0 0 3px rgba(80, 140, 255, 0.35);
 }
 
-/* — Notch (iPhone X–14) — */
 [data-cutout="notch"] .cutout {
   display: block;
   top: 0;
@@ -305,7 +291,6 @@ body {
   height: 9px;
 }
 
-/* — Dynamic Island (iPhone 15/16) — */
 [data-cutout="island"] .cutout {
   display: block;
   top: 11px;
@@ -326,7 +311,6 @@ body {
   height: 12px;
 }
 
-/* — Furo central / lateral (Android) — */
 [data-cutout="punch"] .cutout,
 [data-cutout="punch-left"] .cutout {
   display: block;
@@ -340,7 +324,6 @@ body {
 [data-cutout="punch"] .cutout { left: 50%; transform: translateX(-50%); }
 [data-cutout="punch-left"] .cutout { left: 18px; }
 
-/* — Gota (A12, P30 Pro) — */
 [data-cutout="drop"] .cutout {
   display: block;
   top: 0;
@@ -361,7 +344,6 @@ body {
   height: 10px;
 }
 
-/* Recortes em paisagem: migram para a borda esquerda, como nos aparelhos reais */
 [data-orientation="landscape"][data-cutout="notch"] .cutout {
   top: 50%;
   left: 0;
@@ -427,7 +409,6 @@ body {
   transform: translateY(-50%);
 }
 
-/* ============ Indicador de gesto (home indicator) ============ */
 .home-indicator {
   display: none;
   position: absolute;
@@ -450,7 +431,6 @@ body {
 [data-platform="windows"] .home-indicator,
 [data-kind="tv"] .home-indicator { display: none; }
 
-/* ============ Botões físicos ============ */
 .hw-btn {
   display: none;
   position: absolute;
@@ -459,23 +439,19 @@ body {
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.7);
 }
 
-/* Samsung / Xiaomi / Huawei / OPPO / OnePlus: volume + power à direita */
 [data-buttons="right"] .btn-volup   { display: block; right: -4.5px; top: 17%; width: 4.5px; height: 40px; }
 [data-buttons="right"] .btn-voldown { display: block; right: -4.5px; top: calc(17% + 48px); width: 4.5px; height: 40px; }
 [data-buttons="right"] .btn-power   { display: block; right: -4.5px; top: calc(17% + 108px); width: 4.5px; height: 46px; }
 
-/* Pixel: power acima do volume */
 [data-buttons="pixel"] .btn-power   { display: block; right: -4.5px; top: 16%; width: 4.5px; height: 46px; }
 [data-buttons="pixel"] .btn-volup   { display: block; right: -4.5px; top: calc(16% + 58px); width: 4.5px; height: 38px; }
 [data-buttons="pixel"] .btn-voldown { display: block; right: -4.5px; top: calc(16% + 104px); width: 4.5px; height: 38px; }
 
-/* iPhone: mute + volume à esquerda, power à direita */
 [data-buttons="iphone"] .btn-power   { display: block; right: -4.5px; top: 25%; width: 4.5px; height: 74px; }
 [data-buttons="iphone"] .btn-mute    { display: block; left: -4.5px; top: calc(25% - 42px); width: 4.5px; height: 24px; }
 [data-buttons="iphone"] .btn-volup   { display: block; left: -4.5px; top: 25%; width: 4.5px; height: 36px; }
 [data-buttons="iphone"] .btn-voldown { display: block; left: -4.5px; top: calc(25% + 46px); width: 4.5px; height: 36px; }
 
-/* OnePlus: alert slider extra */
 [data-brand="oneplus"] .btn-mute {
   display: block;
   right: -4.5px;
@@ -486,16 +462,13 @@ body {
   background: linear-gradient(90deg, #3b414c, #1d2026);
 }
 
-/* iPad: power no topo, volume na lateral direita */
 [data-buttons="ipad"] .btn-power   { display: block; top: -4.5px; right: 10%; width: 46px; height: 4.5px; }
 [data-buttons="ipad"] .btn-volup   { display: block; right: -4.5px; top: 3%; width: 4.5px; height: 32px; }
 [data-buttons="ipad"] .btn-voldown { display: block; right: -4.5px; top: calc(3% + 40px); width: 4.5px; height: 32px; }
 
-/* Surface: power + volume no topo, à esquerda */
 [data-buttons="top"] .btn-power { display: block; top: -4.5px; left: 7%; width: 42px; height: 4.5px; }
 [data-buttons="top"] .btn-volup { display: block; top: -4.5px; left: calc(7% + 54px); width: 64px; height: 4.5px; }
 
-/* Telefones em paisagem: botões giram para as bordas superior/inferior */
 [data-orientation="landscape"][data-kind="phone"] .hw-btn { right: auto; bottom: auto; }
 
 [data-orientation="landscape"][data-buttons="right"] .btn-volup   { top: -4.5px; left: 17%; width: 40px; height: 4.5px; }
@@ -513,7 +486,6 @@ body {
 
 [data-orientation="landscape"][data-brand="oneplus"] .btn-mute { top: -4.5px; bottom: auto; left: 8%; width: 26px; height: 4.5px; }
 
-/* ============ iPhone clássico (botão home) ============ */
 .earpiece, .front-cam, .home-btn { display: none; }
 
 [data-cutout="home"] .earpiece {
@@ -571,8 +543,6 @@ body {
   border-radius: 8px;
 }
 
-/* Em paisagem os bezels giram junto (topo → esquerda, base → direita),
-   então os elementos usam --pad-left / --pad-right. */
 [data-orientation="landscape"][data-cutout="home"] .earpiece {
   top: 50%;
   left: calc(var(--pad-left, 80px) * 0.52);
@@ -598,7 +568,6 @@ body {
   transform: translateY(-50%);
 }
 
-/* ============ Smart TV: chin, logo, LED, suporte ============ */
 .tv-chin { display: none; }
 [data-kind="tv"] .tv-chin {
   display: flex;
@@ -649,10 +618,6 @@ body {
     0 8px 20px rgba(0, 0, 0, 0.5);
 }
 
-/* ============ Modo tela cheia (sem moldura) ============
-   Oculta moldura, status bar, recortes, botões e suporte, mantendo apenas
-   o iframe na resolução (var(--vw) × var(--vh)) do dispositivo. O seletor
-   inclui #mockup para vencer a especificidade das regras de TV/marca. */
 #mockup.frameless .device-frame {
   padding: 0;
   border-radius: 0;
@@ -675,8 +640,6 @@ body {
   display: none !important;
 }
 
-/* Tela cheia preenche o palco (folga mínima) e encolhe os controles para
-   liberar área de visualização. */
 body.frameless #stage { padding: 8px; }
 
 body.frameless #toolbar { padding: 4px 8px; gap: 8px; }
@@ -692,7 +655,6 @@ body.frameless #addressInput { height: 26px; font-size: 11.5px; }
 body.frameless #zoomLabel { min-width: 38px; font-size: 11px; }
 body.frameless #infoBar { padding: 3px 10px; font-size: 10.5px; }
 
-/* ============ Sombra de chão ============ */
 .ground {
   width: 74%;
   max-width: 560px;
@@ -704,7 +666,6 @@ body.frameless #infoBar { padding: 3px 10px; font-size: 10.5px; }
 [data-kind="tv"] .ground { margin-top: 8px; width: 64%; max-width: none; }
 body[data-theme="light"] .ground { opacity: 0.5; }
 
-/* ============ Rodapé de informações ============ */
 #infoBar {
   flex: none;
   display: flex;
@@ -722,7 +683,6 @@ body[data-theme="light"] .ground { opacity: 0.5; }
 #infoName { color: var(--text); font-weight: 600; }
 #infoUa { overflow: hidden; text-overflow: ellipsis; }
 
-/* ============ Toast ============ */
 #toast {
   position: fixed;
   bottom: 48px;

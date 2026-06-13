@@ -1,11 +1,8 @@
-// Side panel: lista os dispositivos por categoria, com uma seção de favoritos
-// no topo, e abre a prévia ao clicar.
-
 const FAV_KEY = 'favorites';
 let favorites = new Set();
 const deviceById = {};
-const deviceOrder = [];   // ids na ordem das categorias, para listar os favoritos
-let activeId = null;      // dispositivo cuja prévia foi aberta por último
+const deviceOrder = [];
+let activeId = null;
 
 const STAR_SVG =
   '<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">' +
@@ -46,10 +43,6 @@ function hideError() {
   document.getElementById('panelError').classList.add('hidden');
 }
 
-/* ---------- Favoritos ---------- */
-
-// A seção de favoritos é criada uma vez e tem seu conteúdo recalculado por
-// refreshFavorites() sempre que a lista muda.
 function renderFavorites() {
   const details = document.createElement('details');
   details.id = 'favGroup';
@@ -76,19 +69,15 @@ function refreshFavorites() {
   if (!group) return;
   const list = group.querySelector('.list');
   const count = group.querySelector('.count');
-  // Varre todos os dispositivos na ordem das categorias e inclui os favoritados,
-  // garantindo a lista completa e uma ordem estável.
+
   const favDevices = deviceOrder.filter((id) => favorites.has(id)).map((id) => deviceById[id]);
 
   list.innerHTML = '';
   for (const d of favDevices) list.appendChild(renderDevice(d));
   count.textContent = favDevices.length;
-  // Sem favoritos, a seção fica oculta (a estrela em cada aparelho garante a
-  // descoberta do recurso).
+
   group.classList.toggle('hidden', favDevices.length === 0);
 
-  // Se houver uma busca ativa, reaplica o filtro aos itens recriados para
-  // manter a seção coerente com a busca.
   const search = document.getElementById('search');
   if (search && search.value.trim()) filter(search.value);
 }
@@ -101,8 +90,6 @@ function toggleFavorite(id) {
   refreshFavorites();
 }
 
-// Mantém o estado da estrela igual em todas as cópias do mesmo aparelho
-// (na categoria e na seção de favoritos).
 function syncStars(id) {
   const on = favorites.has(id);
   document.querySelectorAll(`.device[data-id="${CSS.escape(id)}"] .star`).forEach((star) => {
@@ -111,8 +98,6 @@ function syncStars(id) {
     star.title = on ? 'Remover dos favoritos' : 'Adicionar aos favoritos';
   });
 }
-
-/* ---------- Categorias e dispositivos ---------- */
 
 function renderCategory(cat) {
   const details = document.createElement('details');
@@ -137,8 +122,7 @@ function renderCategory(cat) {
 }
 
 function renderDevice(d) {
-  // <div role="button"> em vez de <button> porque a estrela é interativa e
-  // conteúdo interativo não pode ficar dentro de um <button> (HTML inválido).
+
   const btn = document.createElement('div');
   btn.className = 'device';
   btn.setAttribute('role', 'button');
@@ -173,8 +157,7 @@ function renderDevice(d) {
   star.setAttribute('aria-pressed', String(fav));
   star.title = fav ? 'Remover dos favoritos' : 'Adicionar aos favoritos';
   star.innerHTML = STAR_SVG;
-  // A estrela vive dentro do botão do dispositivo: stopPropagation evita
-  // abrir a prévia ao (des)favoritar.
+
   const toggle = (e) => { e.stopPropagation(); e.preventDefault(); toggleFavorite(d.id); };
   star.addEventListener('click', toggle);
   star.addEventListener('keydown', (e) => {
@@ -204,13 +187,12 @@ function renderDevice(d) {
   return btn;
 }
 
-let openBeforeSearch = null;   // estado de abertura dos grupos antes da busca
+let openBeforeSearch = null;
 
 function filter(query) {
   const q = query.trim().toLowerCase();
   const groups = document.querySelectorAll('details');
 
-  // Ao iniciar uma busca, guarda quais grupos estavam abertos para restaurar depois.
   if (q && openBeforeSearch === null) {
     openBeforeSearch = new Map();
     groups.forEach((g) => openBeforeSearch.set(g, g.open));
@@ -227,7 +209,6 @@ function filter(query) {
     if (q && visible > 0) group.open = true;
   });
 
-  // Ao limpar a busca, restaura o estado de abertura escolhido pelo usuário.
   if (!q && openBeforeSearch) {
     openBeforeSearch.forEach((wasOpen, g) => { g.open = wasOpen; });
     openBeforeSearch = null;

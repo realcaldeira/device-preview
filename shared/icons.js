@@ -1,5 +1,3 @@
-// Silhuetas SVG dos dispositivos, indexadas pelo tipo de moldura ("frame").
-// Usadas no side panel e disponíveis para qualquer página da extensão.
 const DP_ICONS = {
   'punch':
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' +
