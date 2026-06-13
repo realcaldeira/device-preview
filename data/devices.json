@@ -1,0 +1,322 @@
+{
+  "categories": [
+    {
+      "id": "android",
+      "name": "Telefones Android",
+      "devices": [
+        {
+          "id": "galaxy-s20",
+          "name": "Galaxy S20",
+          "width": 360, "height": 800, "dpr": 4, "physical": "1440×3200",
+          "frame": "punch", "pro": false, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        },
+        {
+          "id": "galaxy-s21-ultra",
+          "name": "Galaxy S21 Ultra",
+          "width": 384, "height": 854, "dpr": 3.75, "physical": "1440×3200",
+          "frame": "punch", "pro": true, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 14; SM-G998B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        },
+        {
+          "id": "galaxy-s22",
+          "name": "Galaxy S22",
+          "width": 360, "height": 780, "dpr": 3, "physical": "1080×2340",
+          "frame": "punch", "pro": false, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 14; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        },
+        {
+          "id": "galaxy-s22-plus",
+          "name": "Galaxy S22+",
+          "width": 384, "height": 832, "dpr": 2.8125, "physical": "1080×2340",
+          "frame": "punch", "pro": false, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 14; SM-S906B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        },
+        {
+          "id": "galaxy-s22-ultra",
+          "name": "Galaxy S22 Ultra",
+          "width": 384, "height": 824, "dpr": 3.75, "physical": "1440×3088",
+          "frame": "punch", "pro": true, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 14; SM-S908B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        },
+        {
+          "id": "galaxy-s24",
+          "name": "Galaxy S24",
+          "width": 360, "height": 780, "dpr": 3, "physical": "1080×2340",
+          "frame": "punch", "pro": false, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 15; SM-S921B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        },
+        {
+          "id": "galaxy-s26-ultra",
+          "name": "Galaxy S26 Ultra",
+          "width": 384, "height": 832, "dpr": 3.75, "physical": "1440×3120",
+          "frame": "punch", "pro": true, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 16; SM-S948B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        },
+        {
+          "id": "galaxy-note20-ultra",
+          "name": "Galaxy Note20 Ultra",
+          "width": 412, "height": 883, "dpr": 3.5, "physical": "1440×3088",
+          "frame": "punch", "pro": true, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 13; SM-N986B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        },
+        {
+          "id": "galaxy-z-flip3",
+          "name": "Galaxy Z Flip3",
+          "width": 360, "height": 880, "dpr": 3, "physical": "1080×2640",
+          "frame": "punch", "pro": true, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 13; SM-F711B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        },
+        {
+          "id": "galaxy-a12",
+          "name": "Galaxy A12",
+          "width": 360, "height": 800, "dpr": 2, "physical": "720×1600",
+          "frame": "drop", "pro": false, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 11; SM-A125F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        },
+        {
+          "id": "xiaomi-mi-11i",
+          "name": "Xiaomi Mi 11i",
+          "width": 393, "height": 873, "dpr": 2.75, "physical": "1080×2400",
+          "frame": "punch-left", "pro": false, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 13; M2012K11G) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        },
+        {
+          "id": "xiaomi-12",
+          "name": "Xiaomi 12",
+          "width": 393, "height": 873, "dpr": 2.75, "physical": "1080×2400",
+          "frame": "punch", "pro": false, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 13; 2201123G) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        },
+        {
+          "id": "huawei-p30-pro",
+          "name": "Huawei P30 Pro",
+          "width": 360, "height": 780, "dpr": 3, "physical": "1080×2340",
+          "frame": "drop", "pro": false, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 10; VOG-L29) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        },
+        {
+          "id": "pixel-5",
+          "name": "Pixel 5",
+          "width": 393, "height": 851, "dpr": 2.75, "physical": "1080×2340",
+          "frame": "punch-left", "pro": false, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 14; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        },
+        {
+          "id": "pixel-6-pro",
+          "name": "Pixel 6 Pro",
+          "width": 412, "height": 892, "dpr": 3.5, "physical": "1440×3120",
+          "frame": "punch", "pro": true, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 14; Pixel 6 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        },
+        {
+          "id": "pixel-8",
+          "name": "Pixel 8",
+          "width": 412, "height": 915, "dpr": 2.625, "physical": "1080×2400",
+          "frame": "punch", "pro": false, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 15; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        },
+        {
+          "id": "oppo-find-x3-pro",
+          "name": "OPPO Find X3 Pro",
+          "width": 412, "height": 919, "dpr": 3.5, "physical": "1440×3216",
+          "frame": "punch-left", "pro": true, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 13; CPH2173) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        },
+        {
+          "id": "oneplus-nord-2",
+          "name": "OnePlus Nord 2",
+          "width": 412, "height": 915, "dpr": 2.625, "physical": "1080×2400",
+          "frame": "punch-left", "pro": false, "platform": "Android", "mobile": true,
+          "ua": "Mozilla/5.0 (Linux; Android 13; DN2103) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        }
+      ]
+    },
+    {
+      "id": "apple",
+      "name": "Telefones Apple",
+      "devices": [
+        {
+          "id": "iphone-5",
+          "name": "iPhone 5",
+          "width": 320, "height": 568, "dpr": 2, "physical": "640×1136",
+          "frame": "home", "pro": false, "platform": "iOS", "mobile": true,
+          "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_4 like Mac OS X) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.0 Mobile/14G61 Safari/602.1"
+        },
+        {
+          "id": "iphone-se-2016",
+          "name": "iPhone SE (2016)",
+          "width": 320, "height": 568, "dpr": 2, "physical": "640×1136",
+          "frame": "home", "pro": false, "platform": "iOS", "mobile": true,
+          "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_8_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.8 Mobile/15E148 Safari/604.1"
+        },
+        {
+          "id": "iphone-x",
+          "name": "iPhone X",
+          "width": 375, "height": 812, "dpr": 3, "physical": "1125×2436",
+          "frame": "notch", "pro": false, "platform": "iOS", "mobile": true,
+          "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_7_8 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
+        },
+        {
+          "id": "iphone-xr",
+          "name": "iPhone XR",
+          "width": 414, "height": 896, "dpr": 2, "physical": "828×1792",
+          "frame": "notch", "pro": false, "platform": "iOS", "mobile": true,
+          "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1"
+        },
+        {
+          "id": "iphone-11",
+          "name": "iPhone 11",
+          "width": 414, "height": 896, "dpr": 2, "physical": "828×1792",
+          "frame": "notch", "pro": false, "platform": "iOS", "mobile": true,
+          "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1"
+        },
+        {
+          "id": "iphone-11-pro",
+          "name": "iPhone 11 Pro",
+          "width": 375, "height": 812, "dpr": 3, "physical": "1125×2436",
+          "frame": "notch", "pro": true, "platform": "iOS", "mobile": true,
+          "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1"
+        },
+        {
+          "id": "iphone-11-pro-max",
+          "name": "iPhone 11 Pro Max",
+          "width": 414, "height": 896, "dpr": 3, "physical": "1242×2688",
+          "frame": "notch", "pro": true, "platform": "iOS", "mobile": true,
+          "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1"
+        },
+        {
+          "id": "iphone-12-mini",
+          "name": "iPhone 12 Mini",
+          "width": 375, "height": 812, "dpr": 3, "physical": "1080×2340",
+          "frame": "notch", "pro": false, "platform": "iOS", "mobile": true,
+          "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
+        },
+        {
+          "id": "iphone-12",
+          "name": "iPhone 12",
+          "width": 390, "height": 844, "dpr": 3, "physical": "1170×2532",
+          "frame": "notch", "pro": false, "platform": "iOS", "mobile": true,
+          "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
+        },
+        {
+          "id": "iphone-12-pro",
+          "name": "iPhone 12 Pro",
+          "width": 390, "height": 844, "dpr": 3, "physical": "1170×2532",
+          "frame": "notch", "pro": true, "platform": "iOS", "mobile": true,
+          "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
+        },
+        {
+          "id": "iphone-13",
+          "name": "iPhone 13",
+          "width": 390, "height": 844, "dpr": 3, "physical": "1170×2532",
+          "frame": "notch", "pro": false, "platform": "iOS", "mobile": true,
+          "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1"
+        },
+        {
+          "id": "iphone-14",
+          "name": "iPhone 14",
+          "width": 390, "height": 844, "dpr": 3, "physical": "1170×2532",
+          "frame": "notch", "pro": false, "platform": "iOS", "mobile": true,
+          "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1"
+        },
+        {
+          "id": "iphone-15",
+          "name": "iPhone 15",
+          "width": 393, "height": 852, "dpr": 3, "physical": "1179×2556",
+          "frame": "island", "pro": true, "platform": "iOS", "mobile": true,
+          "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.2 Mobile/15E148 Safari/604.1"
+        },
+        {
+          "id": "iphone-16",
+          "name": "iPhone 16",
+          "width": 393, "height": 852, "dpr": 3, "physical": "1179×2556",
+          "frame": "island", "pro": true, "platform": "iOS", "mobile": true,
+          "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.2 Mobile/15E148 Safari/604.1"
+        }
+      ]
+    },
+    {
+      "id": "tablets",
+      "name": "Tablets",
+      "devices": [
+        {
+          "id": "ipad-mini",
+          "name": "iPad Mini",
+          "width": 768, "height": 1024, "dpr": 2, "physical": "1536×2048",
+          "frame": "tablet", "pro": false, "platform": "iOS", "mobile": false,
+          "ua": "Mozilla/5.0 (iPad; CPU OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"
+        },
+        {
+          "id": "ipad-air",
+          "name": "iPad Air",
+          "width": 820, "height": 1180, "dpr": 2, "physical": "1640×2360",
+          "frame": "tablet", "pro": false, "platform": "iOS", "mobile": false,
+          "ua": "Mozilla/5.0 (iPad; CPU OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"
+        },
+        {
+          "id": "ipad-pro-11",
+          "name": "iPad Pro 11\"",
+          "width": 834, "height": 1194, "dpr": 2, "physical": "1668×2388",
+          "frame": "tablet", "pro": true, "platform": "iOS", "mobile": false,
+          "ua": "Mozilla/5.0 (iPad; CPU OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"
+        },
+        {
+          "id": "ipad-pro-129",
+          "name": "iPad Pro 12.9\"",
+          "width": 1024, "height": 1366, "dpr": 2, "physical": "2048×2732",
+          "frame": "tablet", "pro": true, "platform": "iOS", "mobile": false,
+          "ua": "Mozilla/5.0 (iPad; CPU OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"
+        },
+        {
+          "id": "galaxy-tab-s9",
+          "name": "Galaxy Tab S9",
+          "width": 800, "height": 1280, "dpr": 2, "physical": "1600×2560",
+          "frame": "tablet", "pro": false, "platform": "Android", "mobile": false,
+          "ua": "Mozilla/5.0 (Linux; Android 14; SM-X710) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+        },
+        {
+          "id": "surface-pro",
+          "name": "Surface Pro",
+          "width": 912, "height": 1368, "dpr": 2, "physical": "1824×2736",
+          "frame": "tablet", "pro": true, "platform": "Windows", "mobile": false,
+          "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0"
+        }
+      ]
+    },
+    {
+      "id": "tvs",
+      "name": "Smart TVs",
+      "devices": [
+        {
+          "id": "tv-hd",
+          "name": "TV HD 720p",
+          "width": 1280, "height": 720, "dpr": 1, "physical": "1280×720",
+          "frame": "tv", "pro": false, "platform": "Linux", "mobile": false,
+          "ua": "Mozilla/5.0 (SMART-TV; Linux; Tizen 5.5) AppleWebKit/537.36 (KHTML, like Gecko) 69.0.3497.106.1/5.5 TV Safari/537.36"
+        },
+        {
+          "id": "tv-fullhd",
+          "name": "TV Full HD",
+          "width": 1920, "height": 1080, "dpr": 1, "physical": "1920×1080",
+          "frame": "tv", "pro": false, "platform": "Linux", "mobile": false,
+          "ua": "Mozilla/5.0 (SMART-TV; Linux; Tizen 6.5) AppleWebKit/537.36 (KHTML, like Gecko) 85.0.4183.93/6.5 TV Safari/537.36"
+        },
+        {
+          "id": "tv-4k",
+          "name": "TV 4K UHD",
+          "width": 3840, "height": 2160, "dpr": 1, "physical": "3840×2160",
+          "frame": "tv", "pro": true, "platform": "Linux", "mobile": false,
+          "ua": "Mozilla/5.0 (Web0S; Linux/SmartTV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.5359.211 Safari/537.36 WebAppManager"
+        },
+        {
+          "id": "tv-8k",
+          "name": "TV 8K",
+          "width": 7680, "height": 4320, "dpr": 1, "physical": "7680×4320",
+          "frame": "tv", "pro": true, "platform": "Linux", "mobile": false,
+          "ua": "Mozilla/5.0 (SMART-TV; Linux; Tizen 7.0) AppleWebKit/537.36 (KHTML, like Gecko) 94.0.4606.31/7.0 TV Safari/537.36"
+        }
+      ]
+    }
+  ]
+}
