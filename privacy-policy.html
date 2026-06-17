@@ -34,7 +34,7 @@
 <body>
 
   <h1>Política de Privacidade — Device Preview</h1>
-  <p class="meta">Última atualização: 13 de junho de 2026</p>
+  <p class="meta">Última atualização: 17 de junho de 2026</p>
 
   <p>
     Esta Política de Privacidade descreve como a extensão de navegador
@@ -89,12 +89,20 @@
 
   <h2>Por que a extensão pede permissões sensíveis</h2>
   <p>
-    Permissões como acesso a abas, navegação e o protocolo de depuração
-    (<code>chrome.debugger</code>) são usadas <strong>somente</strong> para
-    reproduzir fielmente o dispositivo escolhido — por exemplo, trocar o
+    Permissões como acesso a abas e navegação são usadas <strong>somente</strong>
+    para reproduzir fielmente o dispositivo escolhido — por exemplo, trocar o
     <em>User-Agent</em>, ajustar o <code>devicePixelRatio</code> e permitir a
     emulação de toque na aba de prévia. Elas <strong>não</strong> são usadas para
     monitorar, coletar ou exfiltrar qualquer informação.
+  </p>
+  <p>
+    O protocolo de depuração (<code>chrome.debugger</code>) é uma permissão
+    <strong>opcional</strong>: não é concedida na instalação e só é solicitada no
+    momento em que você ativa a <em>emulação profunda</em> — recurso que usa esse
+    protocolo apenas para aplicar, na própria aba de prévia, o
+    <code>devicePixelRatio</code> e os eventos de toque reais do dispositivo. Você
+    pode recusá-la e continuar usando normalmente todos os demais recursos da
+    extensão.
   </p>
 
   <h2>Compartilhamento com terceiros</h2>
@@ -125,7 +133,7 @@
   <hr class="lang-sep" />
 
   <h1>Privacy Policy — Device Preview</h1>
-  <p class="meta">Last updated: June 13, 2026</p>
+  <p class="meta">Last updated: June 17, 2026</p>
 
   <p>
     This Privacy Policy explains how the <strong>Device Preview</strong> browser
@@ -176,12 +184,20 @@
 
   <h2>Why the extension requests sensitive permissions</h2>
   <p>
-    Permissions such as tabs access, web navigation, and the debugger protocol
-    (<code>chrome.debugger</code>) are used <strong>only</strong> to faithfully
-    reproduce the selected device — for example, switching the
-    <em>User-Agent</em>, adjusting <code>devicePixelRatio</code>, and enabling
-    touch emulation in the preview tab. They are <strong>not</strong> used to
-    monitor, collect, or exfiltrate any information.
+    Permissions such as tabs access and web navigation are used
+    <strong>only</strong> to faithfully reproduce the selected device — for
+    example, switching the <em>User-Agent</em>, adjusting
+    <code>devicePixelRatio</code>, and enabling touch emulation in the preview tab.
+    They are <strong>not</strong> used to monitor, collect, or exfiltrate any
+    information.
+  </p>
+  <p>
+    The debugger protocol (<code>chrome.debugger</code>) is an
+    <strong>optional</strong> permission: it is not granted at install time and is
+    only requested when you turn on <em>deep emulation</em> — a feature that uses
+    the protocol solely to apply the device's real <code>devicePixelRatio</code>
+    and touch events within the preview tab itself. You may decline it and keep
+    using all other features of the extension normally.
   </p>
 
   <h2>Third-party sharing</h2>
