@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Device Preview",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Visualize qualquer site em resoluções reais de celulares, tablets e Smart TVs, com moldura de dispositivo realista.",
   "author": "Lucas Caldeira",
   "minimum_chrome_version": "116",
@@ -29,7 +29,9 @@
     "declarativeNetRequest",
     "storage",
     "tabs",
-    "webNavigation",
+    "webNavigation"
+  ],
+  "optional_permissions": [
     "debugger"
   ],
   "host_permissions": ["<all_urls>"]

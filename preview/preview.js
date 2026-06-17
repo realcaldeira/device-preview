@@ -197,21 +197,26 @@ function bindExtensionEvents() {
     }
   });
 
-  if (chrome.debugger && chrome.debugger.onDetach) {
-    chrome.debugger.onDetach.addListener((source, reason) => {
-      if (!deepTarget || source.targetId !== deepTarget.targetId) return;
-      if (reason === 'canceled_by_user') {
-        deepOn = false;
-        deepTarget = null;
-        deepOrigin = null;
-        updateDeepButton();
-        toast('Emulação profunda desativada pelo aviso do Chrome');
-      } else if (deepOn) {
+  ensureDebuggerListeners();
+}
 
-        scheduleDeepReattach();
-      }
-    });
-  }
+let debuggerListenersReady = false;
+function ensureDebuggerListeners() {
+  if (debuggerListenersReady) return;
+  if (!chrome.debugger || !chrome.debugger.onDetach) return;
+  debuggerListenersReady = true;
+  chrome.debugger.onDetach.addListener((source, reason) => {
+    if (!deepTarget || source.targetId !== deepTarget.targetId) return;
+    if (reason === 'canceled_by_user') {
+      deepOn = false;
+      deepTarget = null;
+      deepOrigin = null;
+      updateDeepButton();
+      toast('Emulação profunda desativada pelo aviso do Chrome');
+    } else if (deepOn) {
+      scheduleDeepReattach();
+    }
+  });
 }
 
 function dims() {
@@ -607,7 +612,7 @@ async function deepAttach({ reloadAfter = false } = {}) {
 async function setDeepEmu(on) {
   if (on === deepOn) return;
   if (on) {
-    if (!hasExtensionApis || !chrome.debugger) {
+    if (!hasExtensionApis) {
       toast('Emulação profunda disponível apenas pela extensão.');
       return;
     }
@@ -615,6 +620,17 @@ async function setDeepEmu(on) {
       toast('Carregue um site antes de ativar a emulação profunda.');
       return;
     }
+    // "debugger" é uma permissão opcional: solicitada sob demanda, dentro do
+    // clique do usuário (este request precisa ser a primeira chamada assíncrona).
+    let granted = false;
+    try {
+      granted = await chrome.permissions.request({ permissions: ['debugger'] });
+    } catch (_) { granted = false; }
+    if (!granted || !chrome.debugger) {
+      toast('Permissão de depuração necessária para ativar a emulação profunda.');
+      return;
+    }
+    ensureDebuggerListeners();
     try {
       await deepAttach({ reloadAfter: true });
       deepOn = true;
