@@ -83,32 +83,37 @@ async function clearRules(tabId) {
 async function openPreview(deviceId) {
   const [active] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
 
+  // Site atualmente em foco — só conta se for uma página real (http/https) e
+  // não a própria prévia (evita carregar "chrome-extension://" dentro do frame).
+  const activeIsPreview = !!(active && active.url && active.url.startsWith(previewBase()));
+  let siteUrl = null;
+  if (active && active.url && /^https?:/i.test(active.url) && !activeIsPreview) {
+    siteUrl = active.url;
+  }
+
   const existing = await chrome.tabs.query({ url: previewBase() + '*' });
   if (existing.length) {
     const tab = existing[0];
     await chrome.tabs.update(tab.id, { active: true });
     await chrome.windows.update(tab.windowId, { focused: true });
     try {
-
-      await chrome.runtime.sendMessage({ type: 'set-device', deviceId, tabId: tab.id });
+      // Reaproveita a prévia já aberta e navega para o site em foco (se houver).
+      await chrome.runtime.sendMessage({ type: 'set-device', deviceId, tabId: tab.id, url: siteUrl });
     } catch (_) {
-
-      await chrome.tabs.update(tab.id, {
-        url: `${previewBase()}?device=${encodeURIComponent(deviceId)}`
-      });
+      const query = `device=${encodeURIComponent(deviceId)}` +
+        (siteUrl ? `&url=${encodeURIComponent(siteUrl)}` : '');
+      await chrome.tabs.update(tab.id, { url: `${previewBase()}?${query}` });
     }
     return;
   }
 
-  let url = 'https://www.wikipedia.org/';
-  if (active && active.url && /^https?:/i.test(active.url)) url = active.url;
+  const url = siteUrl || 'https://www.wikipedia.org/';
   const previewUrl =
     `${previewBase()}?device=${encodeURIComponent(deviceId)}&url=${encodeURIComponent(url)}`;
 
-  if (active && typeof active.id === 'number') {
+  if (active && typeof active.id === 'number' && !activeIsPreview) {
     await chrome.tabs.update(active.id, { url: previewUrl });
   } else {
-
     await chrome.tabs.create({ url: previewUrl });
   }
 }
@@ -130,6 +135,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           sendResponse({ ok: true, dataUrl });
           break;
         }
+        case 'reset-tab':
+          await clearRules(sender.tab.id);
+          sendResponse({ ok: true });
+          break;
         default:
           sendResponse({ ok: false, error: 'mensagem desconhecida' });
       }

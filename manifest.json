@@ -29,9 +29,7 @@
     "declarativeNetRequest",
     "storage",
     "tabs",
-    "webNavigation"
-  ],
-  "optional_permissions": [
+    "webNavigation",
     "debugger"
   ],
   "host_permissions": ["<all_urls>"]

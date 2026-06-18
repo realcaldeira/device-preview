@@ -98,6 +98,18 @@ body {
 .text-btn.on:hover,
 .icon-btn.on:hover { filter: brightness(1.1); border-color: var(--accent); }
 
+.text-btn.danger {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.4);
+  font-weight: 600;
+}
+.text-btn.danger:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+  filter: none;
+}
+
 #addressInput {
   flex: 1;
   min-width: 80px;
@@ -682,6 +694,42 @@ body[data-theme="light"] .ground { opacity: 0.5; }
 #infoBar .sep { opacity: 0.5; }
 #infoName { color: var(--text); font-weight: 600; }
 #infoUa { overflow: hidden; text-overflow: ellipsis; }
+
+#fpsMeter {
+  position: fixed;
+  top: 56px;
+  right: 18px;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(8, 10, 14, 0.82);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+#fpsValue {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  color: #e8eaf0;
+}
+#fpsDetail {
+  font-size: 10px;
+  font-weight: 600;
+  color: #9aa3b2;
+  white-space: nowrap;
+}
+#fpsDetail:empty { display: none; }
+#fpsMeter[data-level="good"] #fpsValue { color: #34d399; }
+#fpsMeter[data-level="ok"]   #fpsValue { color: #fbbf24; }
+#fpsMeter[data-level="bad"]  #fpsValue { color: #f87171; }
+body.frameless #fpsMeter { top: 44px; }
 
 #toast {
   position: fixed;

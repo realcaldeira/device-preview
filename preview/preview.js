@@ -55,7 +55,8 @@ const els = {
   back: $('backBtn'), reload: $('reloadBtn'), address: $('addressInput'), go: $('goBtn'),
   zoomIn: $('zoomInBtn'), zoomOut: $('zoomOutBtn'), zoomFit: $('zoomFitBtn'), zoomLabel: $('zoomLabel'),
   theme: $('themeBtn'), iconMoon: $('iconMoon'), iconSun: $('iconSun'), shot: $('shotBtn'),
-  deep: $('deepBtn'),
+  fps: $('fpsBtn'), fpsMeter: $('fpsMeter'), fpsValue: $('fpsValue'), fpsDetail: $('fpsDetail'),
+  exit: $('exitBtn'),
   stage: $('stage'), zoomBox: $('zoomBox'), mockup: $('mockup'),
   viewport: $('viewport'), sbTime: $('sbTime'),
   infoName: $('infoName'), infoViewport: $('infoViewport'), infoDpr: $('infoDpr'),
@@ -131,7 +132,6 @@ function bindUiEvents() {
     state.orientation = state.orientation === 'portrait' ? 'landscape' : 'portrait';
     buildFrame();
     applyZoom();
-    if (deepOn && deepTarget) applyDeepOverrides().catch(() => {});
     toast(state.orientation === 'portrait' ? 'Retrato' : 'Paisagem');
     saveState();
   });
@@ -141,6 +141,8 @@ function bindUiEvents() {
 
   els.back.addEventListener('click', () => {
     if (frameNavs < 2) return;
+    // history.back() reabre uma navegação no iframe, que o onNav abaixo vai
+    // recontar (frameNavs++). Descontamos 2 aqui para o saldo líquido ser -1.
     frameNavs -= 2;
     updateBackButton();
     history.back();
@@ -163,11 +165,21 @@ function bindUiEvents() {
     setTheme(state.theme === 'dark' ? 'light' : 'dark', true));
 
   els.shot.addEventListener('click', captureShot);
-  els.deep.addEventListener('click', () => setDeepEmu(!deepOn));
+  els.fps.addEventListener('click', () => setFpsMeter(!fpsOn));
+  els.exit.addEventListener('click', exitPreview);
 
   window.addEventListener('resize', () => { if (state.zoom === 'fit') applyZoom(); });
   window.addEventListener('pagehide', () => {
-    if (deepTarget) { try { chrome.debugger.detach(deepTarget); } catch (_) {} }
+    stopFpsPolling();
+    clearTimeout(reattachTimer);
+    if (dbgTarget) { try { chrome.debugger.detach(dbgTarget); } catch (_) {} dbgTarget = null; }
+  });
+
+  // Não desperdiça leituras de FPS com a aba da prévia em segundo plano.
+  document.addEventListener('visibilitychange', () => {
+    if (!fpsOn) return;
+    if (document.hidden) stopFpsPolling();
+    else startFpsPolling();
   });
 }
 
@@ -183,7 +195,7 @@ function bindExtensionEvents() {
     }
     state.currentUrl = details.url;
     if (document.activeElement !== els.address) els.address.value = details.url;
-    if (deepOn) scheduleDeepReattach();
+    if (fpsOn) scheduleReattach();
     saveState();
   };
   chrome.webNavigation.onCommitted.addListener(onNav);
@@ -192,6 +204,10 @@ function bindExtensionEvents() {
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg && msg.type === 'set-device' && msg.tabId === myTabId) {
+      if (msg.url) {
+        state.currentUrl = msg.url;
+        els.address.value = msg.url;
+      }
       setDevice(msg.deviceId, { navigate: true });
       sendResponse({ ok: true });
     }
@@ -205,16 +221,17 @@ function ensureDebuggerListeners() {
   if (debuggerListenersReady) return;
   if (!chrome.debugger || !chrome.debugger.onDetach) return;
   debuggerListenersReady = true;
+
   chrome.debugger.onDetach.addListener((source, reason) => {
-    if (!deepTarget || source.targetId !== deepTarget.targetId) return;
+    if (!dbgTarget || source.targetId !== dbgTarget.targetId) return;
     if (reason === 'canceled_by_user') {
-      deepOn = false;
-      deepTarget = null;
-      deepOrigin = null;
-      updateDeepButton();
-      toast('Emulação profunda desativada pelo aviso do Chrome');
-    } else if (deepOn) {
-      scheduleDeepReattach();
+      resetFpsState('Medição encerrada pelo aviso do Chrome');
+    } else if (fpsOn) {
+      // A sessão caiu (ex.: o iframe navegou). Esquece o alvo para a
+      // re-anexação refazer attach/enable do zero, sem reusar a sessão morta.
+      dbgTarget = null;
+      showFps(null);
+      scheduleReattach();
     }
   });
 }
@@ -382,6 +399,22 @@ function navigate(input) {
   saveState();
 }
 
+async function exitPreview() {
+  // Limpa as regras de User-Agent deste tab antes de sair (para o site abrir com
+  // o UA normal). O debugger, se ativo, é desanexado pelo handler de 'pagehide'.
+  if (hasExtensionApis) {
+    try { await chrome.runtime.sendMessage({ type: 'reset-tab' }); } catch (_) {}
+  }
+  const url = state.currentUrl;
+  if (url && /^https?:/i.test(url)) {
+    window.location.href = url;
+  } else if (hasExtensionApis && myTabId != null) {
+    try { await chrome.tabs.remove(myTabId); } catch (_) { try { window.close(); } catch (__) {} }
+  } else {
+    try { window.close(); } catch (_) {}
+  }
+}
+
 function currentScale() {
   if (state.zoom !== 'fit') return state.zoom / 100;
   const mw = els.mockup.offsetWidth;
@@ -526,38 +559,37 @@ async function captureShot() {
   }
 }
 
-let deepOn = false;
-let deepTarget = null;
-let deepOrigin = null;
-let deepLastUa = null;
-let deepTimer = null;
+let fpsOn = false;
+let fpsBusy = false;
+let dbgTarget = null;
+let reattachTimer = null;
+let reattachTries = 0;
+let fpsPollTimer = null;
 
-function uaPlatformFor(d) {
-  if (d.platform === 'iOS') return d.frame === 'tablet' ? 'iPad' : 'iPhone';
-  if (d.platform === 'Windows') return 'Win32';
-  if (d.platform === 'Android') return 'Linux armv8l';
-  return 'Linux';
-}
+// Limite de re-anexações automáticas antes de desistir e avisar o usuário.
+const MAX_REATTACH_TRIES = 6;
 
-function uaMetadataFor(d) {
-  if (d.platform !== 'Android' && d.platform !== 'Windows') return null;
-  return {
-    brands: [
-      { brand: 'Chromium', version: '125' },
-      { brand: 'Google Chrome', version: '125' },
-      { brand: 'Not.A/Brand', version: '24' }
-    ],
-    fullVersion: '125.0.0.0',
-    platform: d.platform,
-    platformVersion: d.platform === 'Android' ? '14.0.0' : '10.0.0',
-    architecture: d.platform === 'Android' ? '' : 'x86',
-    model: '',
-    mobile: !!d.mobile
-  };
-}
+// Sonda injetada no contexto real do site embutido: registra o tempo de cada
+// quadro (delta do requestAnimationFrame) num buffer. O painel lê esse buffer
+// por polling (Runtime.evaluate) e calcula FPS, 1% low e tempo de quadro — o
+// overhead dentro do site é mínimo (só um push por quadro).
+const FPS_PROBE_SRC =
+  '(function(){' +
+  'if(window.__dpFpsProbe)return;' +
+  'window.__dpFpsProbe=true;' +
+  'var last=performance.now();' +
+  'var buf=[];window.__dpFrames=buf;' +
+  'function loop(now){' +
+  'if(!window.__dpFpsProbe){window.__dpFrames=null;return;}' +
+  'var dt=now-last;last=now;' +
+  'if(dt>0&&dt<1000){buf.push(dt);if(buf.length>360)buf.shift();}' +
+  'requestAnimationFrame(loop);' +
+  '}' +
+  'requestAnimationFrame(loop);' +
+  '})();';
 
 function sendCdp(cmd, params) {
-  return chrome.debugger.sendCommand(deepTarget, cmd, params || {});
+  return chrome.debugger.sendCommand(dbgTarget, cmd, params || {});
 }
 
 async function findFrameTarget() {
@@ -572,104 +604,195 @@ async function findFrameTarget() {
   return t || null;
 }
 
-async function applyDeepOverrides() {
-  const { w, h } = dims();
-  const params = {
-    userAgent: device.ua,
-    acceptLanguage: 'pt-BR,pt;q=0.9',
-    platform: uaPlatformFor(device)
-  };
-  const md = uaMetadataFor(device);
-  if (md) params.userAgentMetadata = md;
-  await sendCdp('Emulation.setUserAgentOverride', params);
-  deepLastUa = device.ua;
+// Estatísticas a partir dos tempos de quadro (ms): janela curta (~500 ms) para
+// o número "ao vivo"; janela longa (~3 s) para o 1% low — a média dos piores
+// ~1% dos quadros, que revela travadas que a média esconde.
+function fpsStats(deltas) {
+  if (!deltas || !deltas.length) return null;
 
-  try {
-    await sendCdp('Emulation.setDeviceMetricsOverride', {
-      width: w,
-      height: h,
-      deviceScaleFactor: device.dpr,
-      mobile: device.mobile !== false
-    });
-  } catch (_) {}
-  try {
-    await sendCdp('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
-    await sendCdp('Emulation.setEmitTouchEventsForMouse', { enabled: true, configuration: 'mobile' });
-  } catch (_) {}
+  let sum = 0, n = 0;
+  for (let i = deltas.length - 1; i >= 0 && sum < 500; i--) { sum += deltas[i]; n++; }
+  const avgMs = sum / n;
+
+  let lsum = 0, ln = 0;
+  for (let i = deltas.length - 1; i >= 0 && lsum < 3000; i--) { lsum += deltas[i]; ln++; }
+  const recent = deltas.slice(deltas.length - ln).sort((a, b) => b - a);
+  const worstN = Math.max(1, Math.round(recent.length * 0.01));
+  let wsum = 0;
+  for (let i = 0; i < worstN; i++) wsum += recent[i];
+
+  return {
+    fps: Math.round(1000 / avgMs),
+    low1: Math.round(1000 / (wsum / worstN)),
+    ms: Math.round(avgMs * 10) / 10
+  };
 }
 
-async function deepAttach({ reloadAfter = false } = {}) {
+function startFpsPolling() {
+  if (fpsPollTimer) return;
+  fpsPollTimer = setInterval(async () => {
+    if (!fpsOn || !dbgTarget) return;
+    try {
+      const res = await sendCdp('Runtime.evaluate', {
+        expression: 'JSON.stringify(window.__dpFrames||[])',
+        returnByValue: true
+      });
+      const raw = res && res.result ? res.result.value : null;
+      if (fpsOn) showFps(raw ? fpsStats(JSON.parse(raw)) : null);
+    } catch (_) {  }
+  }, 250);
+}
+
+function stopFpsPolling() {
+  if (!fpsPollTimer) return;
+  clearInterval(fpsPollTimer);
+  fpsPollTimer = null;
+}
+
+// Anexa o debugger ao iframe e injeta a sonda de FPS. Em re-anexações ao mesmo
+// alvo (ex.: SPA navegando), só re-injeta no documento atual — sem repetir o
+// enable nem o registro, que de outra forma se acumulariam no protocolo.
+async function attachAndApply() {
   const target = await findFrameTarget();
   if (!target) {
     throw new Error('alvo do iframe não encontrado (aguarde o site carregar e tente de novo)');
   }
-  deepTarget = { targetId: target.id };
-  if (!target.attached) await chrome.debugger.attach(deepTarget, '1.3');
-  await applyDeepOverrides();
-  if (reloadAfter) await sendCdp('Page.reload');
-}
-
-async function setDeepEmu(on) {
-  if (on === deepOn) return;
-  if (on) {
-    if (!hasExtensionApis) {
-      toast('Emulação profunda disponível apenas pela extensão.');
-      return;
-    }
-    if (!device || !state.currentUrl) {
-      toast('Carregue um site antes de ativar a emulação profunda.');
-      return;
-    }
-    // "debugger" é uma permissão opcional: solicitada sob demanda, dentro do
-    // clique do usuário (este request precisa ser a primeira chamada assíncrona).
-    let granted = false;
+  const sameSession = !!(dbgTarget && dbgTarget.targetId === target.id);
+  dbgTarget = { targetId: target.id };
+  if (!sameSession) {
     try {
-      granted = await chrome.permissions.request({ permissions: ['debugger'] });
-    } catch (_) { granted = false; }
-    if (!granted || !chrome.debugger) {
-      toast('Permissão de depuração necessária para ativar a emulação profunda.');
-      return;
+      if (!target.attached) await chrome.debugger.attach(dbgTarget, '1.3');
+      await sendCdp('Runtime.enable');
+      await sendCdp('Page.enable');
+      // Garante a sonda em navegações futuras deste alvo (registrado uma única vez).
+      try { await sendCdp('Page.addScriptToEvaluateOnNewDocument', { source: FPS_PROBE_SRC }); } catch (_) {}
+    } catch (_) {
+      // target.attached costuma significar DevTools/outra extensão já depurando:
+      // o attach é pulado e os comandos seguintes rejeitam. Reporta com clareza.
+      dbgTarget = null;
+      throw new Error('não foi possível depurar o site (feche o DevTools desta aba e tente de novo)');
     }
-    ensureDebuggerListeners();
-    try {
-      await deepAttach({ reloadAfter: true });
-      deepOn = true;
-      try { deepOrigin = new URL(state.currentUrl).origin; } catch (_) { deepOrigin = null; }
-      toast('Emulação profunda ativada: UA via JS, DPR e toque reais');
-    } catch (e) {
-      deepTarget = null;
-      toast('Não foi possível ativar: ' + e.message);
-    }
-  } else {
-    deepOn = false;
-    deepOrigin = null;
-    deepLastUa = null;
-    if (deepTarget) {
-      try { await chrome.debugger.detach(deepTarget); } catch (_) {}
-    }
-    deepTarget = null;
-    if (state.currentUrl) els.viewport.src = state.currentUrl;
-    toast('Emulação profunda desativada');
   }
-  updateDeepButton();
+  // Injeta no documento atual (idempotente: a sonda se autoignora se já existe).
+  try { await sendCdp('Runtime.evaluate', { expression: FPS_PROBE_SRC }); } catch (_) {}
 }
 
-function updateDeepButton() {
-  els.deep.classList.toggle('on', deepOn);
-  els.deep.setAttribute('aria-pressed', String(deepOn));
+async function detachDebugger() {
+  if (!dbgTarget) return;
+  try { await chrome.debugger.detach(dbgTarget); } catch (_) {}
+  dbgTarget = null;
 }
 
-function scheduleDeepReattach() {
-  clearTimeout(deepTimer);
-  deepTimer = setTimeout(async () => {
-    if (!deepOn) return;
-    let origin = null;
-    try { origin = new URL(state.currentUrl).origin; } catch (_) {}
-    const needsReload = origin !== deepOrigin || deepLastUa !== device.ua;
+// "debugger" precisa ser uma permissão obrigatória (o Chrome não permite
+// torná-la opcional). Como já vem concedida na instalação, basta checar a API.
+function debuggerReady(reason) {
+  if (!chrome.debugger) {
+    toast('Recurso de depuração indisponível para ' + reason + '. Recarregue a extensão em chrome://extensions.');
+    return false;
+  }
+  return true;
+}
+
+// Desfaz todo o estado do medidor (timers, alvo, UI) num só lugar. Usado pelos
+// caminhos de falha/desligamento involuntário; não tenta falar com o debugger
+// (nesses casos a sessão já caiu).
+function resetFpsState(message) {
+  fpsOn = false;
+  stopFpsPolling();
+  clearTimeout(reattachTimer);
+  reattachTimer = null;
+  reattachTries = 0;
+  dbgTarget = null;
+  els.fpsMeter.classList.add('hidden');
+  updateFpsButton();
+  if (message) toast(message);
+}
+
+async function setFpsMeter(on) {
+  // fpsBusy serializa as transições: sem isso, um on→off durante o await do
+  // attach deixaria um setInterval órfão rodando com o botão em "off".
+  if (on === fpsOn || fpsBusy) return;
+  fpsBusy = true;
+  try {
+    if (on) {
+      if (!hasExtensionApis) {
+        toast('Medidor de FPS disponível apenas pela extensão.');
+        return;
+      }
+      if (!device || !state.currentUrl) {
+        toast('Carregue um site antes de medir o FPS.');
+        return;
+      }
+      if (!debuggerReady('o medidor de FPS')) return;
+      ensureDebuggerListeners();
+      fpsOn = true;
+      reattachTries = 0;
+      showFps(null);
+      try {
+        await attachAndApply();
+        startFpsPolling();
+        toast('Medidor de FPS ativado');
+      } catch (e) {
+        fpsOn = false;
+        stopFpsPolling();
+        clearTimeout(reattachTimer);
+        els.fpsMeter.classList.add('hidden');
+        await detachDebugger();
+        toast('Não foi possível medir o FPS: ' + e.message);
+      }
+    } else {
+      fpsOn = false;
+      stopFpsPolling();
+      clearTimeout(reattachTimer);
+      els.fpsMeter.classList.add('hidden');
+      // Para o loop da sonda dentro do site antes de soltar o debugger.
+      try { await sendCdp('Runtime.evaluate', { expression: 'window.__dpFpsProbe=false' }); } catch (_) {}
+      await detachDebugger();
+      toast('Medidor de FPS desativado');
+    }
+    updateFpsButton();
+  } finally {
+    fpsBusy = false;
+  }
+}
+
+function updateFpsButton() {
+  els.fps.classList.toggle('on', fpsOn);
+  els.fps.setAttribute('aria-pressed', String(fpsOn));
+}
+
+function fpsLevel(fps) {
+  return fps >= 50 ? 'good' : fps >= 30 ? 'ok' : 'bad';
+}
+
+function showFps(stats) {
+  if (!stats) {
+    els.fpsValue.textContent = '··· FPS';
+    els.fpsDetail.textContent = '';
+    els.fpsMeter.removeAttribute('data-level');
+  } else {
+    els.fpsValue.textContent = stats.fps + ' FPS';
+    els.fpsDetail.textContent = '1% ' + stats.low1 + '  ·  ' + stats.ms + ' ms';
+    els.fpsMeter.dataset.level = fpsLevel(stats.fps);
+  }
+  els.fpsMeter.classList.remove('hidden');
+}
+
+function scheduleReattach() {
+  clearTimeout(reattachTimer);
+  reattachTimer = setTimeout(async () => {
+    if (!fpsOn) return;
     try {
-      await deepAttach({ reloadAfter: needsReload });
-      deepOrigin = origin;
-    } catch (_) {  }
+      await attachAndApply();
+      reattachTries = 0;
+    } catch (_) {
+      if (!fpsOn) return;
+      if (++reattachTries >= MAX_REATTACH_TRIES) {
+        resetFpsState('Medição de FPS interrompida: não foi possível reconectar ao site.');
+      } else {
+        scheduleReattach();
+      }
+    }
   }, 350);
 }
 
