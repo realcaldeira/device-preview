@@ -1,3 +1,5 @@
+importScripts('/shared/url.js');
+
 const PREVIEW_PATH = 'preview/preview.html';
 const previewBase = () => chrome.runtime.getURL(PREVIEW_PATH);
 
@@ -87,7 +89,7 @@ async function openPreview(deviceId) {
   // não a própria prévia (evita carregar "chrome-extension://" dentro do frame).
   const activeIsPreview = !!(active && active.url && active.url.startsWith(previewBase()));
   let siteUrl = null;
-  if (active && active.url && /^https?:/i.test(active.url) && !activeIsPreview) {
+  if (active && active.url && dpIsHttpUrl(active.url) && !activeIsPreview) {
     siteUrl = active.url;
   }
 

@@ -383,7 +383,7 @@ function schemeFor(value) {
 function normalizeUrl(input) {
   const value = (input || '').trim();
   if (!value) return null;
-  if (/^https?:\/\//i.test(value)) return value;
+  if (dpIsHttpUrl(value)) return value;
   if (/^[\w-]+(\.[\w-]+)+([/:?#]|$)/.test(value) || value.startsWith('localhost')) {
     return schemeFor(value) + value;
   }
@@ -406,7 +406,7 @@ async function exitPreview() {
     try { await chrome.runtime.sendMessage({ type: 'reset-tab' }); } catch (_) {}
   }
   const url = state.currentUrl;
-  if (url && /^https?:/i.test(url)) {
+  if (dpIsHttpUrl(url)) {
     window.location.href = url;
   } else if (hasExtensionApis && myTabId != null) {
     try { await chrome.tabs.remove(myTabId); } catch (_) { try { window.close(); } catch (__) {} }
@@ -570,23 +570,48 @@ let fpsPollTimer = null;
 const MAX_REATTACH_TRIES = 6;
 
 // Sonda injetada no contexto real do site embutido: registra o tempo de cada
-// quadro (delta do requestAnimationFrame) num buffer. O painel lê esse buffer
-// por polling (Runtime.evaluate) e calcula FPS, 1% low e tempo de quadro — o
-// overhead dentro do site é mínimo (só um push por quadro).
-const FPS_PROBE_SRC =
-  '(function(){' +
-  'if(window.__dpFpsProbe)return;' +
-  'window.__dpFpsProbe=true;' +
-  'var last=performance.now();' +
-  'var buf=[];window.__dpFrames=buf;' +
-  'function loop(now){' +
-  'if(!window.__dpFpsProbe){window.__dpFrames=null;return;}' +
-  'var dt=now-last;last=now;' +
-  'if(dt>0&&dt<1000){buf.push(dt);if(buf.length>360)buf.shift();}' +
-  'requestAnimationFrame(loop);' +
-  '}' +
-  'requestAnimationFrame(loop);' +
-  '})();';
+// quadro (delta do requestAnimationFrame) e expõe window.__dpFpsStats(), que
+// calcula FPS, 1% low e tempo de quadro JÁ no site — o painel lê só 3 números
+// por polling, sem transferir o buffer inteiro a cada leitura. Escrita como
+// função (injetada via toString) para ter realce/lint em vez de string solta.
+function fpsProbe() {
+  if (window.__dpFpsProbe) return;
+  window.__dpFpsProbe = true;
+  var buf = [];
+  var last = performance.now();
+
+  function loop(now) {
+    if (!window.__dpFpsProbe) { window.__dpFpsStats = null; return; }
+    var dt = now - last;
+    last = now;
+    if (dt > 0 && dt < 1000) { buf.push(dt); if (buf.length > 360) buf.shift(); }
+    requestAnimationFrame(loop);
+  }
+
+  /* Janela curta (~500 ms) para o número "ao vivo"; janela longa (~3 s) para o
+     1% low — média dos ~1% piores quadros, que revela travadas que a média esconde. */
+  window.__dpFpsStats = function () {
+    if (!buf.length) return null;
+    var sum = 0, n = 0;
+    for (var i = buf.length - 1; i >= 0 && sum < 500; i--) { sum += buf[i]; n++; }
+    var avgMs = sum / n;
+    var lsum = 0, ln = 0;
+    for (var j = buf.length - 1; j >= 0 && lsum < 3000; j--) { lsum += buf[j]; ln++; }
+    var recent = buf.slice(buf.length - ln).sort(function (a, b) { return b - a; });
+    var worstN = Math.max(1, Math.round(recent.length * 0.01));
+    var wsum = 0;
+    for (var k = 0; k < worstN; k++) wsum += recent[k];
+    return {
+      fps: Math.round(1000 / avgMs),
+      low1: Math.round(1000 / (wsum / worstN)),
+      ms: Math.round(avgMs * 10) / 10
+    };
+  };
+
+  requestAnimationFrame(loop);
+}
+
+const FPS_PROBE_SRC = '(' + fpsProbe.toString() + ')();';
 
 function sendCdp(cmd, params) {
   return chrome.debugger.sendCommand(dbgTarget, cmd, params || {});
@@ -594,38 +619,19 @@ function sendCdp(cmd, params) {
 
 async function findFrameTarget() {
   const targets = await chrome.debugger.getTargets();
-  let t = targets.find((x) => x.type !== 'page' && x.url === state.currentUrl);
+  // Só iframes: o site embutido é sempre cross-origin com a extensão, logo é um
+  // OOPIF com target próprio. Filtrar por 'iframe' evita casar workers/outros
+  // alvos de mesma origem no fallback. (Subframes same-origin do site não viram
+  // target separado por site-isolation, então não há ambiguidade aqui.)
+  const frames = targets.filter((x) => x.type === 'iframe' && x.url);
+  let t = frames.find((x) => x.url === state.currentUrl);
   if (!t) {
     try {
       const origin = new URL(state.currentUrl).origin;
-      t = targets.find((x) => x.type !== 'page' && x.url && x.url.startsWith(origin));
+      t = frames.find((x) => x.url.startsWith(origin));
     } catch (_) {  }
   }
   return t || null;
-}
-
-// Estatísticas a partir dos tempos de quadro (ms): janela curta (~500 ms) para
-// o número "ao vivo"; janela longa (~3 s) para o 1% low — a média dos piores
-// ~1% dos quadros, que revela travadas que a média esconde.
-function fpsStats(deltas) {
-  if (!deltas || !deltas.length) return null;
-
-  let sum = 0, n = 0;
-  for (let i = deltas.length - 1; i >= 0 && sum < 500; i--) { sum += deltas[i]; n++; }
-  const avgMs = sum / n;
-
-  let lsum = 0, ln = 0;
-  for (let i = deltas.length - 1; i >= 0 && lsum < 3000; i--) { lsum += deltas[i]; ln++; }
-  const recent = deltas.slice(deltas.length - ln).sort((a, b) => b - a);
-  const worstN = Math.max(1, Math.round(recent.length * 0.01));
-  let wsum = 0;
-  for (let i = 0; i < worstN; i++) wsum += recent[i];
-
-  return {
-    fps: Math.round(1000 / avgMs),
-    low1: Math.round(1000 / (wsum / worstN)),
-    ms: Math.round(avgMs * 10) / 10
-  };
 }
 
 function startFpsPolling() {
@@ -634,11 +640,11 @@ function startFpsPolling() {
     if (!fpsOn || !dbgTarget) return;
     try {
       const res = await sendCdp('Runtime.evaluate', {
-        expression: 'JSON.stringify(window.__dpFrames||[])',
+        expression: 'window.__dpFpsStats ? window.__dpFpsStats() : null',
         returnByValue: true
       });
-      const raw = res && res.result ? res.result.value : null;
-      if (fpsOn) showFps(raw ? fpsStats(JSON.parse(raw)) : null);
+      const stats = res && res.result ? res.result.value : null;
+      if (fpsOn) showFps(stats);
     } catch (_) {  }
   }, 250);
 }
