@@ -85,8 +85,6 @@ async function clearRules(tabId) {
 async function openPreview(deviceId) {
   const [active] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
 
-  // Site atualmente em foco — só conta se for uma página real (http/https) e
-  // não a própria prévia (evita carregar "chrome-extension://" dentro do frame).
   const activeIsPreview = !!(active && active.url && active.url.startsWith(previewBase()));
   let siteUrl = null;
   if (active && active.url && dpIsHttpUrl(active.url) && !activeIsPreview) {
@@ -99,7 +97,7 @@ async function openPreview(deviceId) {
     await chrome.tabs.update(tab.id, { active: true });
     await chrome.windows.update(tab.windowId, { focused: true });
     try {
-      // Reaproveita a prévia já aberta e navega para o site em foco (se houver).
+
       await chrome.runtime.sendMessage({ type: 'set-device', deviceId, tabId: tab.id, url: siteUrl });
     } catch (_) {
       const query = `device=${encodeURIComponent(deviceId)}` +

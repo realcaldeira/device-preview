@@ -97,7 +97,11 @@ async function init() {
       : (deviceMap[last.deviceId] ? last.deviceId : categories[0].devices[0].id);
     state.currentUrl = params.get('url') || last.url || 'https://www.wikipedia.org/';
 
-    if (last.zoom === 'fit' || typeof last.zoom === 'number') state.zoom = last.zoom;
+    if (last.zoom === 'fit' ||
+        (typeof last.zoom === 'number' && isFinite(last.zoom) &&
+         last.zoom >= ZOOM_MIN && last.zoom <= ZOOM_MAX)) {
+      state.zoom = last.zoom;
+    }
     const keepOrientation = deviceId === last.deviceId ? last.orientation : null;
 
     await setDevice(deviceId, { navigate: true, orientation: keepOrientation });
@@ -141,8 +145,7 @@ function bindUiEvents() {
 
   els.back.addEventListener('click', () => {
     if (frameNavs < 2) return;
-    // history.back() reabre uma navegação no iframe, que o onNav abaixo vai
-    // recontar (frameNavs++). Descontamos 2 aqui para o saldo líquido ser -1.
+
     frameNavs -= 2;
     updateBackButton();
     history.back();
@@ -170,12 +173,14 @@ function bindUiEvents() {
 
   window.addEventListener('resize', () => { if (state.zoom === 'fit') applyZoom(); });
   window.addEventListener('pagehide', () => {
+
+    fpsOn = false;
     stopFpsPolling();
     clearTimeout(reattachTimer);
-    if (dbgTarget) { try { chrome.debugger.detach(dbgTarget); } catch (_) {} dbgTarget = null; }
+    reattachTimer = null;
+    fpsFrameId = null;
   });
 
-  // Não desperdiça leituras de FPS com a aba da prévia em segundo plano.
   document.addEventListener('visibilitychange', () => {
     if (!fpsOn) return;
     if (document.hidden) stopFpsPolling();
@@ -210,28 +215,6 @@ function bindExtensionEvents() {
       }
       setDevice(msg.deviceId, { navigate: true });
       sendResponse({ ok: true });
-    }
-  });
-
-  ensureDebuggerListeners();
-}
-
-let debuggerListenersReady = false;
-function ensureDebuggerListeners() {
-  if (debuggerListenersReady) return;
-  if (!chrome.debugger || !chrome.debugger.onDetach) return;
-  debuggerListenersReady = true;
-
-  chrome.debugger.onDetach.addListener((source, reason) => {
-    if (!dbgTarget || source.targetId !== dbgTarget.targetId) return;
-    if (reason === 'canceled_by_user') {
-      resetFpsState('Medição encerrada pelo aviso do Chrome');
-    } else if (fpsOn) {
-      // A sessão caiu (ex.: o iframe navegou). Esquece o alvo para a
-      // re-anexação refazer attach/enable do zero, sem reusar a sessão morta.
-      dbgTarget = null;
-      showFps(null);
-      scheduleReattach();
     }
   });
 }
@@ -400,8 +383,7 @@ function navigate(input) {
 }
 
 async function exitPreview() {
-  // Limpa as regras de User-Agent deste tab antes de sair (para o site abrir com
-  // o UA normal). O debugger, se ativo, é desanexado pelo handler de 'pagehide'.
+
   if (hasExtensionApis) {
     try { await chrome.runtime.sendMessage({ type: 'reset-tab' }); } catch (_) {}
   }
@@ -561,19 +543,14 @@ async function captureShot() {
 
 let fpsOn = false;
 let fpsBusy = false;
-let dbgTarget = null;
+let fpsFrameId = null;
 let reattachTimer = null;
 let reattachTries = 0;
 let fpsPollTimer = null;
+let pollInFlight = false;
 
-// Limite de re-anexações automáticas antes de desistir e avisar o usuário.
 const MAX_REATTACH_TRIES = 6;
 
-// Sonda injetada no contexto real do site embutido: registra o tempo de cada
-// quadro (delta do requestAnimationFrame) e expõe window.__dpFpsStats(), que
-// calcula FPS, 1% low e tempo de quadro JÁ no site — o painel lê só 3 números
-// por polling, sem transferir o buffer inteiro a cada leitura. Escrita como
-// função (injetada via toString) para ter realce/lint em vez de string solta.
 function fpsProbe() {
   if (window.__dpFpsProbe) return;
   window.__dpFpsProbe = true;
@@ -588,8 +565,6 @@ function fpsProbe() {
     requestAnimationFrame(loop);
   }
 
-  /* Janela curta (~500 ms) para o número "ao vivo"; janela longa (~3 s) para o
-     1% low — média dos ~1% piores quadros, que revela travadas que a média esconde. */
   window.__dpFpsStats = function () {
     if (!buf.length) return null;
     var sum = 0, n = 0;
@@ -611,41 +586,56 @@ function fpsProbe() {
   requestAnimationFrame(loop);
 }
 
-const FPS_PROBE_SRC = '(' + fpsProbe.toString() + ')();';
-
-function sendCdp(cmd, params) {
-  return chrome.debugger.sendCommand(dbgTarget, cmd, params || {});
-}
-
-async function findFrameTarget() {
-  const targets = await chrome.debugger.getTargets();
-  // Só iframes: o site embutido é sempre cross-origin com a extensão, logo é um
-  // OOPIF com target próprio. Filtrar por 'iframe' evita casar workers/outros
-  // alvos de mesma origem no fallback. (Subframes same-origin do site não viram
-  // target separado por site-isolation, então não há ambiguidade aqui.)
-  const frames = targets.filter((x) => x.type === 'iframe' && x.url);
-  let t = frames.find((x) => x.url === state.currentUrl);
-  if (!t) {
+async function findSiteFrameId() {
+  let frames;
+  try {
+    frames = await chrome.webNavigation.getAllFrames({ tabId: myTabId });
+  } catch (_) { frames = null; }
+  if (!frames) return null;
+  const cands = frames.filter(
+    (f) => f.parentFrameId === 0 && f.frameId !== 0 && /^https?:/i.test(f.url || '')
+  );
+  let f = cands.find((c) => c.url === state.currentUrl);
+  if (!f) {
     try {
       const origin = new URL(state.currentUrl).origin;
-      t = frames.find((x) => x.url.startsWith(origin));
+      f = cands.find((c) => c.url.startsWith(origin));
     } catch (_) {  }
   }
-  return t || null;
+  if (!f) f = cands[0];
+  return f ? f.frameId : null;
+}
+
+async function runInFrame(frameId, func) {
+  const out = await chrome.scripting.executeScript({
+    target: { tabId: myTabId, frameIds: [frameId] },
+    world: 'MAIN',
+    func
+  });
+  return out && out[0] ? out[0].result : null;
 }
 
 function startFpsPolling() {
   if (fpsPollTimer) return;
   fpsPollTimer = setInterval(async () => {
-    if (!fpsOn || !dbgTarget) return;
+
+    if (!fpsOn || fpsFrameId == null || pollInFlight) return;
+    pollInFlight = true;
     try {
-      const res = await sendCdp('Runtime.evaluate', {
-        expression: 'window.__dpFpsStats ? window.__dpFpsStats() : null',
-        returnByValue: true
-      });
-      const stats = res && res.result ? res.result.value : null;
-      if (fpsOn) showFps(stats);
-    } catch (_) {  }
+      const res = await runInFrame(fpsFrameId, () => ({
+        alive: !!window.__dpFpsProbe,
+        stats: window.__dpFpsStats ? window.__dpFpsStats() : null
+      }));
+      if (!fpsOn) return;
+
+      if (!res || !res.alive) scheduleReattach();
+      else showFps(res.stats);
+    } catch (_) {
+
+      if (fpsOn) scheduleReattach();
+    } finally {
+      pollInFlight = false;
+    }
   }, 250);
 }
 
@@ -655,68 +645,66 @@ function stopFpsPolling() {
   fpsPollTimer = null;
 }
 
-// Anexa o debugger ao iframe e injeta a sonda de FPS. Em re-anexações ao mesmo
-// alvo (ex.: SPA navegando), só re-injeta no documento atual — sem repetir o
-// enable nem o registro, que de outra forma se acumulariam no protocolo.
-async function attachAndApply() {
-  const target = await findFrameTarget();
-  if (!target) {
-    throw new Error('alvo do iframe não encontrado (aguarde o site carregar e tente de novo)');
-  }
-  const sameSession = !!(dbgTarget && dbgTarget.targetId === target.id);
-  dbgTarget = { targetId: target.id };
-  if (!sameSession) {
+const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function applyWithRetries() {
+  for (let i = 0; ; i++) {
     try {
-      if (!target.attached) await chrome.debugger.attach(dbgTarget, '1.3');
-      await sendCdp('Runtime.enable');
-      await sendCdp('Page.enable');
-      // Garante a sonda em navegações futuras deste alvo (registrado uma única vez).
-      try { await sendCdp('Page.addScriptToEvaluateOnNewDocument', { source: FPS_PROBE_SRC }); } catch (_) {}
-    } catch (_) {
-      // target.attached costuma significar DevTools/outra extensão já depurando:
-      // o attach é pulado e os comandos seguintes rejeitam. Reporta com clareza.
-      dbgTarget = null;
-      throw new Error('não foi possível depurar o site (feche o DevTools desta aba e tente de novo)');
+      await applyProbe();
+      return;
+    } catch (e) {
+      if (!fpsOn || e.code !== 'NO_TARGET' || i >= MAX_REATTACH_TRIES) throw e;
+      await delay(300);
+      if (!fpsOn) throw e;
     }
   }
-  // Injeta no documento atual (idempotente: a sonda se autoignora se já existe).
-  try { await sendCdp('Runtime.evaluate', { expression: FPS_PROBE_SRC }); } catch (_) {}
 }
 
-async function detachDebugger() {
-  if (!dbgTarget) return;
-  try { await chrome.debugger.detach(dbgTarget); } catch (_) {}
-  dbgTarget = null;
+function noTarget(msg) {
+  const err = new Error(msg);
+  err.code = 'NO_TARGET';
+  return err;
 }
 
-// "debugger" precisa ser uma permissão obrigatória (o Chrome não permite
-// torná-la opcional). Como já vem concedida na instalação, basta checar a API.
-function debuggerReady(reason) {
-  if (!chrome.debugger) {
-    toast('Recurso de depuração indisponível para ' + reason + '. Recarregue a extensão em chrome://extensions.');
+async function applyProbe() {
+  const frameId = await findSiteFrameId();
+  if (frameId == null) throw noTarget('frame do site não encontrado');
+  try {
+    await runInFrame(frameId, fpsProbe);
+  } catch (_) {
+
+    throw noTarget('frame do site não está pronto');
+  }
+
+  if (!fpsOn) {
+    try { await runInFrame(frameId, () => { window.__dpFpsProbe = false; }); } catch (_) {}
+    throw noTarget('cancelado');
+  }
+  fpsFrameId = frameId;
+}
+
+function scriptingReady(reason) {
+  if (!chrome.scripting) {
+    toast('Recurso de medição indisponível para ' + reason + '. Recarregue a extensão em chrome://extensions.');
     return false;
   }
   return true;
 }
 
-// Desfaz todo o estado do medidor (timers, alvo, UI) num só lugar. Usado pelos
-// caminhos de falha/desligamento involuntário; não tenta falar com o debugger
-// (nesses casos a sessão já caiu).
 function resetFpsState(message) {
   fpsOn = false;
   stopFpsPolling();
   clearTimeout(reattachTimer);
   reattachTimer = null;
   reattachTries = 0;
-  dbgTarget = null;
+  fpsFrameId = null;
   els.fpsMeter.classList.add('hidden');
   updateFpsButton();
   if (message) toast(message);
 }
 
 async function setFpsMeter(on) {
-  // fpsBusy serializa as transições: sem isso, um on→off durante o await do
-  // attach deixaria um setInterval órfão rodando com o botão em "off".
+
   if (on === fpsOn || fpsBusy) return;
   fpsBusy = true;
   try {
@@ -729,31 +717,39 @@ async function setFpsMeter(on) {
         toast('Carregue um site antes de medir o FPS.');
         return;
       }
-      if (!debuggerReady('o medidor de FPS')) return;
-      ensureDebuggerListeners();
+      if (!scriptingReady('o medidor de FPS')) return;
       fpsOn = true;
       reattachTries = 0;
       showFps(null);
       try {
-        await attachAndApply();
+        await applyWithRetries();
         startFpsPolling();
         toast('Medidor de FPS ativado');
       } catch (e) {
         fpsOn = false;
         stopFpsPolling();
         clearTimeout(reattachTimer);
+        reattachTimer = null;
         els.fpsMeter.classList.add('hidden');
-        await detachDebugger();
-        toast('Não foi possível medir o FPS: ' + e.message);
+        fpsFrameId = null;
+        const msg = e.code === 'NO_TARGET'
+          ? 'não foi possível acessar o conteúdo do site (ele pode bloquear exibição em iframe; recarregue a página e tente de novo)'
+          : e.message;
+        toast('Não foi possível medir o FPS: ' + msg);
       }
     } else {
       fpsOn = false;
       stopFpsPolling();
       clearTimeout(reattachTimer);
+      reattachTimer = null;
       els.fpsMeter.classList.add('hidden');
-      // Para o loop da sonda dentro do site antes de soltar o debugger.
-      try { await sendCdp('Runtime.evaluate', { expression: 'window.__dpFpsProbe=false' }); } catch (_) {}
-      await detachDebugger();
+
+      if (fpsFrameId != null) {
+        try {
+          await runInFrame(fpsFrameId, () => { window.__dpFpsProbe = false; });
+        } catch (_) {  }
+      }
+      fpsFrameId = null;
       toast('Medidor de FPS desativado');
     }
     updateFpsButton();
@@ -785,11 +781,12 @@ function showFps(stats) {
 }
 
 function scheduleReattach() {
-  clearTimeout(reattachTimer);
+  if (reattachTimer) return;
   reattachTimer = setTimeout(async () => {
+    reattachTimer = null;
     if (!fpsOn) return;
     try {
-      await attachAndApply();
+      await applyProbe();
       reattachTries = 0;
     } catch (_) {
       if (!fpsOn) return;
@@ -807,7 +804,9 @@ function renderClock() {
   const h = now.getHours();
   const m = String(now.getMinutes()).padStart(2, '0');
   const ios = device && device.platform === 'iOS';
-  els.sbTime.textContent = ios ? `${h}:${m}` : `${String(h).padStart(2, '0')}:${m}`;
+  els.sbTime.textContent = ios
+    ? `${h % 12 || 12}:${m}`
+    : `${String(h).padStart(2, '0')}:${m}`;
 }
 
 function startClock() {
