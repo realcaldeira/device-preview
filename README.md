@@ -14,7 +14,7 @@
 
 ---
 
-Extensão para **Chrome/Edge (Manifest V3)** que abre uma prévia fiel de qualquer página dentro de uma **moldura realista** — com notch, Dynamic Island, status bar, botões laterais, recortes de câmera e até chassi de TV com pedestal. Vai além do modo dispositivo do DevTools ao trocar o **User-Agent real** por aparelho e, opcionalmente, aplicar **emulação profunda** (UA via JavaScript, `devicePixelRatio` e eventos de toque).
+Extensão para **Chrome/Edge (Manifest V3)** que abre uma prévia fiel de qualquer página dentro de uma **moldura realista** — com notch, Dynamic Island, status bar, botões laterais, recortes de câmera e até chassi de TV com pedestal. Vai além do modo dispositivo do DevTools ao trocar o **User-Agent real** por aparelho e ainda **mede o desempenho (FPS)** do site embutido.
 
 ## ✨ Destaques
 
@@ -22,7 +22,7 @@ Extensão para **Chrome/Edge (Manifest V3)** que abre uma prévia fiel de qualqu
 - 🌐 **42 dispositivos** com specs reais (viewport, DPR físico e User-Agent) — telefones, tablets e TVs.
 - 🔄 **Gira** entre retrato e paisagem (recortes e botões migram de borda, como nos aparelhos reais).
 - 🪟 **Sites em iframe que normalmente bloqueiam** — remoção cirúrgica de `X-Frame-Options` / CSP apenas na aba da prévia.
-- 🔬 **Emulação profunda** opcional via `chrome.debugger` — fidelidade de DevTools em Android.
+- 📊 **Medidor de FPS** via `chrome.debugger` — FPS ao vivo, **1% low** (pior caso) e tempo de quadro do site embutido.
 - ⭐ **Favoritos** e **memória de estado** (zoom, tela cheia, esticar, orientação, último site/aparelho).
 - 📸 **Captura PNG** do mockup completo na resolução física do dispositivo.
 - 🌗 Tema **claro/escuro** da interface.
@@ -50,9 +50,10 @@ Na tela de prévia você pode:
 | ⛶ **Tela cheia** | Oculta a moldura e mantém só a tela do site, na resolução exata (proporção preservada). |
 | ↔️ **Esticar** | Preenche 100% da janela em largura e altura (distorce a proporção). |
 | 🔍 **Zoom** | − / + / Ajustar à janela. |
-| 🔬 **Emulação profunda** | UA via JavaScript, `devicePixelRatio` e toque reais no site. |
+| 📊 **FPS** | Mede o desempenho do site embutido: FPS ao vivo, 1% low e tempo de quadro. |
 | 📸 **Capturar** | PNG do mockup completo na resolução física do dispositivo. |
 | 🌗 **Tema** | Alterna claro/escuro da interface. |
+| 🚪 **Sair** | Fecha a prévia e volta ao site normal na mesma aba. |
 
 - ⭐ **Favoritos**: clique na estrela ao lado de um dispositivo para fixá-lo no topo do painel. A lista persiste entre sessões.
 - 💾 **Memória de estado**: a prévia retoma zoom, tela cheia, esticar e (ao reabrir o mesmo aparelho) a orientação usada por último. URL e dispositivo são lembrados quando a prévia é aberta sem parâmetros.
@@ -69,17 +70,17 @@ Na tela de prévia você pode:
 
 Cada dispositivo carrega `viewport`, `dpr` (resolução física), tipo de moldura e `User-Agent` reais — definidos em [`data/devices.json`](data/devices.json).
 
-## 🔬 Emulação profunda
+## 📊 Medidor de FPS
 
-O botão **Emulação profunda** anexa o protocolo de depuração do Chrome (`chrome.debugger`) **diretamente ao processo do iframe** (a interface da prévia não é afetada) e aplica:
+O botão **FPS** anexa o protocolo de depuração do Chrome (`chrome.debugger`) **diretamente ao processo do iframe** (a interface da prévia não é afetada) e injeta uma sonda que mede o tempo de cada quadro via `requestAnimationFrame`. O painel mostra, em tempo real:
 
-- `navigator.userAgent` e `navigator.userAgentData` do dispositivo (JavaScript, não só rede);
-- `devicePixelRatio` real do aparelho — imagens `srcset` passam a ser escolhidas corretamente;
-- **emulação de toque**: cliques viram eventos touch, e `@media (pointer: coarse)` / `(hover: none)` respondem como num celular.
+- **FPS ao vivo** — média dos quadros dos últimos ~0,5 s;
+- **1% low** — média dos ~1% piores quadros dos últimos ~3 s, que revela travadas que a média esconde;
+- **tempo de quadro** em milissegundos.
 
-Com isso, dispositivos **Android atingem a mesma fidelidade do modo dispositivo do DevTools** (o Chrome do Android usa o mesmo motor Blink). Para iOS e TVs a fidelidade aumenta, mas o motor continua sendo o Blink do desktop — bugs específicos de Safari/WebKit não aparecem.
+A cor muda por faixa (verde ≥ 50, amarelo ≥ 30, vermelho < 30). É uma medida do desempenho da *main thread* do site (jank de JavaScript/layout) — ótima para comparar páginas e detectar travadas. Não é o FPS do compositor/GPU, e o teto é o refresh do seu monitor.
 
-> ⚠️ Enquanto ativo, o Chrome exibe o aviso *"Device Preview começou a depurar este navegador"* (não há como ocultar) e a re-anexação é refeita a cada navegação entre sites diferentes. Desligue no mesmo botão para voltar ao modo leve.
+> ⚠️ Enquanto ativo, o Chrome exibe o aviso *"Device Preview começou a depurar este navegador"* (não há como ocultar) e a re-anexação é refeita a cada navegação entre sites diferentes. Desligue no mesmo botão para parar a medição.
 
 ## ⚙️ Como funciona
 
@@ -110,7 +111,7 @@ device-preview/
 
 ## ⚠️ Limitações conhecidas
 
-- **Sem** emulação profunda, o User-Agent é sobrescrito só **na camada de rede** (o `navigator.userAgent` via JS continua o do desktop) e o conteúdo renderiza com o DPR do seu monitor. Ative a emulação profunda para corrigir os dois.
+- O User-Agent é sobrescrito **na camada de rede** (cabeçalho HTTP); o `navigator.userAgent` via JavaScript continua o do desktop, e o conteúdo renderiza com o DPR do seu monitor.
 - O motor de renderização é sempre o **Blink** do seu Chrome: detalhes específicos de Safari/WebKit (iOS) e de navegadores de TV não são reproduzidos por nenhuma ferramenta desktop.
 - Sites com *frame-busting* via JavaScript (`if (top !== self) ...`) ainda podem se recusar a renderizar.
 - Logins que dependem de cookies `SameSite=Lax/Strict` podem falhar dentro do iframe.
