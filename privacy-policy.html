@@ -95,12 +95,12 @@
     monitorar, coletar ou exfiltrar qualquer informação.
   </p>
   <p>
-    O protocolo de depuração (<code>chrome.debugger</code>) é usado
+    A injeção de scripts (<code>chrome.scripting</code>) é usada
     <strong>exclusivamente</strong> pelo <em>medidor de FPS</em>: quando você ativa
-    esse recurso, a extensão anexa o protocolo à própria aba de prévia apenas para
-    medir os quadros por segundo do site exibido. Nenhum dado da página é lido,
-    armazenado ou transmitido — só a contagem de quadros. Enquanto o medidor está
-    ativo, o Chrome exibe um aviso de depuração; desligue o medidor para encerrá-lo.
+    esse recurso, a extensão injeta no frame do site uma pequena sonda que mede
+    apenas os quadros por segundo exibidos. Nenhum dado da página é lido,
+    armazenado ou transmitido — só a contagem de quadros. Desligue o medidor para
+    encerrar a medição.
   </p>
 
   <h2>Compartilhamento com terceiros</h2>
@@ -188,12 +188,11 @@
     <strong>not</strong> used to monitor, collect, or exfiltrate any information.
   </p>
   <p>
-    The debugger protocol (<code>chrome.debugger</code>) is used
+    Script injection (<code>chrome.scripting</code>) is used
     <strong>exclusively</strong> by the <em>FPS meter</em>: when you enable that
-    feature, the extension attaches the protocol to the preview tab itself only to
-    measure the frames per second of the displayed site. No page data is read,
-    stored, or transmitted — just the frame count. While the meter is active, Chrome
-    shows a debugging banner; turn the meter off to end it.
+    feature, the extension injects a small probe into the site's frame that only
+    measures the displayed frames per second. No page data is read, stored, or
+    transmitted — just the frame count. Turn the meter off to end the measurement.
   </p>
 
   <h2>Third-party sharing</h2>

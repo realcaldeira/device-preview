@@ -22,7 +22,7 @@ Extensão para **Chrome/Edge (Manifest V3)** que abre uma prévia fiel de qualqu
 - 🌐 **42 dispositivos** com specs reais (viewport, DPR físico e User-Agent) — telefones, tablets e TVs.
 - 🔄 **Gira** entre retrato e paisagem (recortes e botões migram de borda, como nos aparelhos reais).
 - 🪟 **Sites em iframe que normalmente bloqueiam** — remoção cirúrgica de `X-Frame-Options` / CSP apenas na aba da prévia.
-- 📊 **Medidor de FPS** via `chrome.debugger` — FPS ao vivo, **1% low** (pior caso) e tempo de quadro do site embutido.
+- 📊 **Medidor de FPS** via `chrome.scripting` — FPS ao vivo, **1% low** (pior caso) e tempo de quadro do site embutido.
 - ⭐ **Favoritos** e **memória de estado** (zoom, tela cheia, esticar, orientação, último site/aparelho).
 - 📸 **Captura PNG** do mockup completo na resolução física do dispositivo.
 - 🌗 Tema **claro/escuro** da interface.
@@ -72,7 +72,7 @@ Cada dispositivo carrega `viewport`, `dpr` (resolução física), tipo de moldur
 
 ## 📊 Medidor de FPS
 
-O botão **FPS** anexa o protocolo de depuração do Chrome (`chrome.debugger`) **diretamente ao processo do iframe** (a interface da prévia não é afetada) e injeta uma sonda que mede o tempo de cada quadro via `requestAnimationFrame`. O painel mostra, em tempo real:
+O botão **FPS** injeta, via `chrome.scripting` (no *world* MAIN), uma sonda **dentro do frame do site** (a interface da prévia não é afetada) que mede o tempo de cada quadro via `requestAnimationFrame`. O painel mostra, em tempo real:
 
 - **FPS ao vivo** — média dos quadros dos últimos ~0,5 s;
 - **1% low** — média dos ~1% piores quadros dos últimos ~3 s, que revela travadas que a média esconde;
@@ -80,7 +80,7 @@ O botão **FPS** anexa o protocolo de depuração do Chrome (`chrome.debugger`) 
 
 A cor muda por faixa (verde ≥ 50, amarelo ≥ 30, vermelho < 30). É uma medida do desempenho da *main thread* do site (jank de JavaScript/layout) — ótima para comparar páginas e detectar travadas. Não é o FPS do compositor/GPU, e o teto é o refresh do seu monitor.
 
-> ⚠️ Enquanto ativo, o Chrome exibe o aviso *"Device Preview começou a depurar este navegador"* (não há como ocultar) e a re-anexação é refeita a cada navegação entre sites diferentes. Desligue no mesmo botão para parar a medição.
+> ℹ️ A sonda é re-injetada automaticamente a cada navegação/recarga do site. Desligue no mesmo botão para parar a medição. Não há aviso de depuração do Chrome — a medição usa `chrome.scripting`, não o protocolo de depuração.
 
 ## ⚙️ Como funciona
 
