@@ -543,6 +543,7 @@ async function captureShot() {
 
 let fpsOn = false;
 let fpsBusy = false;
+let fpsPending = null;
 let fpsFrameId = null;
 let reattachTimer = null;
 let reattachTries = 0;
@@ -550,6 +551,7 @@ let fpsPollTimer = null;
 let pollInFlight = false;
 
 const MAX_REATTACH_TRIES = 6;
+const EXEC_TIMEOUT = 2000;
 
 function fpsProbe() {
   if (window.__dpFpsProbe) return;
@@ -606,12 +608,21 @@ async function findSiteFrameId() {
   return f ? f.frameId : null;
 }
 
+function withTimeout(promise, ms, onTimeout) {
+  let timer = null;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(onTimeout()), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 async function runInFrame(frameId, func) {
-  const out = await chrome.scripting.executeScript({
+  const exec = chrome.scripting.executeScript({
     target: { tabId: myTabId, frameIds: [frameId] },
     world: 'MAIN',
     func
   });
+  const out = await withTimeout(exec, EXEC_TIMEOUT, () => noTarget('tempo esgotado ao acessar o frame'));
   return out && out[0] ? out[0].result : null;
 }
 
@@ -643,19 +654,21 @@ function stopFpsPolling() {
   if (!fpsPollTimer) return;
   clearInterval(fpsPollTimer);
   fpsPollTimer = null;
+  pollInFlight = false;
 }
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function applyWithRetries() {
   for (let i = 0; ; i++) {
+    if (fpsCancelled()) throw cancelled();
     try {
       await applyProbe();
       return;
     } catch (e) {
-      if (!fpsOn || e.code !== 'NO_TARGET' || i >= MAX_REATTACH_TRIES) throw e;
+      if (fpsCancelled()) throw cancelled();
+      if (e.code !== 'NO_TARGET' || i >= MAX_REATTACH_TRIES) throw e;
       await delay(300);
-      if (!fpsOn) throw e;
     }
   }
 }
@@ -666,19 +679,28 @@ function noTarget(msg) {
   return err;
 }
 
+function cancelled() {
+  const err = new Error('cancelado');
+  err.code = 'CANCELLED';
+  return err;
+}
+
+function fpsCancelled() {
+  return !fpsOn || fpsPending === false;
+}
+
 async function applyProbe() {
   const frameId = await findSiteFrameId();
   if (frameId == null) throw noTarget('frame do site não encontrado');
   try {
     await runInFrame(frameId, fpsProbe);
   } catch (_) {
-
     throw noTarget('frame do site não está pronto');
   }
 
-  if (!fpsOn) {
+  if (fpsCancelled()) {
     try { await runInFrame(frameId, () => { window.__dpFpsProbe = false; }); } catch (_) {}
-    throw noTarget('cancelado');
+    throw cancelled();
   }
   fpsFrameId = frameId;
 }
@@ -704,9 +726,10 @@ function resetFpsState(message) {
 }
 
 async function setFpsMeter(on) {
-
-  if (on === fpsOn || fpsBusy) return;
+  if (fpsBusy) { fpsPending = on; return; }
+  if (on === fpsOn) return;
   fpsBusy = true;
+  fpsPending = null;
   try {
     if (on) {
       if (!hasExtensionApis) {
@@ -732,10 +755,12 @@ async function setFpsMeter(on) {
         reattachTimer = null;
         els.fpsMeter.classList.add('hidden');
         fpsFrameId = null;
-        const msg = e.code === 'NO_TARGET'
-          ? 'não foi possível acessar o conteúdo do site (ele pode bloquear exibição em iframe; recarregue a página e tente de novo)'
-          : e.message;
-        toast('Não foi possível medir o FPS: ' + msg);
+        if (e.code !== 'CANCELLED') {
+          const msg = e.code === 'NO_TARGET'
+            ? 'não foi possível acessar o conteúdo do site (ele pode bloquear exibição em iframe; recarregue a página e tente de novo)'
+            : e.message;
+          toast('Não foi possível medir o FPS: ' + msg);
+        }
       }
     } else {
       fpsOn = false;
@@ -755,6 +780,9 @@ async function setFpsMeter(on) {
     updateFpsButton();
   } finally {
     fpsBusy = false;
+    const next = fpsPending;
+    fpsPending = null;
+    if (next !== null && next !== fpsOn) setFpsMeter(next);
   }
 }
 
