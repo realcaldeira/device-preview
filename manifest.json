@@ -30,7 +30,7 @@
     "storage",
     "tabs",
     "webNavigation",
-    "debugger"
+    "scripting"
   ],
   "host_permissions": ["<all_urls>"]
 }

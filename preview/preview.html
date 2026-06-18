@@ -157,8 +157,12 @@
               <span class="cam"></span>
             </span>
 
-            <iframe id="viewport" src="about:blank" allowfullscreen
-                    allow="autoplay; fullscreen; encrypted-media; picture-in-picture; clipboard-write"></iframe>
+            <!-- local-network-access *: a partir do Chrome 142 (Local Network Access),
+                 um site público embutido só alcança localhost/rede local se o frame-pai
+                 conceder esta permission policy. Sem isso, dev servers locais (ex.: MFEs
+                 sobrescritos para localhost) não carregam dentro da prévia. -->
+            <iframe id="viewport" src="about:blank"
+                    allow="autoplay; fullscreen; encrypted-media; picture-in-picture; clipboard-write; local-network-access *"></iframe>
 
             <span class="screen-glare"></span>
             <span class="home-indicator"></span>
