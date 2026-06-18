@@ -97,7 +97,11 @@ async function init() {
       : (deviceMap[last.deviceId] ? last.deviceId : categories[0].devices[0].id);
     state.currentUrl = params.get('url') || last.url || 'https://www.wikipedia.org/';
 
-    if (last.zoom === 'fit' || typeof last.zoom === 'number') state.zoom = last.zoom;
+    if (last.zoom === 'fit' ||
+        (typeof last.zoom === 'number' && isFinite(last.zoom) &&
+         last.zoom >= ZOOM_MIN && last.zoom <= ZOOM_MAX)) {
+      state.zoom = last.zoom;
+    }
     const keepOrientation = deviceId === last.deviceId ? last.orientation : null;
 
     await setDevice(deviceId, { navigate: true, orientation: keepOrientation });
@@ -141,8 +145,7 @@ function bindUiEvents() {
 
   els.back.addEventListener('click', () => {
     if (frameNavs < 2) return;
-    // history.back() reabre uma navegação no iframe, que o onNav abaixo vai
-    // recontar (frameNavs++). Descontamos 2 aqui para o saldo líquido ser -1.
+
     frameNavs -= 2;
     updateBackButton();
     history.back();
@@ -170,9 +173,7 @@ function bindUiEvents() {
 
   window.addEventListener('resize', () => { if (state.zoom === 'fit') applyZoom(); });
   window.addEventListener('pagehide', () => {
-    // A aba está fechando: o iframe e sua sonda morrem junto. Zera todo o estado
-    // do medidor — inclusive fpsOn — para não retomar pela metade caso a página
-    // seja restaurada do bfcache (pagehide não é necessariamente terminal).
+
     fpsOn = false;
     stopFpsPolling();
     clearTimeout(reattachTimer);
@@ -180,7 +181,6 @@ function bindUiEvents() {
     fpsFrameId = null;
   });
 
-  // Não desperdiça leituras de FPS com a aba da prévia em segundo plano.
   document.addEventListener('visibilitychange', () => {
     if (!fpsOn) return;
     if (document.hidden) stopFpsPolling();
@@ -383,8 +383,7 @@ function navigate(input) {
 }
 
 async function exitPreview() {
-  // Limpa as regras de User-Agent deste tab antes de sair (para o site abrir com
-  // o UA normal). O estado do medidor de FPS é zerado pelo handler de 'pagehide'.
+
   if (hasExtensionApis) {
     try { await chrome.runtime.sendMessage({ type: 'reset-tab' }); } catch (_) {}
   }
@@ -550,14 +549,8 @@ let reattachTries = 0;
 let fpsPollTimer = null;
 let pollInFlight = false;
 
-// Limite de re-injeções automáticas antes de desistir e avisar o usuário.
 const MAX_REATTACH_TRIES = 6;
 
-// Sonda injetada no contexto real do site embutido (world MAIN): registra o
-// tempo de cada quadro (delta do requestAnimationFrame) e expõe
-// window.__dpFpsStats(), que calcula FPS, 1% low e tempo de quadro JÁ no site —
-// o painel lê só 3 números por polling, sem transferir o buffer inteiro a cada
-// leitura. Injetada como função (não string) via chrome.scripting.
 function fpsProbe() {
   if (window.__dpFpsProbe) return;
   window.__dpFpsProbe = true;
@@ -572,8 +565,6 @@ function fpsProbe() {
     requestAnimationFrame(loop);
   }
 
-  /* Janela curta (~500 ms) para o número "ao vivo"; janela longa (~3 s) para o
-     1% low — média dos ~1% piores quadros, que revela travadas que a média esconde. */
   window.__dpFpsStats = function () {
     if (!buf.length) return null;
     var sum = 0, n = 0;
@@ -595,10 +586,6 @@ function fpsProbe() {
   requestAnimationFrame(loop);
 }
 
-// Localiza o frameId do site embutido. O iframe do viewport é o único filho
-// direto do topo (parentFrameId 0) carregando http(s) — subframes do próprio
-// site (anúncios, widgets) têm o viewport como pai, não o topo. Casa pela URL
-// atual e cai para a origem/primeiro candidato em caso de redirect.
 async function findSiteFrameId() {
   let frames;
   try {
@@ -619,8 +606,6 @@ async function findSiteFrameId() {
   return f ? f.frameId : null;
 }
 
-// Executa uma função no contexto real (world MAIN) do frame do site e devolve
-// o valor de retorno dela. Lança se o frame sumiu/não é injetável.
 async function runInFrame(frameId, func) {
   const out = await chrome.scripting.executeScript({
     target: { tabId: myTabId, frameIds: [frameId] },
@@ -633,9 +618,7 @@ async function runInFrame(frameId, func) {
 function startFpsPolling() {
   if (fpsPollTimer) return;
   fpsPollTimer = setInterval(async () => {
-    // pollInFlight serializa os ticks: sob carga, um executeScript pode demorar
-    // mais que 250 ms — sem a guarda, as chamadas se acumulariam e poderiam
-    // pintar leituras fora de ordem.
+
     if (!fpsOn || fpsFrameId == null || pollInFlight) return;
     pollInFlight = true;
     try {
@@ -644,14 +627,11 @@ function startFpsPolling() {
         stats: window.__dpFpsStats ? window.__dpFpsStats() : null
       }));
       if (!fpsOn) return;
-      // Sonda ausente = o site navegou/recarregou e a levou junto: reinjeta.
-      // Distinguir isso de "sonda viva ainda sem dados" (stats null) evita o
-      // medidor ficar preso em "···" quando o frame troca de documento sem o
-      // executeScript chegar a lançar.
+
       if (!res || !res.alive) scheduleReattach();
       else showFps(res.stats);
     } catch (_) {
-      // Frame inacessível (em transição/removido): reencontra e re-injeta.
+
       if (fpsOn) scheduleReattach();
     } finally {
       pollInFlight = false;
@@ -667,10 +647,6 @@ function stopFpsPolling() {
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// O frame do site só fica injetável alguns instantes após o carregamento. Na
-// ativação, retentamos enquanto ele não aparece (mesmas tentativas do reattach)
-// em vez de falhar de cara. Aborta na hora se o usuário desligar o medidor no
-// meio, ou em falha dura (frame não injetável).
 async function applyWithRetries() {
   for (let i = 0; ; i++) {
     try {
@@ -684,28 +660,22 @@ async function applyWithRetries() {
   }
 }
 
-// Erro que sinaliza "frame ainda não pronto" — a retentativa sabe que vale
-// insistir (vs. um erro real, que propaga e desliga o medidor).
 function noTarget(msg) {
   const err = new Error(msg);
   err.code = 'NO_TARGET';
   return err;
 }
 
-// Localiza o frame do site e injeta a sonda no seu contexto real. A sonda é
-// idempotente (autoignora se já existe), então re-injetar em SPA/recarga é
-// seguro.
 async function applyProbe() {
   const frameId = await findSiteFrameId();
   if (frameId == null) throw noTarget('frame do site não encontrado');
   try {
     await runInFrame(frameId, fpsProbe);
   } catch (_) {
-    // Frame ainda não injetável (em transição de navegação): tratar como ausente.
+
     throw noTarget('frame do site não está pronto');
   }
-  // Se o medidor foi desligado durante o await da injeção, desfaz a sonda
-  // recém-criada para não deixar um requestAnimationFrame órfão rodando no site.
+
   if (!fpsOn) {
     try { await runInFrame(frameId, () => { window.__dpFpsProbe = false; }); } catch (_) {}
     throw noTarget('cancelado');
@@ -713,7 +683,6 @@ async function applyProbe() {
   fpsFrameId = frameId;
 }
 
-// Verifica a API de scripting (já concedida na instalação via permissão fixa).
 function scriptingReady(reason) {
   if (!chrome.scripting) {
     toast('Recurso de medição indisponível para ' + reason + '. Recarregue a extensão em chrome://extensions.');
@@ -722,9 +691,6 @@ function scriptingReady(reason) {
   return true;
 }
 
-// Desfaz todo o estado do medidor (timers, frame, UI) num só lugar. Usado pelos
-// caminhos de falha/desligamento involuntário; não tenta falar com o frame
-// (nesses casos a sonda já foi embora junto com a navegação).
 function resetFpsState(message) {
   fpsOn = false;
   stopFpsPolling();
@@ -738,8 +704,7 @@ function resetFpsState(message) {
 }
 
 async function setFpsMeter(on) {
-  // fpsBusy serializa as transições: sem isso, um on→off durante o await do
-  // attach deixaria um setInterval órfão rodando com o botão em "off".
+
   if (on === fpsOn || fpsBusy) return;
   fpsBusy = true;
   try {
@@ -778,7 +743,7 @@ async function setFpsMeter(on) {
       clearTimeout(reattachTimer);
       reattachTimer = null;
       els.fpsMeter.classList.add('hidden');
-      // Para o loop da sonda dentro do site (libera o requestAnimationFrame).
+
       if (fpsFrameId != null) {
         try {
           await runInFrame(fpsFrameId, () => { window.__dpFpsProbe = false; });
@@ -815,11 +780,6 @@ function showFps(stats) {
   els.fpsMeter.classList.remove('hidden');
 }
 
-// Reencontra o frame e re-injeta a sonda após uma navegação/recarga do site.
-// Debounced; NÃO reinicia o timer se já há um reattach pendente — o polling
-// (250 ms) chama isto a cada tick de falha e, com clearTimeout, o timer de
-// 350 ms nunca chegaria a disparar (250 < 350), deixando a re-injeção e o
-// eventual reset/aviso presos para sempre.
 function scheduleReattach() {
   if (reattachTimer) return;
   reattachTimer = setTimeout(async () => {
@@ -844,7 +804,9 @@ function renderClock() {
   const h = now.getHours();
   const m = String(now.getMinutes()).padStart(2, '0');
   const ios = device && device.platform === 'iOS';
-  els.sbTime.textContent = ios ? `${h}:${m}` : `${String(h).padStart(2, '0')}:${m}`;
+  els.sbTime.textContent = ios
+    ? `${h % 12 || 12}:${m}`
+    : `${String(h).padStart(2, '0')}:${m}`;
 }
 
 function startClock() {
