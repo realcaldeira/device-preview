@@ -39,6 +39,11 @@ let myTabId = null;
 
 let frameNavs = 0;
 
+let appliedUa = null;
+let appliedPlatform = null;
+let appliedMobile = null;
+let lastNavigatedUrl = null;
+
 const state = {
   orientation: 'portrait',
   zoom: 'fit',
@@ -77,15 +82,16 @@ async function init() {
   }
 
   try {
-    const tab = await chrome.tabs.getCurrent();
+    const [tab, stored, devicesRes] = await Promise.all([
+      chrome.tabs.getCurrent(),
+      chrome.storage.local.get(['theme', 'lastState']),
+      fetch(chrome.runtime.getURL('data/devices.json'))
+    ]);
     myTabId = tab ? tab.id : null;
-
-    const stored = await chrome.storage.local.get(['theme', 'lastState']);
     setTheme(stored.theme === 'light' ? 'light' : 'dark', false);
     const last = stored.lastState || {};
 
-    const res = await fetch(chrome.runtime.getURL('data/devices.json'));
-    categories = (await res.json()).categories;
+    categories = (await devicesRes.json()).categories;
     for (const cat of categories) for (const d of cat.devices) deviceMap[d.id] = d;
     populateSelect();
 
@@ -199,6 +205,7 @@ function bindExtensionEvents() {
       updateBackButton();
     }
     state.currentUrl = details.url;
+    lastNavigatedUrl = details.url;
     if (document.activeElement !== els.address) els.address.value = details.url;
     if (fpsOn) scheduleReattach();
     saveState();
@@ -234,7 +241,22 @@ async function setDevice(id, { navigate: doNavigate = false, orientation = null 
   const natural = device.width > device.height ? 'landscape' : 'portrait';
   state.orientation = orientation === 'portrait' || orientation === 'landscape' ? orientation : natural;
 
-  if (hasExtensionApis) {
+  // A moldura depende só das dimensões e do formato do aparelho, não do User-Agent.
+  // Desenha de imediato para a troca aparecer na hora, sem esperar o service worker.
+  buildFrame();
+  updateInfo();
+  renderClock();
+  applyZoom();
+  document.title = `Device Preview — ${device.name}`;
+
+  // Só reaplica o User-Agent quando ele muda de fato. Trocar entre aparelhos de mesmo
+  // UA (só muda o tamanho da tela) dispensa o round-trip ao service worker.
+  const uaChanged =
+    device.ua !== appliedUa ||
+    device.platform !== appliedPlatform ||
+    device.mobile !== appliedMobile;
+
+  if (hasExtensionApis && uaChanged) {
     try {
       const res = await chrome.runtime.sendMessage({
         type: 'apply-device',
@@ -244,23 +266,25 @@ async function setDevice(id, { navigate: doNavigate = false, orientation = null 
       });
       if (!res || !res.ok) {
         toast('Falha ao aplicar o User-Agent: ' + ((res && res.error) || 'sem resposta do service worker'));
+      } else {
+        appliedUa = device.ua;
+        appliedPlatform = device.platform;
+        appliedMobile = device.mobile;
       }
     } catch (e) {
       toast('Falha ao aplicar o User-Agent: ' + e.message);
     }
   }
 
-  buildFrame();
-  updateInfo();
-  renderClock();
-  applyZoom();
-
-  if (doNavigate && state.currentUrl) {
+  // Recarrega o site apenas quando o UA mudou (o request precisa ser refeito) ou quando o
+  // destino difere do que já está no iframe. Só redesenhar a moldura não exige recarregar.
+  if (doNavigate && state.currentUrl &&
+      (uaChanged || state.currentUrl !== lastNavigatedUrl)) {
     els.viewport.src = state.currentUrl;
     els.address.value = state.currentUrl;
+    lastNavigatedUrl = state.currentUrl;
   }
 
-  document.title = `Device Preview — ${device.name}`;
   saveState();
 }
 
@@ -377,6 +401,7 @@ function navigate(input) {
   const url = normalizeUrl(input);
   if (!url) return;
   state.currentUrl = url;
+  lastNavigatedUrl = url;
   els.address.value = url;
   els.viewport.src = url;
   saveState();
