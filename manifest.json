@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Device Preview",
+  "name": "DeviceDeck",
   "version": "1.4.1",
   "description": "Visualize qualquer site em resoluções reais de celulares, tablets e Smart TVs, com moldura de dispositivo realista.",
   "author": "Lucas Caldeira",
@@ -12,7 +12,7 @@
     "128": "icons/icon128.png"
   },
   "action": {
-    "default_title": "Device Preview — abrir painel de dispositivos",
+    "default_title": "DeviceDeck — abrir painel de dispositivos",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png"
