@@ -1,6 +1,6 @@
 <div align="center">
 
-# 📱 Device Preview
+# 📱 DeviceDeck
 
 **Visualize qualquer site em resoluções reais de celulares, tablets e Smart TVs — com moldura de dispositivo realista.**
 
@@ -31,7 +31,7 @@ Extensão para **Chrome/Edge (Manifest V3)** que abre uma prévia fiel de qualqu
 
 1. Abra `chrome://extensions` (ou `edge://extensions`).
 2. Ative o **Modo do desenvolvedor** (canto superior direito).
-3. Clique em **Carregar sem compactação** e selecione a pasta `device-preview/`.
+3. Clique em **Carregar sem compactação** e selecione a pasta `devicedeck/`.
 4. Clique no ícone da extensão para abrir o **side panel** com os dispositivos.
 
 > Requer **Chrome/Edge 116+** (uso de `side_panel`).
@@ -92,7 +92,7 @@ A cor muda por faixa (verde ≥ 50, amarelo ≥ 30, vermelho < 30). É uma medid
 ## 🗂️ Estrutura do projeto
 
 ```
-device-preview/
+devicedeck/
 ├── manifest.json               # Manifest V3
 ├── background/
 │   └── service-worker.js       # Regras de rede (UA + iframe), abertura da prévia, captura

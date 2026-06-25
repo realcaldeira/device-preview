@@ -260,7 +260,7 @@ async function setDevice(id, { navigate: doNavigate = false, orientation = null 
     els.address.value = state.currentUrl;
   }
 
-  document.title = `Device Preview — ${device.name}`;
+  document.title = `DeviceDeck — ${device.name}`;
   saveState();
 }
 
@@ -527,7 +527,7 @@ async function captureShot() {
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
     const link = document.createElement('a');
-    link.download = `device-preview_${device.id}_${physW}x${physH}.png`;
+    link.download = `devicedeck_${device.id}_${physW}x${physH}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
     toast(`Captura salva (${outW}×${outH} px)`);
