@@ -45,13 +45,15 @@ const state = {
   currentUrl: '',
   theme: 'dark',
   frameless: false,
-  stretch: false
+  stretch: false,
+  browser: true
 };
 
 const $ = (id) => document.getElementById(id);
 const els = {
   select: $('deviceSelect'), rotate: $('rotateBtn'),
-  frameless: $('framelessBtn'), stretch: $('stretchBtn'),
+  frameless: $('framelessBtn'), stretch: $('stretchBtn'), browser: $('browserBtn'),
+  bbHostTop: $('bbHostTop'), bbHostBot: $('bbHostBot'),
   back: $('backBtn'), reload: $('reloadBtn'), address: $('addressInput'), go: $('goBtn'),
   zoomIn: $('zoomInBtn'), zoomOut: $('zoomOutBtn'), zoomFit: $('zoomFitBtn'), zoomLabel: $('zoomLabel'),
   theme: $('themeBtn'), iconMoon: $('iconMoon'), iconSun: $('iconSun'), shot: $('shotBtn'),
@@ -59,6 +61,7 @@ const els = {
   exit: $('exitBtn'),
   stage: $('stage'), zoomBox: $('zoomBox'), mockup: $('mockup'),
   viewport: $('viewport'), sbTime: $('sbTime'),
+  vkb: $('vkb'), vkbKeys: $('vkbKeys'),
   infoName: $('infoName'), infoViewport: $('infoViewport'), infoDpr: $('infoDpr'),
   infoPhysical: $('infoPhysical'), infoUa: $('infoUa'), toast: $('toast')
 };
@@ -105,6 +108,7 @@ async function init() {
     const keepOrientation = deviceId === last.deviceId ? last.orientation : null;
 
     await setDevice(deviceId, { navigate: true, orientation: keepOrientation });
+    setBrowserUi(last.browser !== false, false);
     setFrameless(!!last.frameless, false);
     if (last.stretch) setStretch(true, false);
   } catch (e) {
@@ -142,6 +146,7 @@ function bindUiEvents() {
 
   els.frameless.addEventListener('click', () => setFrameless(!state.frameless, true));
   els.stretch.addEventListener('click', () => setStretch(!state.stretch, true));
+  els.browser.addEventListener('click', () => setBrowserUi(!state.browser, true));
 
   els.back.addEventListener('click', () => {
     if (frameNavs < 2) return;
@@ -171,6 +176,11 @@ function bindUiEvents() {
   els.fps.addEventListener('click', () => setFpsMeter(!fpsOn));
   els.exit.addEventListener('click', exitPreview);
 
+  window.addEventListener('message', onKbMessage);
+  els.vkb.addEventListener('pointerdown', onKbPointerDown);
+  window.addEventListener('pointerup', stopKbRepeat);
+  window.addEventListener('pointercancel', stopKbRepeat);
+
   window.addEventListener('resize', () => { if (state.zoom === 'fit') applyZoom(); });
   window.addEventListener('pagehide', () => {
 
@@ -179,6 +189,9 @@ function bindUiEvents() {
     clearTimeout(reattachTimer);
     reattachTimer = null;
     fpsFrameId = null;
+    stopKbRepeat();
+    clearTimeout(kbInjectTimer);
+    kbInjectTimer = null;
   });
 
   document.addEventListener('visibilitychange', () => {
@@ -200,10 +213,21 @@ function bindExtensionEvents() {
     }
     state.currentUrl = details.url;
     if (document.activeElement !== els.address) els.address.value = details.url;
+    renderBrowserHost();
     if (fpsOn) scheduleReattach();
     saveState();
   };
-  chrome.webNavigation.onCommitted.addListener(onNav);
+  const onCommitted = (details) => {
+    if (details.tabId === myTabId && details.frameId !== 0) {
+      kbInjectedFrames.delete(details.frameId);
+      if (details.url !== 'about:blank') {
+        if (details.parentFrameId === 0) hideKeyboard();
+        scheduleKbInject();
+      }
+    }
+    onNav(details);
+  };
+  chrome.webNavigation.onCommitted.addListener(onCommitted);
   chrome.webNavigation.onHistoryStateUpdated.addListener(onNav);
   chrome.webNavigation.onReferenceFragmentUpdated.addListener(onNav);
 
@@ -230,6 +254,7 @@ async function setDevice(id, { navigate: doNavigate = false, orientation = null 
   if (!next) return;
   device = next;
   els.select.value = id;
+  hideKeyboard();
 
   const natural = device.width > device.height ? 'landscape' : 'portrait';
   state.orientation = orientation === 'portrait' || orientation === 'landscape' ? orientation : natural;
@@ -258,10 +283,22 @@ async function setDevice(id, { navigate: doNavigate = false, orientation = null 
   if (doNavigate && state.currentUrl) {
     els.viewport.src = state.currentUrl;
     els.address.value = state.currentUrl;
+    renderBrowserHost();
   }
 
-  document.title = `DeviceDeck — ${device.name}`;
+  document.title = `Simulador Mobile — ${device.name}`;
   saveState();
+}
+
+function browserBarKind() {
+  const preset = FRAME_PRESETS[device.frame] || FRAME_PRESETS.punch;
+  if (preset.kind === 'tv') return 'none';
+  if (device.platform === 'iOS') {
+    const topBar = preset.kind === 'tablet' || device.frame === 'home' ||
+                   state.orientation === 'landscape';
+    return topBar ? 'safari-top' : 'safari-bottom';
+  }
+  return 'chrome';
 }
 
 function buildFrame() {
@@ -274,6 +311,7 @@ function buildFrame() {
   els.mockup.dataset.orientation = state.orientation;
   els.mockup.dataset.brand = brand;
   els.mockup.dataset.buttons = buttonLayout(brand);
+  els.mockup.dataset.browser = browserBarKind();
   els.mockup.dataset.platform =
     device.platform === 'iOS' ? 'ios' :
     device.platform === 'Android' ? 'android' :
@@ -357,6 +395,26 @@ function setStretch(on, persist) {
   }
 }
 
+function renderBrowserHost() {
+  let host = '';
+  try { host = new URL(state.currentUrl).hostname.replace(/^www\./, ''); } catch (_) {}
+  els.bbHostTop.textContent = host || '—';
+  els.bbHostBot.textContent = host || '—';
+}
+
+function setBrowserUi(on, persist) {
+  state.browser = on;
+  els.mockup.classList.toggle('no-browser', !on);
+  els.browser.classList.toggle('on', on);
+  els.browser.setAttribute('aria-pressed', String(on));
+  renderBrowserHost();
+  applyZoom();
+  if (persist) {
+    toast(on ? 'Barra do navegador visível' : 'Barra do navegador oculta');
+    saveState();
+  }
+}
+
 function schemeFor(value) {
   return /^(localhost|127\.0\.0\.1|\[::1\])(?=[:/?#]|$)/i.test(value) ||
          /^[\w-]+(\.[\w-]+)*\.local(?=[:/?#]|$)/i.test(value)
@@ -379,6 +437,7 @@ function navigate(input) {
   state.currentUrl = url;
   els.address.value = url;
   els.viewport.src = url;
+  renderBrowserHost();
   saveState();
 }
 
@@ -470,7 +529,8 @@ function saveState() {
         orientation: state.orientation,
         zoom: state.zoom,
         frameless: state.frameless,
-        stretch: state.stretch
+        stretch: state.stretch,
+        browser: state.browser
       }
     });
   }, 250);
@@ -479,6 +539,11 @@ function saveState() {
 async function captureShot() {
   if (!device) { toast('Escolha um dispositivo primeiro.'); return; }
   if (!hasExtensionApis) { toast('Captura disponível apenas pela extensão.'); return; }
+
+  if (kbVisible) {
+    hideKeyboard();
+    await delay(260);
+  }
 
   const before = els.mockup.getBoundingClientRect();
   const fits = before.top >= 0 && before.left >= 0 &&
@@ -527,7 +592,7 @@ async function captureShot() {
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
     const link = document.createElement('a');
-    link.download = `devicedeck_${device.id}_${physW}x${physH}.png`;
+    link.download = `simulador_${device.id}_${physW}x${physH}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
     toast(`Captura salva (${outW}×${outH} px)`);
@@ -588,15 +653,16 @@ function fpsProbe() {
   requestAnimationFrame(loop);
 }
 
-async function findSiteFrameId() {
-  let frames;
+async function allHttpFrames() {
+  let frames = null;
   try {
     frames = await chrome.webNavigation.getAllFrames({ tabId: myTabId });
-  } catch (_) { frames = null; }
-  if (!frames) return null;
-  const cands = frames.filter(
-    (f) => f.parentFrameId === 0 && f.frameId !== 0 && /^https?:/i.test(f.url || '')
-  );
+  } catch (_) {}
+  return (frames || []).filter((f) => f.frameId !== 0 && /^https?:/i.test(f.url || ''));
+}
+
+async function findSiteFrameId() {
+  const cands = (await allHttpFrames()).filter((f) => f.parentFrameId === 0);
   let f = cands.find((c) => c.url === state.currentUrl);
   if (!f) {
     try {
@@ -825,6 +891,325 @@ function scheduleReattach() {
       }
     }
   }, 350);
+}
+
+function kbProbe() {
+  if (window.__ddKbProbe) return;
+  window.__ddKbProbe = true;
+
+  var TEXT_TYPES = /^(text|search|email|url|tel|password|number)$/;
+
+  function modeOf(el) {
+    if (!el || el === document.body || el === document.documentElement) return null;
+    if (el.isContentEditable) return 'text';
+    var tag = el.tagName;
+    if (tag === 'TEXTAREA') return el.disabled || el.readOnly ? null : 'text';
+    if (tag !== 'INPUT' || el.disabled || el.readOnly) return null;
+    var type = (el.getAttribute('type') || 'text').toLowerCase();
+    if (!TEXT_TYPES.test(type)) return null;
+    var im = (el.getAttribute('inputmode') || '').toLowerCase();
+    if (im === 'numeric' || im === 'decimal') return 'number';
+    if (im === 'tel' || im === 'email' || im === 'url' || im === 'search') return im;
+    return type === 'password' ? 'text' : type;
+  }
+
+  function send(msg) { try { window.top.postMessage(msg, '*'); } catch (_) {} }
+
+  var fieldSeq = 0;
+  var frameTag = Math.random().toString(36).slice(2, 10);
+
+  function announce() {
+    var el = document.activeElement;
+    var mode = modeOf(el);
+    if (mode) {
+      if (!el.__ddKbField) el.__ddKbField = frameTag + ':' + (++fieldSeq);
+      send({
+        __simulador: 'kb-focus',
+        mode: mode,
+        multiline: el.tagName === 'TEXTAREA' || !!el.isContentEditable,
+        field: el.__ddKbField
+      });
+    }
+    return !!mode;
+  }
+
+  document.addEventListener('focusin', announce, true);
+  document.addEventListener('pointerdown', function () { setTimeout(announce, 0); }, true);
+  document.addEventListener('focusout', function () {
+    setTimeout(function () {
+      if (!modeOf(document.activeElement)) send({ __simulador: 'kb-blur' });
+    }, 0);
+  }, true);
+
+  function nativeSetValue(el, value) {
+    var proto = el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+    var desc = Object.getOwnPropertyDescriptor(proto, 'value');
+    if (desc && desc.set) desc.set.call(el, value); else el.value = value;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function insertText(el, text) {
+    var ok = false;
+    try { ok = document.execCommand('insertText', false, text); } catch (_) {}
+    if (!ok && 'value' in el) nativeSetValue(el, (el.value || '') + text);
+  }
+
+  function deleteBack(el) {
+    var ok = false;
+    try { ok = document.execCommand('delete', false); } catch (_) {}
+    if (!ok && 'value' in el && el.value) nativeSetValue(el, el.value.slice(0, -1));
+  }
+
+  window.addEventListener('message', function (e) {
+    var d = e.data;
+    if (!d || d.__simulador !== 'kb-key' || typeof d.key !== 'string') return;
+    var el = document.activeElement;
+    var mode = modeOf(el);
+    if (d.key === '__hide__') { if (mode) el.blur(); return; }
+    if (!mode) return;
+    if (d.key === '__reveal__') {
+      try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {}
+      return;
+    }
+    if (d.key === 'Backspace') { deleteBack(el); return; }
+    if (d.key === 'Enter') {
+      var opts = { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true };
+      var allowed = el.dispatchEvent(new KeyboardEvent('keydown', opts));
+      el.dispatchEvent(new KeyboardEvent('keyup', opts));
+      if (!allowed) return;
+      if (el.tagName === 'TEXTAREA' || el.isContentEditable) {
+        insertText(el, '\n');
+      } else if (el.form) {
+        try { el.form.requestSubmit ? el.form.requestSubmit() : el.form.submit(); } catch (_) {}
+      }
+      return;
+    }
+    insertText(el, d.key === 'Space' ? ' ' : d.key);
+  });
+
+  announce();
+}
+
+let kbMode = 'text';
+let kbMultiline = false;
+let kbShift = false;
+let kbPage = 'letters';
+let kbVisible = false;
+let kbFocusWin = null;
+let kbFieldId = null;
+let kbInjectTimer = null;
+let kbRepeatDelay = null;
+let kbRepeatTimer = null;
+const kbInjectedFrames = new Set();
+
+function kbSupported() {
+  if (!device) return false;
+  const preset = FRAME_PRESETS[device.frame] || FRAME_PRESETS.punch;
+  return preset.kind !== 'tv';
+}
+
+function scheduleKbInject() {
+  if (!hasExtensionApis || !chrome.scripting) return;
+  clearTimeout(kbInjectTimer);
+  kbInjectTimer = setTimeout(injectKbProbe, 350);
+}
+
+async function injectKbProbe() {
+  if (!hasExtensionApis || !chrome.scripting || myTabId == null || !kbSupported()) return;
+  const targets = (await allHttpFrames()).filter((f) => !kbInjectedFrames.has(f.frameId));
+  await Promise.allSettled(targets.map((f) =>
+    chrome.scripting.executeScript({
+      target: { tabId: myTabId, frameIds: [f.frameId] },
+      world: 'MAIN',
+      func: kbProbe
+    }).then(() => kbInjectedFrames.add(f.frameId))
+  ));
+}
+
+function kbBroadcast(msg) {
+  const post = (win, depth) => {
+    try { win.postMessage(msg, '*'); } catch (_) {}
+    if (depth <= 0) return;
+    let count = 0;
+    try { count = win.frames.length; } catch (_) {}
+    for (let i = 0; i < Math.min(count, 15); i++) {
+      try { post(win.frames[i], depth - 1); } catch (_) {}
+    }
+  };
+  if (els.viewport.contentWindow) post(els.viewport.contentWindow, 3);
+}
+
+function kbSend(msg) {
+  if (kbFocusWin) {
+    try {
+      kbFocusWin.postMessage(msg, '*');
+      return;
+    } catch (_) {}
+  }
+  kbBroadcast(msg);
+}
+
+function onKbMessage(e) {
+  const d = e.data;
+  if (!d || typeof d !== 'object') return;
+  if (d.__simulador === 'kb-focus') {
+    if (!kbSupported()) return;
+    const field = typeof d.field === 'string' ? d.field : null;
+    if (kbVisible && field && field === kbFieldId) {
+      if (e.source) kbFocusWin = e.source;
+      return;
+    }
+    kbFieldId = field;
+    showKeyboard(typeof d.mode === 'string' ? d.mode : 'text', !!d.multiline);
+    kbFocusWin = e.source || null;
+    setTimeout(() => kbSend({ __simulador: 'kb-key', key: '__reveal__' }), 260);
+  } else if (d.__simulador === 'kb-blur') {
+    if (!kbFocusWin || e.source === kbFocusWin) hideKeyboard();
+  }
+}
+
+function kbBottomRow() {
+  const extra = kbMode === 'email' ? '@' : kbMode === 'url' ? '/' : ',';
+  const enterLabel = kbMultiline ? '⏎'
+    : kbMode === 'search' ? 'buscar'
+    : kbMode === 'url' || kbMode === 'email' ? 'ir' : '⏎';
+  const toggle = kbPage === 'letters'
+    ? { key: '__sym1__', cls: 'vk-fn vk-w15', label: '?123' }
+    : { key: '__abc__', cls: 'vk-fn vk-w15', label: 'ABC' };
+  return [
+    toggle,
+    extra,
+    { key: 'Space', cls: 'vk-space', label: 'espaço' },
+    '.',
+    { key: 'Enter', cls: 'vk-fn vk-enter vk-w15', label: enterLabel }
+  ];
+}
+
+function kbRows() {
+  if (kbMode === 'number' || kbMode === 'tel') {
+    return [
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+      ['7', '8', '9'],
+      [kbMode === 'tel' ? '+' : ',', '0', { key: 'Backspace', cls: 'vk-fn', label: '⌫' }]
+    ];
+  }
+  if (kbPage === 'sym1' || kbPage === 'sym2') {
+    const top = kbPage === 'sym1'
+      ? [['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+         ['-', '/', ':', ';', '(', ')', 'R$', '&', '@', '"']]
+      : [['[', ']', '{', '}', '#', '%', '^', '*', '+', '='],
+         ['_', '\\', '|', '~', '<', '>', '€', '£', '¥', '•']];
+    return [
+      top[0],
+      top[1],
+      [{ key: kbPage === 'sym1' ? '__sym2__' : '__sym1__', cls: 'vk-fn vk-w15', label: kbPage === 'sym1' ? '#+=' : '123' },
+       '.', ',', '?', '!', "'",
+       { key: 'Backspace', cls: 'vk-fn vk-w15', label: '⌫' }],
+      kbBottomRow()
+    ];
+  }
+  return [
+    ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+    ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+    [{ key: '__shift__', cls: 'vk-fn vk-w15' + (kbShift ? ' vk-active' : ''), label: '⇧' },
+     'z', 'x', 'c', 'v', 'b', 'n', 'm',
+     { key: 'Backspace', cls: 'vk-fn vk-w15', label: '⌫' }],
+    kbBottomRow()
+  ];
+}
+
+function renderKeyboard() {
+  els.vkbKeys.textContent = '';
+  for (const row of kbRows()) {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'vkb-row';
+    for (const item of row) {
+      const def = typeof item === 'string' ? { key: item, cls: '', label: item } : item;
+      let label = def.label;
+      let key = def.key;
+      if (typeof item === 'string' && kbShift && kbPage === 'letters' && /^[a-z]$/.test(item)) {
+        label = key = item.toUpperCase();
+      }
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = ('vk-key ' + (def.cls || '')).trim();
+      btn.dataset.key = key;
+      btn.textContent = label;
+      rowEl.appendChild(btn);
+    }
+    els.vkbKeys.appendChild(rowEl);
+  }
+}
+
+function showKeyboard(mode, multiline) {
+  kbMode = mode === 'password' ? 'text' : mode;
+  kbMultiline = multiline;
+  kbPage = 'letters';
+  kbShift = false;
+  els.vkb.dataset.mode = kbMode === 'number' || kbMode === 'tel' ? 'pad' : 'text';
+  renderKeyboard();
+  els.vkb.classList.add('show');
+  els.vkb.setAttribute('aria-hidden', 'false');
+  kbVisible = true;
+}
+
+function hideKeyboard() {
+  kbFocusWin = null;
+  if (!kbVisible) return;
+  kbVisible = false;
+  stopKbRepeat();
+  els.vkb.classList.remove('show');
+  els.vkb.setAttribute('aria-hidden', 'true');
+}
+
+function pressKey(key) {
+  if (key === '__hide__') {
+    kbSend({ __simulador: 'kb-key', key: '__hide__' });
+    hideKeyboard();
+    return;
+  }
+  if (key === '__shift__') { kbShift = !kbShift; renderKeyboard(); return; }
+  if (key === '__sym1__') { kbPage = 'sym1'; kbShift = false; renderKeyboard(); return; }
+  if (key === '__sym2__') { kbPage = 'sym2'; renderKeyboard(); return; }
+  if (key === '__abc__') { kbPage = 'letters'; renderKeyboard(); return; }
+
+  kbSend({ __simulador: 'kb-key', key });
+
+  if (kbShift && kbPage === 'letters' && /^[A-Z]$/.test(key)) {
+    kbShift = false;
+    renderKeyboard();
+  }
+  if (key === 'Enter' && !kbMultiline) hideKeyboard();
+}
+
+let kbPressedBtn = null;
+
+function stopKbRepeat() {
+  clearTimeout(kbRepeatDelay);
+  kbRepeatDelay = null;
+  clearInterval(kbRepeatTimer);
+  kbRepeatTimer = null;
+  if (kbPressedBtn) {
+    kbPressedBtn.classList.remove('vk-pressed');
+    kbPressedBtn = null;
+  }
+}
+
+function onKbPointerDown(e) {
+  e.preventDefault();
+  const btn = e.target.closest('[data-key]');
+  if (!btn) return;
+  stopKbRepeat();
+  kbPressedBtn = btn;
+  btn.classList.add('vk-pressed');
+  const key = btn.dataset.key;
+  pressKey(key);
+  if (key === 'Backspace') {
+    kbRepeatDelay = setTimeout(() => {
+      kbRepeatTimer = setInterval(() => pressKey('Backspace'), 60);
+    }, 450);
+  }
 }
 
 function renderClock() {

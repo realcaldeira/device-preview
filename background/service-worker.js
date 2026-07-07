@@ -1,9 +1,24 @@
 importScripts('/shared/url.js');
 
 const PREVIEW_PATH = 'preview/preview.html';
+const SIDEPANEL_PATH = 'sidepanel/sidepanel.html';
 const previewBase = () => chrome.runtime.getURL(PREVIEW_PATH);
 
-chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
+chrome.sidePanel.setOptions({ enabled: false }).catch(() => {});
+
+function enablePanel(tabId) {
+  return chrome.sidePanel.setOptions({
+    tabId,
+    path: SIDEPANEL_PATH,
+    enabled: true
+  }).catch(() => {});
+}
+
+chrome.action.onClicked.addListener((tab) => {
+  if (!tab || typeof tab.id !== 'number') return;
+  enablePanel(tab.id);
+  chrome.sidePanel.open({ tabId: tab.id }).catch(() => {});
+});
 
 function ruleIds(tabId) {
   const base = (tabId % 100000000) * 10;
@@ -94,6 +109,7 @@ async function openPreview(deviceId) {
   const existing = await chrome.tabs.query({ url: previewBase() + '*' });
   if (existing.length) {
     const tab = existing[0];
+    await enablePanel(tab.id);
     await chrome.tabs.update(tab.id, { active: true });
     await chrome.windows.update(tab.windowId, { focused: true });
     try {
@@ -114,7 +130,8 @@ async function openPreview(deviceId) {
   if (active && typeof active.id === 'number' && !activeIsPreview) {
     await chrome.tabs.update(active.id, { url: previewUrl });
   } else {
-    await chrome.tabs.create({ url: previewUrl });
+    const created = await chrome.tabs.create({ url: previewUrl });
+    if (created && typeof created.id === 'number') await enablePanel(created.id);
   }
 }
 
