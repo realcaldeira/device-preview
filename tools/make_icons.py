@@ -1,10 +1,3 @@
-"""Gera os ícones PNG da extensão usando apenas a biblioteca padrão.
-
-Uso:
-    python3 tools/make_icons.py
-    # depois, redimensione com sips (macOS):
-    # for s in 16 32 48; do sips -z $s $s icons/icon128.png --out icons/icon$s.png; done
-"""
 import os
 import struct
 import zlib
@@ -23,7 +16,6 @@ def write_png(path, size, rows):
         f.write(png)
 
 def in_rrect(x, y, x0, y0, x1, y1, r):
-    """Ponto dentro de um retângulo de cantos arredondados."""
     if x < x0 or x > x1 or y < y0 or y > y1:
         return False
     dx = (x0 + r) - x if x < x0 + r else (x - (x1 - r) if x > x1 - r else 0)

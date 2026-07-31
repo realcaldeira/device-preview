@@ -1,14 +1,10 @@
-# macOS
 .DS_Store
 
-# Editores
 .vscode/
 .idea/
 *.swp
 
-# Python
 __pycache__/
 *.pyc
 
-# Pacote da Chrome Web Store
 *.zip

@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Device Preview",
-  "version": "1.4.3",
-  "description": "Visualize qualquer site em resoluções reais de celulares, tablets e Smart TVs, com moldura de dispositivo realista.",
+  "name": "Simulador Mobile: Celular, Tablet e Smart TV",
+  "short_name": "Simulador",
+  "version": "1.5.0",
+  "description": "Teste responsivo: visualize qualquer site no celular, tablet e Smart TV com moldura realista, teclado virtual, User-Agent e FPS.",
   "author": "Lucas Caldeira",
   "minimum_chrome_version": "116",
   "icons": {
@@ -12,7 +13,7 @@
     "128": "icons/icon128.png"
   },
   "action": {
-    "default_title": "Device Preview — abrir painel de dispositivos",
+    "default_title": "Simulador Mobile — abrir painel de dispositivos",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png"

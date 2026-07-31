@@ -1,13 +1,13 @@
 <div align="center">
 
-# 📱 Device Preview
+# 📱 Simulador Mobile — Celular, Tablet e Smart TV
 
-**Visualize qualquer site em resoluções reais de celulares, tablets e Smart TVs — com moldura de dispositivo realista.**
+**Teste responsivo de verdade: visualize qualquer site em resoluções reais de celulares, tablets e Smart TVs — com moldura de dispositivo realista e teclado virtual.**
 
 ![Manifest V3](https://img.shields.io/badge/Manifest-V3-blue)
 ![Chrome 116+](https://img.shields.io/badge/Chrome-116%2B-success)
 ![Edge](https://img.shields.io/badge/Edge-compatível-0078D7)
-![Versão](https://img.shields.io/badge/versão-1.1.0-orange)
+![Versão](https://img.shields.io/badge/versão-1.5.0-orange)
 ![Dispositivos](https://img.shields.io/badge/dispositivos-42-purple)
 
 </div>
@@ -21,6 +21,8 @@ Extensão para **Chrome/Edge (Manifest V3)** que abre uma prévia fiel de qualqu
 - 🖼️ **Moldura 100% CSS/SVG** — aço inox nos aparelhos Apple, alumínio fosco nos Android, recortes com lente de câmera, status bar por plataforma (iOS vs Android) com **hora e bateria reais** do computador.
 - 🌐 **42 dispositivos** com specs reais (viewport, DPR físico e User-Agent) — telefones, tablets e TVs.
 - 🔄 **Gira** entre retrato e paisagem (recortes e botões migram de borda, como nos aparelhos reais).
+- ⌨️ **Teclado virtual** — ao focar um campo de texto no site, o teclado sobe na tela como num aparelho real e **digita de verdade**: layout Gboard escuro no Android, teclado claro no iOS, página de símbolos e teclado numérico para campos `number`/`tel`.
+- 🌐 **Navegador dentro do mockup** — omnibox do Chrome no topo (Android), barra do Safari embaixo (iPhone) ou no topo (iPad e iPhone com botão home), sempre com o **domínio real** do site aberto; dá para ocultar num clique.
 - 🪟 **Sites em iframe que normalmente bloqueiam** — remoção cirúrgica de `X-Frame-Options` / CSP apenas na aba da prévia.
 - 📊 **Medidor de FPS** via `chrome.scripting` — FPS ao vivo, **1% low** (pior caso) e tempo de quadro do site embutido.
 - ⭐ **Favoritos** e **memória de estado** (zoom, tela cheia, esticar, orientação, último site/aparelho).
@@ -38,7 +40,7 @@ Extensão para **Chrome/Edge (Manifest V3)** que abre uma prévia fiel de qualqu
 
 ## 🚀 Como usar
 
-Com qualquer site aberto, clique no ícone da extensão e escolha um dispositivo no painel lateral — a prévia abre na própria aba atual, já com a URL que estava aberta. Uma aba de prévia já existente é reaproveitada, trocando apenas o dispositivo.
+Com qualquer site aberto, clique no ícone da extensão e escolha um dispositivo no painel lateral — o painel aparece **apenas na aba atual** e a prévia abre nessa mesma aba, já com a URL que estava aberta. Uma aba de prévia já existente é reaproveitada, trocando apenas o dispositivo.
 
 Na tela de prévia você pode:
 
@@ -47,6 +49,8 @@ Na tela de prévia você pode:
 | 🔗 **Trocar URL** | Barra de endereço (Enter ou "Ir"), com **recarregar** e **voltar**. |
 | 📱 **Trocar dispositivo** | Seletor da barra superior ou o side panel (a aba é reaproveitada). |
 | 🔄 **Girar** | Alterna entre retrato e paisagem. |
+| ⌨️ **Teclado virtual** | Clique num campo de texto do site: o teclado sobe na tela e as teclas digitam no campo (Enter envia formulários; ⌄ oculta). |
+| 🌐 **Barra do navegador** | Mostra/oculta a interface do Chrome/Safari do celular dentro do mockup, com o domínio real do site. |
 | ⛶ **Tela cheia** | Oculta a moldura e mantém só a tela do site, na resolução exata (proporção preservada). |
 | ↔️ **Esticar** | Preenche 100% da janela em largura e altura (distorce a proporção). |
 | 🔍 **Zoom** | − / + / Ajustar à janela. |
@@ -87,6 +91,7 @@ A cor muda por faixa (verde ≥ 50, amarelo ≥ 30, vermelho < 30). É uma medid
 - **User-Agent real por dispositivo**: ao selecionar um aparelho, o service worker cria regras de sessão do `chrome.declarativeNetRequest` restritas à aba da prévia (`condition.tabIds`), substituindo o cabeçalho `User-Agent` (e os client hints `sec-ch-ua-*`) em todas as requisições do iframe.
 - **Sites dentro de iframe**: a mesma técnica remove os cabeçalhos `X-Frame-Options` e `Content-Security-Policy` apenas nas respostas de `sub_frame` daquela aba, permitindo carregar sites que normalmente bloqueiam iframes.
 - **Moldura**: aro metálico em gradiente, recortes com lente de câmera e brilho azulado (notch, Dynamic Island, furo central/lateral, gota), status bar específica por plataforma com hora e bateria reais, indicador de gesto, botões físicos posicionados conforme cada marca (mute do iPhone, alert slider do OnePlus, power acima do volume no Pixel) e chassi de TV com chin, logo, LED de standby e pedestal. Em paisagem, recortes e botões migram de borda.
+- **Teclado virtual**: uma sonda injetada via `chrome.scripting` nos frames do site detecta o foco em campos editáveis e avisa a prévia por `postMessage`; as teclas inserem texto com comandos de edição nativos (compatível com React e afins) e o campo focado rola para ficar visível acima do teclado.
 - **Limpeza**: as regras de rede são removidas quando a aba da prévia é fechada ou navega para fora da extensão.
 
 ## 🗂️ Estrutura do projeto

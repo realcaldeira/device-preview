@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Device Preview</title>
+  <title>Simulador Mobile</title>
   <link rel="stylesheet" href="preview.css">
 </head>
 <body data-theme="dark">
@@ -28,6 +28,15 @@
           <path d="M3 12h18"/>
           <path d="M7 8l-4 4 4 4"/>
           <path d="M17 8l4 4-4 4"/>
+        </svg>
+      </button>
+      <button id="browserBtn" class="icon-btn" aria-pressed="true"
+              title="Barra do navegador: mostra a interface do Chrome/Safari do celular dentro do mockup">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="16" rx="2"/>
+          <path d="M3 9h18"/>
+          <circle cx="6" cy="6.5" r="0.5" fill="currentColor"/>
+          <circle cx="8.5" cy="6.5" r="0.5" fill="currentColor"/>
         </svg>
       </button>
     </div>
@@ -157,8 +166,47 @@
               <span class="cam"></span>
             </span>
 
+            <div class="browser-bar bb-top" id="bbTop">
+              <span class="bb-pill">
+                <svg class="bb-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="11" width="16" height="10" rx="2"/>
+                  <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+                </svg>
+                <span class="bb-host" id="bbHostTop">—</span>
+                <svg class="bb-reload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+                  <path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/>
+                </svg>
+              </span>
+              <span class="bb-tabs">1</span>
+              <span class="bb-menu"><i></i><i></i><i></i></span>
+            </div>
+
             <iframe id="viewport" src="about:blank"
                     allow="autoplay; fullscreen; encrypted-media; picture-in-picture; clipboard-write; local-network-access *"></iframe>
+
+            <div class="browser-bar bb-bottom" id="bbBottom">
+              <span class="bb-pill">
+                <span class="bb-aa">AA</span>
+                <span class="bb-host" id="bbHostBot">—</span>
+                <svg class="bb-reload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+                  <path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/>
+                </svg>
+              </span>
+              <span class="bb-nav">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                <svg class="bb-dim" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5Z"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="13" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg>
+              </span>
+            </div>
+
+            <div id="vkb" aria-hidden="true" data-mode="text">
+              <div class="vkb-bar">
+                <button type="button" data-key="__hide__" title="Ocultar teclado">⌄</button>
+              </div>
+              <div id="vkbKeys"></div>
+            </div>
 
             <span class="screen-glare"></span>
             <span class="home-indicator"></span>
