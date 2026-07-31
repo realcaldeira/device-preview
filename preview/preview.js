@@ -6,11 +6,25 @@ const FRAME_PRESETS = {
   'drop':       { padTop: 12, padSide: 12, padBottom: 20, radius: 34, screenRadius: 22, sb: 28, kind: 'phone' },
   'home':       { padTop: 80, padSide: 18, padBottom: 86, radius: 56, screenRadius: 4,  sb: 22, kind: 'phone' },
   'tablet':     { padTop: 32, padSide: 32, padBottom: 32, radius: 36, screenRadius: 12, sb: 26, kind: 'tablet' },
+  'laptop':     { padTop: 15, padSide: 11, padBottom: 26, radius: 16, screenRadius: 4,  sb: 0,  kind: 'laptop' },
   'tv':         { padTop: 10, padSide: 10, padBottom: 6,  radius: 12, screenRadius: 3,  sb: 0,  kind: 'tv' }
 };
 
+function kindOf(d) {
+  return (FRAME_PRESETS[d.frame] || FRAME_PRESETS.punch).kind;
+}
+
+// Celular e tablet: os aparelhos que se usam com o dedo e cujo teclado é o da
+// tela. Notebook e TV têm mouse/controle e teclado físico.
+function isHandheld() {
+  if (!device) return false;
+  const kind = kindOf(device);
+  return kind === 'phone' || kind === 'tablet';
+}
+
 function brandOf(d) {
   if (d.frame === 'tv') return 'tv';
+  if (d.frame === 'laptop') return d.platform === 'macOS' ? 'macbook' : 'laptop';
   if (d.platform === 'iOS') return d.frame === 'tablet' ? 'ipad' : 'iphone';
   if (d.platform === 'Windows') return 'surface';
   const prefix = d.id.split('-')[0];
@@ -23,7 +37,7 @@ function buttonLayout(brand) {
     case 'pixel': return 'pixel';
     case 'ipad': return 'ipad';
     case 'surface': return 'top';
-    case 'tv': return 'none';
+    case 'tv': case 'macbook': case 'laptop': return 'none';
     default: return 'right';
   }
 }
@@ -51,14 +65,17 @@ const state = {
   theme: 'dark',
   frameless: false,
   stretch: false,
-  browser: true
+  browser: true,
+  touch: true
 };
 
 const $ = (id) => document.getElementById(id);
 const els = {
   select: $('deviceSelect'), rotate: $('rotateBtn'),
   frameless: $('framelessBtn'), stretch: $('stretchBtn'), browser: $('browserBtn'),
+  touch: $('touchBtn'),
   bbHostTop: $('bbHostTop'), bbHostBot: $('bbHostBot'),
+  bdHost: $('bdHost'), bdTab: $('bdTab'),
   back: $('backBtn'), reload: $('reloadBtn'), address: $('addressInput'), go: $('goBtn'),
   zoomIn: $('zoomInBtn'), zoomOut: $('zoomOutBtn'), zoomFit: $('zoomFitBtn'), zoomLabel: $('zoomLabel'),
   theme: $('themeBtn'), iconMoon: $('iconMoon'), iconSun: $('iconSun'), shot: $('shotBtn'),
@@ -113,6 +130,7 @@ async function init() {
     }
     const keepOrientation = deviceId === last.deviceId ? last.orientation : null;
 
+    state.touch = last.touch !== false;
     await setDevice(deviceId, { navigate: true, orientation: keepOrientation });
     setBrowserUi(last.browser !== false, false);
     setFrameless(!!last.frameless, false);
@@ -146,6 +164,7 @@ function bindUiEvents() {
     state.orientation = state.orientation === 'portrait' ? 'landscape' : 'portrait';
     buildFrame();
     applyZoom();
+    pushDeviceCfg();
     toast(state.orientation === 'portrait' ? 'Retrato' : 'Paisagem');
     saveState();
   });
@@ -153,6 +172,7 @@ function bindUiEvents() {
   els.frameless.addEventListener('click', () => setFrameless(!state.frameless, true));
   els.stretch.addEventListener('click', () => setStretch(!state.stretch, true));
   els.browser.addEventListener('click', () => setBrowserUi(!state.browser, true));
+  els.touch.addEventListener('click', () => setTouch(!state.touch, true));
 
   els.back.addEventListener('click', () => {
     if (frameNavs < 2) return;
@@ -163,7 +183,7 @@ function bindUiEvents() {
   });
 
   els.reload.addEventListener('click', () => {
-    if (state.currentUrl) els.viewport.src = state.currentUrl;
+    if (state.currentUrl) loadViewport(state.currentUrl);
   });
 
   els.go.addEventListener('click', () => navigate(els.address.value));
@@ -305,19 +325,22 @@ async function setDevice(id, { navigate: doNavigate = false, orientation = null 
   // destino difere do que já está no iframe. Só redesenhar a moldura não exige recarregar.
   if (doNavigate && state.currentUrl &&
       (uaChanged || state.currentUrl !== lastNavigatedUrl)) {
-    els.viewport.src = state.currentUrl;
+    loadViewport(state.currentUrl);
     els.address.value = state.currentUrl;
     lastNavigatedUrl = state.currentUrl;
     renderBrowserHost();
   }
 
-
+  // Acerta o botão e, quando o site não foi recarregado, entrega as medidas do
+  // novo aparelho à sonda que já está rodando dentro dele.
+  setTouch(state.touch, false);
   saveState();
 }
 
 function browserBarKind() {
   const preset = FRAME_PRESETS[device.frame] || FRAME_PRESETS.punch;
   if (preset.kind === 'tv') return 'none';
+  if (preset.kind === 'laptop') return 'desktop';
   if (device.platform === 'iOS') {
     const topBar = preset.kind === 'tablet' || device.frame === 'home' ||
                    state.orientation === 'landscape';
@@ -340,13 +363,17 @@ function buildFrame() {
   els.mockup.dataset.platform =
     device.platform === 'iOS' ? 'ios' :
     device.platform === 'Android' ? 'android' :
-    device.platform === 'Windows' ? 'windows' : 'tv';
+    device.platform === 'Windows' ? 'windows' :
+    device.platform === 'macOS' ? 'macos' : 'tv';
 
   const natural = device.width > device.height ? 'landscape' : 'portrait';
   const rotated = state.orientation !== natural;
   const pads = rotated
     ? { top: preset.padSide, right: preset.padBottom, bottom: preset.padSide, left: preset.padTop }
     : { top: preset.padTop, right: preset.padSide, bottom: preset.padBottom, left: preset.padSide };
+
+  // Notebook não se gira: a tampa tem lado certo.
+  els.rotate.disabled = preset.kind === 'laptop';
 
   const s = els.mockup.style;
   s.setProperty('--vw', w + 'px');
@@ -425,6 +452,8 @@ function renderBrowserHost() {
   try { host = new URL(state.currentUrl).hostname.replace(/^www\./, ''); } catch (_) {}
   els.bbHostTop.textContent = host || '—';
   els.bbHostBot.textContent = host || '—';
+  els.bdHost.textContent = state.currentUrl || '—';
+  els.bdTab.textContent = host || 'Nova aba';
 }
 
 function setBrowserUi(on, persist) {
@@ -436,6 +465,75 @@ function setBrowserUi(on, persist) {
   applyZoom();
   if (persist) {
     toast(on ? 'Barra do navegador visível' : 'Barra do navegador oculta');
+    saveState();
+  }
+}
+
+// A sonda de content/device-probe.js só age no frame que carrega esta marca em
+// window.name — e a configuração viaja junto porque ela precisa ser lida antes
+// do primeiro script do site rodar.
+const DEVICE_TAG = '__sim_dev__';
+
+// O que o JavaScript do site espera ver em cada sistema: navigator.platform
+// (herança), o valor de User-Agent Client Hints e o fabricante do navegador.
+const PLATFORMS = {
+  iOS:     { nav: 'iPhone',        ua: 'iOS',     vendor: 'Apple Computer, Inc.' },
+  macOS:   { nav: 'MacIntel',      ua: 'macOS',   vendor: 'Apple Computer, Inc.' },
+  Android: { nav: 'Linux armv8l',  ua: 'Android', vendor: 'Google Inc.' },
+  Windows: { nav: 'Win32',         ua: 'Windows', vendor: 'Google Inc.' },
+  Linux:   { nav: 'Linux armv7l',  ua: 'Linux',   vendor: 'Google Inc.' }
+};
+
+function deviceCfg() {
+  const { w, h } = dims();
+  const p = PLATFORMS[device.platform] || PLATFORMS.Linux;
+  return {
+    ua: device.ua,
+    navPlatform: device.platform === 'iOS' && kindOf(device) === 'tablet' ? 'iPad' : p.nav,
+    uaPlatform: p.ua,
+    vendor: p.vendor,
+    mobile: !!device.mobile,
+    handheld: isHandheld(),
+    touch: state.touch && isHandheld(),
+    sw: w,
+    sh: h,
+    dpr: device.dpr,
+    landscape: state.orientation === 'landscape'
+  };
+}
+
+// O nome só entra no browsing context quando ele é criado: trocar o atributo de
+// um iframe já carregado não muda o window.name que a sonda lê. Por isso cada
+// navegação nasce em um elemento novo, já nomeado.
+function loadViewport(url) {
+  const old = els.viewport;
+  const next = old.cloneNode(false);
+  if (device) next.name = DEVICE_TAG + JSON.stringify(deviceCfg());
+  next.src = url;
+  old.replaceWith(next);
+  els.viewport = next;
+}
+
+// Atualização a quente: girar a tela ou trocar de aparelho de mesmo User-Agent
+// não recarrega o site, então a sonda recebe a configuração nova por mensagem.
+function pushDeviceCfg() {
+  if (!device) return;
+  frameBroadcast({ __simulador: 'dev-cfg', cfg: deviceCfg() });
+}
+
+function setTouch(on, persist) {
+  state.touch = on;
+  const supported = isHandheld();
+  els.touch.disabled = !supported;
+  els.touch.classList.toggle('on', on && supported);
+  els.touch.setAttribute('aria-pressed', String(on && supported));
+  pushDeviceCfg();
+  if (persist) {
+    toast(!supported
+      ? 'Este aparelho é usado com mouse — o toque fica desligado.'
+      : on
+        ? 'Toque ligado: arraste para rolar, como no aparelho de verdade.'
+        : 'Toque desligado: o site volta a receber eventos de mouse.');
     saveState();
   }
 }
@@ -462,7 +560,7 @@ function navigate(input) {
   state.currentUrl = url;
   lastNavigatedUrl = url;
   els.address.value = url;
-  els.viewport.src = url;
+  loadViewport(url);
   renderBrowserHost();
   saveState();
 }
@@ -556,7 +654,8 @@ function saveState() {
         zoom: state.zoom,
         frameless: state.frameless,
         stretch: state.stretch,
-        browser: state.browser
+        browser: state.browser,
+        touch: state.touch
       }
     });
   }, 250);
@@ -575,6 +674,15 @@ async function captureShot() {
   const fits = before.top >= 0 && before.left >= 0 &&
                before.bottom <= window.innerHeight && before.right <= window.innerWidth;
 
+  // O medidor de FPS fica sobreposto à tela do dispositivo, dentro da área que será
+  // recortada. Esconde durante a captura (e trava o polling, que senão o reexibiria
+  // no próximo tick) para que não apareça na imagem.
+  const fpsWasVisible = !els.fpsMeter.classList.contains('hidden');
+  if (fpsWasVisible) {
+    suppressFpsRender = true;
+    els.fpsMeter.classList.add('hidden');
+  }
+
   let restoreZoom = null;
   if (!fits) {
     restoreZoom = state.zoom;
@@ -582,6 +690,9 @@ async function captureShot() {
     applyZoom();
     els.stage.scrollTo(0, 0);
     await new Promise((r) => setTimeout(r, 180));
+  } else if (fpsWasVisible) {
+    // garante um repaint sem o medidor antes de capturar o quadro
+    await new Promise((r) => setTimeout(r, 50));
   }
 
   try {
@@ -625,6 +736,12 @@ async function captureShot() {
   } catch (e) {
     toast('Erro na captura: ' + e.message);
   } finally {
+    if (fpsWasVisible) {
+      suppressFpsRender = false;
+      // Só reexibe se o medidor ainda estiver ligado (o usuário pode tê-lo
+      // desligado durante a captura).
+      if (fpsOn) els.fpsMeter.classList.remove('hidden');
+    }
     if (restoreZoom !== null) {
       state.zoom = restoreZoom;
       applyZoom();
@@ -633,6 +750,7 @@ async function captureShot() {
 }
 
 let fpsOn = false;
+let suppressFpsRender = false;
 let fpsBusy = false;
 let fpsPending = null;
 let fpsFrameId = null;
@@ -888,6 +1006,7 @@ function fpsLevel(fps) {
 }
 
 function showFps(stats) {
+  if (suppressFpsRender) return;
   if (!stats) {
     els.fpsValue.textContent = '··· FPS';
     els.fpsDetail.textContent = '';
@@ -1028,12 +1147,6 @@ let kbRepeatDelay = null;
 let kbRepeatTimer = null;
 const kbInjectedFrames = new Set();
 
-function kbSupported() {
-  if (!device) return false;
-  const preset = FRAME_PRESETS[device.frame] || FRAME_PRESETS.punch;
-  return preset.kind !== 'tv';
-}
-
 function scheduleKbInject() {
   if (!hasExtensionApis || !chrome.scripting) return;
   clearTimeout(kbInjectTimer);
@@ -1041,7 +1154,7 @@ function scheduleKbInject() {
 }
 
 async function injectKbProbe() {
-  if (!hasExtensionApis || !chrome.scripting || myTabId == null || !kbSupported()) return;
+  if (!hasExtensionApis || !chrome.scripting || myTabId == null || !isHandheld()) return;
   const targets = (await allHttpFrames()).filter((f) => !kbInjectedFrames.has(f.frameId));
   await Promise.allSettled(targets.map((f) =>
     chrome.scripting.executeScript({
@@ -1052,7 +1165,7 @@ async function injectKbProbe() {
   ));
 }
 
-function kbBroadcast(msg) {
+function frameBroadcast(msg) {
   const post = (win, depth) => {
     try { win.postMessage(msg, '*'); } catch (_) {}
     if (depth <= 0) return;
@@ -1072,14 +1185,14 @@ function kbSend(msg) {
       return;
     } catch (_) {}
   }
-  kbBroadcast(msg);
+  frameBroadcast(msg);
 }
 
 function onKbMessage(e) {
   const d = e.data;
   if (!d || typeof d !== 'object') return;
   if (d.__simulador === 'kb-focus') {
-    if (!kbSupported()) return;
+    if (!isHandheld()) return;
     const field = typeof d.field === 'string' ? d.field : null;
     if (kbVisible && field && field === kbFieldId) {
       if (e.source) kbFocusWin = e.source;

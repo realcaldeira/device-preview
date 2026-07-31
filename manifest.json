@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Simulador Mobile: Celular, Tablet e Smart TV",
   "short_name": "Simulador",
-  "version": "1.5.0",
-  "description": "Teste responsivo: visualize qualquer site no celular, tablet e Smart TV com moldura realista, teclado virtual, User-Agent e FPS.",
+  "version": "1.6.0",
+  "description": "Teste responsivo: veja qualquer site no celular, tablet, notebook e TV com moldura realista, toque, teclado virtual e FPS.",
   "author": "Lucas Caldeira",
   "minimum_chrome_version": "116",
   "icons": {
@@ -25,6 +25,15 @@
   "background": {
     "service_worker": "background/service-worker.js"
   },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "all_frames": true,
+      "run_at": "document_start",
+      "world": "MAIN",
+      "js": ["content/device-probe.js"]
+    }
+  ],
   "permissions": [
     "sidePanel",
     "declarativeNetRequest",

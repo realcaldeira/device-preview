@@ -102,6 +102,16 @@
     armazenado ou transmitido — só a contagem de quadros. Desligue o medidor para
     encerrar a medição.
   </p>
+  <p>
+    A extensão também registra um <em>content script</em> para todas as páginas
+    (<code>content/device-probe.js</code>). Ele verifica em sua primeira linha se
+    o quadro em que está rodando é a tela de prévia da extensão e, em qualquer
+    outra página, <strong>encerra imediatamente sem fazer nada</strong>. Dentro da
+    prévia, ele apenas responde ao site com as características do aparelho
+    escolhido (User-Agent, tamanho de tela, densidade de pixels) e converte os
+    movimentos do mouse em toques. Ele não lê, não guarda e não envia conteúdo
+    das páginas.
+  </p>
 
   <h2>Compartilhamento com terceiros</h2>
   <p>
@@ -193,6 +203,15 @@
     feature, the extension injects a small probe into the site's frame that only
     measures the displayed frames per second. No page data is read, stored, or
     transmitted — just the frame count. Turn the meter off to end the measurement.
+  </p>
+  <p>
+    The extension also registers a content script for all pages
+    (<code>content/device-probe.js</code>). Its very first line checks whether the
+    frame it runs in is the extension's preview screen; on any other page it
+    <strong>exits immediately and does nothing</strong>. Inside the preview, it
+    only reports the selected device's characteristics to the site (User-Agent,
+    screen size, pixel density) and turns mouse movement into touch. It does not
+    read, store, or send page content.
   </p>
 
   <h2>Third-party sharing</h2>

@@ -35,6 +35,11 @@ const DP_ICONS = {
     '<rect x="4" y="2.5" width="16" height="19" rx="2.2"/>' +
     '<path d="M10.8 18.8h2.4" stroke-linecap="round"/></svg>',
 
+  'laptop':
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' +
+    '<rect x="4" y="4.5" width="16" height="11" rx="1.6"/>' +
+    '<path d="M2 18.5h20M10.5 18.5h3" stroke-linecap="round"/></svg>',
+
   'tv':
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' +
     '<rect x="2.5" y="4" width="19" height="12.5" rx="1.6"/>' +

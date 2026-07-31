@@ -1,14 +1,14 @@
 <div align="center">
 
-# 📱 Simulador Mobile — Celular, Tablet e Smart TV
+# 📱 Simulador Mobile — Celular, Tablet, Notebook e Smart TV
 
-**Teste responsivo de verdade: visualize qualquer site em resoluções reais de celulares, tablets e Smart TVs — com moldura de dispositivo realista e teclado virtual.**
+**Teste responsivo de verdade: visualize qualquer site em resoluções reais de celulares, tablets, notebooks e Smart TVs — com moldura de dispositivo realista, toque real e teclado virtual.**
 
 ![Manifest V3](https://img.shields.io/badge/Manifest-V3-blue)
 ![Chrome 116+](https://img.shields.io/badge/Chrome-116%2B-success)
 ![Edge](https://img.shields.io/badge/Edge-compatível-0078D7)
-![Versão](https://img.shields.io/badge/versão-1.5.0-orange)
-![Dispositivos](https://img.shields.io/badge/dispositivos-42-purple)
+![Versão](https://img.shields.io/badge/versão-1.6.0-orange)
+![Dispositivos](https://img.shields.io/badge/dispositivos-50-purple)
 
 </div>
 
@@ -19,7 +19,10 @@ Extensão para **Chrome/Edge (Manifest V3)** que abre uma prévia fiel de qualqu
 ## ✨ Destaques
 
 - 🖼️ **Moldura 100% CSS/SVG** — aço inox nos aparelhos Apple, alumínio fosco nos Android, recortes com lente de câmera, status bar por plataforma (iOS vs Android) com **hora e bateria reais** do computador.
-- 🌐 **42 dispositivos** com specs reais (viewport, DPR físico e User-Agent) — telefones, tablets e TVs.
+- 🌐 **50 dispositivos** com specs reais (viewport, DPR físico e User-Agent) — telefones, tablets, notebooks e TVs.
+- 👆 **Toque de verdade** — em celular e tablet o site recebe eventos de toque no lugar do mouse: arrastar rola a página (com inércia), o ponteiro vira um dedo e a detecção `pointer: coarse` passa a valer.
+- 💻 **Notebooks** — MacBook e notebooks Windows/Chromebook com tampa, base e a barra do navegador de desktop (abas, semáforo do macOS ou botões de janela).
+- 🕵️ **Identidade do aparelho no JavaScript** — `navigator.userAgent`, `platform`, `maxTouchPoints`, `screen` e `devicePixelRatio` respondem como no aparelho, já no primeiro script da página.
 - 🔄 **Gira** entre retrato e paisagem (recortes e botões migram de borda, como nos aparelhos reais).
 - ⌨️ **Teclado virtual** — ao focar um campo de texto no site, o teclado sobe na tela como num aparelho real e **digita de verdade**: layout Gboard escuro no Android, teclado claro no iOS, página de símbolos e teclado numérico para campos `number`/`tel`.
 - 🌐 **Navegador dentro do mockup** — omnibox do Chrome no topo (Android), barra do Safari embaixo (iPhone) ou no topo (iPad e iPhone com botão home), sempre com o **domínio real** do site aberto; dá para ocultar num clique.
@@ -101,12 +104,14 @@ device-preview/
 ├── manifest.json               # Manifest V3
 ├── background/
 │   └── service-worker.js       # Regras de rede (UA + iframe), abertura da prévia, captura
+├── content/
+│   └── device-probe.js         # Identidade do aparelho e eventos de toque dentro do site
 ├── sidepanel/
 │   └── sidepanel.html/.css/.js # Painel lateral com os dispositivos por categoria
 ├── preview/
 │   └── preview.html/.css/.js   # Mockup com moldura, status bar e controles
 ├── data/
-│   └── devices.json            # 42 dispositivos com specs reais (viewport, DPR, UA)
+│   └── devices.json            # 50 dispositivos com specs reais (viewport, DPR, UA)
 ├── shared/
 │   └── icons.js                # Silhuetas SVG por tipo de moldura
 ├── icons/                      # Ícones PNG da extensão
@@ -116,7 +121,8 @@ device-preview/
 
 ## ⚠️ Limitações conhecidas
 
-- O User-Agent é sobrescrito **na camada de rede** (cabeçalho HTTP); o `navigator.userAgent` via JavaScript continua o do desktop, e o conteúdo renderiza com o DPR do seu monitor.
+- Regras `@media (hover: hover)` / `(pointer: fine)` escritas na **folha de estilo** do site continuam sendo avaliadas pelo Chrome com os valores do desktop — a sonda cobre o `matchMedia` do JavaScript, mas só o protocolo de depuração (que deixa a faixa de "navegador sendo depurado" na aba) muda o motor de CSS.
+- A identidade do aparelho (User-Agent, tela, DPR, toque) vale no **frame principal** do site; iframes de terceiros dentro dele continuam vendo o desktop.
 - O motor de renderização é sempre o **Blink** do seu Chrome: detalhes específicos de Safari/WebKit (iOS) e de navegadores de TV não são reproduzidos por nenhuma ferramenta desktop.
 - Sites com *frame-busting* via JavaScript (`if (top !== self) ...`) ainda podem se recusar a renderizar.
 - Logins que dependem de cookies `SameSite=Lax/Strict` podem falhar dentro do iframe.

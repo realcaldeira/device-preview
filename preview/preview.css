@@ -609,6 +609,120 @@ body {
   box-shadow: 0 0 7px 1.5px rgba(52, 211, 153, 0.75);
 }
 
+/* ---------------------------------------------------------------- notebook */
+
+[data-kind="laptop"] .device-frame {
+  background: linear-gradient(165deg, #23262c 0%, #101318 60%, #1b1e24 100%);
+  box-shadow:
+    0 34px 70px rgba(0, 0, 0, 0.5),
+    0 10px 24px rgba(0, 0, 0, 0.38);
+}
+[data-kind="laptop"] .device-frame::before {
+  padding: 2px;
+  background: linear-gradient(160deg, #9aa1ac, #3a3e46 45%, #7c828d 80%, #2c3037);
+  opacity: 0.55;
+}
+[data-brand="macbook"] .device-frame {
+  background: linear-gradient(165deg, #d9dbdf 0%, #b8bcc2 55%, #cdd0d5 100%);
+}
+[data-brand="macbook"] .device-frame::before {
+  background: linear-gradient(160deg, #ffffff, #9fa4ab 40%, #f1f2f4 70%, #8d939b);
+  opacity: 0.75;
+}
+/* A tela do notebook é envolvida por um bezel preto, não pelo alumínio da tampa. */
+[data-kind="laptop"] .screen { outline: 6px solid #0a0b0e; }
+
+/* Câmera no bezel superior. */
+[data-kind="laptop"] .front-cam {
+  display: block;
+  position: absolute;
+  top: calc(var(--pad-top, 15px) / 2 - 2px);
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 32%, #34507c 0%, #1b2a45 40%, #060a13 75%);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.lid-logo { display: none; }
+[data-kind="laptop"] .lid-logo {
+  display: block;
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--pad-bottom, 26px) / 2 - 6px);
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  padding-left: 0.3em;
+  text-transform: uppercase;
+  color: #565c66;
+}
+[data-brand="macbook"] .lid-logo { color: #7d828a; }
+[data-brand="macbook"] .lid-logo::after { content: 'MacBook'; }
+[data-brand="laptop"] .lid-logo::after { content: 'Notebook'; }
+
+/* Base vista de frente: dobradiça, corpo em leve perspectiva e o recorte de
+   abertura. É mais larga que a tampa — o respiro no #mockup a mantém dentro da
+   área que a captura de tela recorta. */
+.laptop-deck { display: none; position: relative; }
+#mockup[data-kind="laptop"] { padding: 0 14px; }
+[data-kind="laptop"] .laptop-deck {
+  display: block;
+  width: calc(100% + 28px);
+  height: clamp(22px, calc(var(--vw, 1440px) * 0.023), 42px);
+  margin-top: -1px;
+}
+.deck-hinge {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  height: 18%;
+  background: linear-gradient(180deg, #0b0e12, #262a31);
+}
+[data-brand="macbook"] .deck-hinge { background: linear-gradient(180deg, #6f747c, #bcc0c5); }
+
+.deck-body {
+  position: absolute;
+  inset: 14% 0 0 0;
+  background: linear-gradient(180deg, #3a3f47 0%, #23272e 38%, #14171c 100%);
+  clip-path: polygon(1.2% 0, 98.8% 0, 100% 100%, 0 100%);
+  border-radius: 0 0 8px 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+[data-brand="macbook"] .deck-body {
+  background: linear-gradient(180deg, #e2e4e7 0%, #c2c6cb 40%, #9ea3aa 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Reentrância central por onde a tampa é aberta. */
+.deck-lip {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 15%;
+  height: 42%;
+  border-radius: 0 0 40% 40%;
+  background: rgba(0, 0, 0, 0.42);
+}
+[data-brand="macbook"] .deck-lip { background: rgba(0, 0, 0, 0.16); }
+
+/* Recorte, botões físicos e indicador já nascem ocultos; a barra de status do
+   celular é a única que precisa sumir aqui. */
+[data-kind="laptop"] .status-bar { display: none; }
+
+[data-kind="laptop"] .ground { margin-top: 10px; width: 84%; max-width: none; }
+
+#mockup.frameless .laptop-deck,
+#mockup.frameless .lid-logo { display: none !important; }
+[data-kind="laptop"].frameless .screen { outline: 0; }
+
 .tv-stand { display: none; flex-direction: column; align-items: center; }
 [data-kind="tv"] .tv-stand { display: flex; }
 
@@ -697,10 +811,10 @@ body[data-theme="light"] .ground { opacity: 0.5; }
 #infoUa { overflow: hidden; text-overflow: ellipsis; }
 
 #fpsMeter {
-  position: fixed;
-  top: 56px;
-  right: 18px;
-  z-index: 90;
+  position: absolute;
+  top: calc(var(--sb-h, 0px) + 8px);
+  right: 8px;
+  z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -730,7 +844,9 @@ body[data-theme="light"] .ground { opacity: 0.5; }
 #fpsMeter[data-level="good"] #fpsValue { color: #34d399; }
 #fpsMeter[data-level="ok"]   #fpsValue { color: #fbbf24; }
 #fpsMeter[data-level="bad"]  #fpsValue { color: #f87171; }
-body.frameless #fpsMeter { top: 44px; }
+#mockup.frameless #fpsMeter { top: 8px; }
+/* No notebook a barra do navegador é alta: o medidor desce para não cobri-la. */
+[data-browser="desktop"] #fpsMeter { top: calc(var(--bb-h, 0px) + 8px); }
 
 .browser-bar {
   display: none;
@@ -767,6 +883,7 @@ body.frameless #fpsMeter { top: 44px; }
 [data-browser="chrome"] { --bb-h: 52px; }
 [data-browser="safari-top"] { --bb-h: 50px; }
 [data-browser="safari-bottom"] { --bb-h: 92px; }
+[data-browser="desktop"] { --bb-h: 76px; }
 #mockup.no-browser, #mockup.frameless { --bb-h: 0px; }
 
 .bb-top {
@@ -847,6 +964,114 @@ body.frameless #fpsMeter { top: 44px; }
 }
 [data-browser="safari-top"] .bb-top .bb-tabs { border-color: #111318; }
 [data-browser="safari-top"] .bb-top .bb-menu i { background: #111318; }
+
+/* ------------------------------------------- barra do navegador de notebook */
+
+.bb-desktop {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  height: 76px;
+  background: #202124;
+  color: #e8eaed;
+}
+[data-browser="desktop"] .bb-desktop { display: flex; }
+
+.bd-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 10px;
+}
+.bd-traffic { display: none; gap: 6px; flex: none; padding-right: 4px; }
+.bd-traffic i { width: 11px; height: 11px; border-radius: 50%; background: #4a4d52; }
+[data-brand="macbook"] .bd-traffic { display: flex; }
+[data-brand="macbook"] .bd-traffic i:nth-child(1) { background: #ff5f57; }
+[data-brand="macbook"] .bd-traffic i:nth-child(2) { background: #febc2e; }
+[data-brand="macbook"] .bd-traffic i:nth-child(3) { background: #28c840; }
+
+.bd-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 240px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px 8px 0 0;
+  background: #35363a;
+  font-size: 12px;
+}
+.bd-favicon {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #6ea8fe, #3b82f6);
+}
+.bd-tab-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bd-close { flex: none; opacity: 0.6; font-size: 14px; line-height: 1; }
+.bd-plus { flex: none; opacity: 0.75; font-size: 15px; line-height: 1; padding: 0 4px; }
+
+.bd-winbtns { display: flex; gap: 14px; flex: none; margin-left: auto; padding-right: 4px; }
+.bd-winbtns i { width: 10px; height: 10px; opacity: 0.75; }
+.wb-min { border-bottom: 1.4px solid #e8eaed; height: 6px; }
+.wb-max { border: 1.4px solid #e8eaed; }
+.wb-close {
+  background:
+    linear-gradient(45deg, transparent 44%, #e8eaed 44%, #e8eaed 56%, transparent 56%),
+    linear-gradient(-45deg, transparent 44%, #e8eaed 44%, #e8eaed 56%, transparent 56%);
+}
+[data-brand="macbook"] .bd-winbtns { display: none; }
+
+.bd-omni {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 40px;
+  padding: 0 12px;
+  background: #35363a;
+}
+.bd-arrows { display: flex; align-items: center; gap: 14px; flex: none; }
+.bd-arrows svg { width: 17px; height: 17px; }
+.bd-arrows .bd-dim { opacity: 0.38; }
+
+.bd-url {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #202124;
+  font-size: 12px;
+}
+.bd-host {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.92;
+}
+.bd-actions { display: flex; align-items: center; gap: 12px; flex: none; }
+.bd-actions svg { width: 16px; height: 16px; opacity: 0.85; }
+.bd-dots { display: inline-flex; flex-direction: column; gap: 2.5px; }
+.bd-dots i { width: 3.5px; height: 3.5px; border-radius: 50%; background: #e8eaed; }
+
+/* Chrome no macOS: barra clara, como o padrão do sistema. */
+[data-brand="macbook"] .bb-desktop { background: #e8e8ed; color: #1d1d1f; }
+[data-brand="macbook"] .bd-tab { background: #fbfbfd; }
+[data-brand="macbook"] .bd-omni { background: #fbfbfd; }
+[data-brand="macbook"] .bd-url { background: #ececf0; }
+[data-brand="macbook"] .bd-dots i { background: #1d1d1f; }
 
 #vkb {
   position: absolute;
