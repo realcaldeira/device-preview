@@ -1,0 +1,338 @@
+{
+  "extName": {
+    "message": "Mobile Simulator: Phone, Tablet, Laptop & Smart TV"
+  },
+  "extShortName": {
+    "message": "Simulator"
+  },
+  "extDescription": {
+    "message": "Real responsive testing: phone, tablet, laptop & TV mockups with realistic frames, touch, virtual keyboard, UA & FPS."
+  },
+  "actionTitle": {
+    "message": "Mobile Simulator — open device panel"
+  },
+  "cmdReopenLast": {
+    "message": "Reopen the last device and URL in preview"
+  },
+  "appTitle": {
+    "message": "Mobile Simulator"
+  },
+  "panelSubtitle": {
+    "message": "Pick a device to preview the current tab’s site"
+  },
+  "searchPlaceholder": {
+    "message": "Search device…"
+  },
+  "presetsLabel": {
+    "message": "Presets"
+  },
+  "recentLabel": {
+    "message": "Recent"
+  },
+  "favorites": {
+    "message": "Favorites"
+  },
+  "footerPreview": {
+    "message": "Preview opens in the current tab, with a realistic frame."
+  },
+  "footerCredit": {
+    "message": "Built by Lucas Caldeira"
+  },
+  "footerShortcut": {
+    "message": "Shortcut: Alt+Shift+P reopens the last device"
+  },
+  "ariaPresets": {
+    "message": "Workflow presets"
+  },
+  "ariaRecent": {
+    "message": "Recent history"
+  },
+  "ariaGroups": {
+    "message": "Device categories"
+  },
+  "presetApplyTitle": {
+    "message": "Favorite the set and open the first device"
+  },
+  "urlOfTab": {
+    "message": "Tab URL"
+  },
+  "favAdd": {
+    "message": "Add to favorites"
+  },
+  "favRemove": {
+    "message": "Remove from favorites"
+  },
+  "physicalRes": {
+    "message": "Physical resolution: $1$ px"
+  },
+  "cat_android": {
+    "message": "Android phones"
+  },
+  "cat_apple": {
+    "message": "Apple phones"
+  },
+  "cat_tablets": {
+    "message": "Tablets"
+  },
+  "cat_notebooks": {
+    "message": "Laptops"
+  },
+  "cat_tvs": {
+    "message": "Smart TVs"
+  },
+  "preset_qa_ios_name": {
+    "message": "iOS QA"
+  },
+  "preset_qa_ios_hint": {
+    "message": "New iPhone, SE and iPad"
+  },
+  "preset_android_mid_name": {
+    "message": "Android mid"
+  },
+  "preset_android_mid_hint": {
+    "message": "Budget, Pixel and flagship"
+  },
+  "preset_tv_living_name": {
+    "message": "Living room TV"
+  },
+  "preset_tv_living_hint": {
+    "message": "Full HD and 4K"
+  },
+  "obStep": {
+    "message": "Step $1$ of $2$"
+  },
+  "obSkip": {
+    "message": "Skip"
+  },
+  "obNext": {
+    "message": "Next"
+  },
+  "obStart": {
+    "message": "Get started"
+  },
+  "ob1Title": {
+    "message": "Pick a device"
+  },
+  "ob1Body": {
+    "message": "Tap an iPhone or Pixel below — preview opens in the current tab with a realistic frame and that device’s User-Agent."
+  },
+  "ob2Title": {
+    "message": "Use the site already open"
+  },
+  "ob2Body": {
+    "message": "The current tab URL loads into the mockup automatically. If the tab is chrome:// or empty, we open a demo (Wikipedia)."
+  },
+  "ob3Title": {
+    "message": "Rotate, capture and measure FPS"
+  },
+  "ob3Body": {
+    "message": "In the preview bar: rotate, virtual keyboard when focusing a field, Capture PNG and FPS. Alt+Shift+P reopens the last device."
+  },
+  "errDevices": {
+    "message": "Could not load the device list: $1$. Reload the extension at chrome://extensions."
+  },
+  "errPreset": {
+    "message": "Preset failed: $1$"
+  },
+  "errPreview": {
+    "message": "Failed to open preview: $1$"
+  },
+  "errPreviewReload": {
+    "message": "Failed to open preview: $1$. Reload the extension at chrome://extensions."
+  },
+  "errNoResponse": {
+    "message": "no response from service worker"
+  },
+  "btnRotate": {
+    "message": "Rotate (portrait/landscape)"
+  },
+  "btnFrameless": {
+    "message": "Fullscreen: hide the frame and show only the screen at device resolution (keeps aspect ratio)"
+  },
+  "btnStretch": {
+    "message": "Stretch: fill the window distorting aspect ratio (enables fullscreen)"
+  },
+  "btnBrowser": {
+    "message": "Browser bar: show Chrome/Safari chrome inside the mockup"
+  },
+  "btnTouch": {
+    "message": "Touch: the site receives touch events instead of mouse; drag scrolls; pointer becomes a finger (phones and tablets only)"
+  },
+  "btnBack": {
+    "message": "Back"
+  },
+  "btnReload": {
+    "message": "Reload"
+  },
+  "addressPlaceholder": {
+    "message": "Enter a URL and press Enter"
+  },
+  "addressAria": {
+    "message": "Site address (URL)"
+  },
+  "btnGo": {
+    "message": "Go"
+  },
+  "btnGoTitle": {
+    "message": "Navigate to URL"
+  },
+  "btnZoomOut": {
+    "message": "Zoom out"
+  },
+  "btnZoomIn": {
+    "message": "Zoom in"
+  },
+  "btnZoomFit": {
+    "message": "Fit to window"
+  },
+  "btnZoomFitLabel": {
+    "message": "Fit"
+  },
+  "zoomLabel": {
+    "message": "Current zoom"
+  },
+  "btnTheme": {
+    "message": "Toggle light/dark theme"
+  },
+  "btnFps": {
+    "message": "FPS meter: measure frames per second of the embedded site."
+  },
+  "btnCapture": {
+    "message": "Capture"
+  },
+  "btnCaptureTitle": {
+    "message": "Capture mockup image"
+  },
+  "btnReport": {
+    "message": "Report"
+  },
+  "btnReportTitle": {
+    "message": "Copy report (viewport, UA, FPS) for PR/Jira"
+  },
+  "btnExit": {
+    "message": "Exit"
+  },
+  "btnExitTitle": {
+    "message": "Exit preview and return to the normal site"
+  },
+  "deviceSelectAria": {
+    "message": "Switch device"
+  },
+  "reviewBody": {
+    "message": "Did the capture help? A Chrome Web Store review boosts discovery for other developers."
+  },
+  "reviewLater": {
+    "message": "Not now"
+  },
+  "reviewNever": {
+    "message": "Don’t ask again"
+  },
+  "reviewGo": {
+    "message": "Rate ★★★★★"
+  },
+  "toastOpenViaExt": {
+    "message": "Open this page from the extension (toolbar icon), not as a local file."
+  },
+  "toastInitError": {
+    "message": "Failed to start preview: $1$"
+  },
+  "toastPortrait": {
+    "message": "Portrait"
+  },
+  "toastLandscape": {
+    "message": "Landscape"
+  },
+  "toastFramelessOn": {
+    "message": "Fullscreen: device screen only"
+  },
+  "toastFramelessOff": {
+    "message": "Device frame visible"
+  },
+  "toastStretchOn": {
+    "message": "Stretched: fills the window (distorts aspect ratio)"
+  },
+  "toastStretchOff": {
+    "message": "Device aspect ratio restored"
+  },
+  "toastBrowserOn": {
+    "message": "Browser bar visible"
+  },
+  "toastBrowserOff": {
+    "message": "Browser bar hidden"
+  },
+  "toastPickDevice": {
+    "message": "Pick a device first."
+  },
+  "toastCaptureExtOnly": {
+    "message": "Capture is only available from the extension."
+  },
+  "toastCaptureSaved": {
+    "message": "Capture saved ($1$×$2$ px)"
+  },
+  "toastCaptureError": {
+    "message": "Capture error: $1$"
+  },
+  "toastUaFail": {
+    "message": "Failed to apply User-Agent: $1$"
+  },
+  "toastFpsOn": {
+    "message": "FPS meter on"
+  },
+  "toastFpsOff": {
+    "message": "FPS meter off"
+  },
+  "toastFpsExtOnly": {
+    "message": "FPS meter is only available from the extension."
+  },
+  "toastFpsNeedSite": {
+    "message": "Load a site before measuring FPS."
+  },
+  "toastFpsFail": {
+    "message": "Could not measure FPS: $1$"
+  },
+  "toastFpsUnavailable": {
+    "message": "Measurement unavailable for $1$. Reload the extension at chrome://extensions."
+  },
+  "toastReportCopied": {
+    "message": "Report copied — paste into PR or Jira"
+  },
+  "toastReportFail": {
+    "message": "Could not copy; check the console for the text"
+  },
+  "toastTouchDesktop": {
+    "message": "This device is used with a mouse — touch stays off."
+  },
+  "toastTouchOn": {
+    "message": "Touch on: drag to scroll, like on a real device."
+  },
+  "toastTouchOff": {
+    "message": "Touch off: the site receives mouse events again."
+  },
+  "toastZoomStretch": {
+    "message": "Stretched to fill the window"
+  },
+  "reportTitle": {
+    "message": "## Mobile Simulator — report"
+  },
+  "reportDevice": {
+    "message": "Device"
+  },
+  "reportViewport": {
+    "message": "Viewport"
+  },
+  "reportOrientation": {
+    "message": "Orientation"
+  },
+  "reportPlatform": {
+    "message": "Platform"
+  },
+  "reportFpsMissing": {
+    "message": "(turn on the FPS meter in the toolbar to include)"
+  },
+  "reportGenerated": {
+    "message": "_Generated by Mobile Simulator $1$_"
+  },
+  "reportPhysical": {
+    "message": "Physical"
+  }
+}

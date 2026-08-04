@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>t</title>
+<link rel="stylesheet" href="../preview/preview.css?v=4"><style>body{margin:0}#stage{min-height:100vh}</style></head>
+<body data-theme="dark"><main id="stage"></main>
+<script src="../shared/frames.js"></script>
+<script>
+// Harness de teste da moldura por imagem, sem as APIs da extensão.
+// Uso: tools/t-bench.html?frame=island&brand=iphone&rot=0&scale=0.55
+(async()=>{
+const q=new URLSearchParams(location.search);
+const html=await fetch('../preview/preview.html').then(r=>r.text());
+const d=new DOMParser().parseFromString(html,'text/html');
+document.getElementById('stage').innerHTML=d.getElementById('stage').innerHTML;
+
+const PRESETS=DP_FRAME_PRESETS;
+const IMG=DP_FRAME_IMAGES;
+const frame=q.get('frame')||'island';
+const p=PRESETS[frame]||PRESETS.island;
+const [vw,vh]=DP_FRAME_VIEWPORTS[frame]||DP_FRAME_VIEWPORTS.island;
+const brand=q.get('brand')||(frame==='island'||frame==='notch'||frame==='home'?'iphone':frame==='tablet'?'ipad':frame==='laptop'?(q.get('mac')?'macbook':'laptop'):frame==='tv'?'tv':frame==='punch-left'?'pixel':'galaxy');
+const rot=q.get('rot')==='1'&&p.kind!=='laptop';
+let key=frame==='laptop'&&brand==='macbook'?'laptop-macbook':frame;
+const cfg=IMG[key];
+const base=cfg.inset||[p.padTop,p.padSide,p.padBottom,p.padSide];
+const useRot=rot&&cfg.rot!==false;
+const inset=useRot?[base[1],base[2],base[3],base[0]]:base;
+const bw=inset.map(v=>Math.max(v,p.radius));
+const slice=bw.map(v=>Math.max(1,Math.round(v*cfg.scale)));
+
+const m=document.getElementById('mockup');
+Object.assign(m.dataset,{cutout:frame,kind:p.kind,orientation:rot?'landscape':'portrait',
+  brand:brand,buttons:brand==='iphone'?'iphone':brand==='pixel'?'pixel':brand==='ipad'?'ipad':brand==='tv'||p.kind==='laptop'?'none':'right',
+  browser:p.kind==='tv'?'none':p.kind==='laptop'?'desktop':(brand==='iphone'||brand==='ipad')?'safari-bottom':'chrome',
+  platform:brand==='iphone'||brand==='ipad'?'ios':p.kind==='tv'?'tv':brand==='macbook'?'macos':'android',
+  frameImage:'on'});
+const s=m.style;
+s.setProperty('--vw',(rot?vh:vw)+'px');
+s.setProperty('--vh',(rot?vw:vh)+'px');
+s.setProperty('--sb-h',p.sb+'px');
+s.setProperty('--pad-top',inset[0]+'px');s.setProperty('--pad-right',inset[1]+'px');
+s.setProperty('--pad-bottom',inset[2]+'px');s.setProperty('--pad-left',inset[3]+'px');
+s.setProperty('--frame-radius',p.radius+'px');
+s.setProperty('--screen-radius',p.screenRadius+'px');
+s.setProperty('--frame-img','url("'+new URL('../frames/'+key+(useRot?'.rot':'')+'.webp',location.href).href+'")');
+s.setProperty('--frame-slice',slice.join(' '));
+s.setProperty('--frame-bw',bw.map(v=>v+'px').join(' '));
+s.setProperty('--frame-corner',cfg.corner||'round');
+s.transformOrigin='50% 0';s.transform='scale('+(q.get('scale')||0.55)+')';
+document.getElementById('bbHostTop').textContent='wikipedia.org';
+document.getElementById('bbHostBot').textContent='wikipedia.org';
+const v=document.getElementById('viewport');v.removeAttribute('src');v.style.background='#fff';
+})();
+</script></body></html>

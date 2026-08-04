@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Desinstalou o Simulador Mobile?</title>
+  <meta name="description" content="FAQ pós-desinstalação do Simulador Mobile. Sem coleta de dados — dicas locais conforme o motivo." />
+  <script>
+    (function () {
+      var lang = (navigator.language || '').toLowerCase();
+      if (!lang.startsWith('pt')) {
+        location.replace('en/uninstall.html' + location.search + location.hash);
+      }
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="site.css" />
+  <link rel="alternate" hreflang="pt-BR" href="./uninstall.html" />
+  <link rel="alternate" hreflang="en" href="en/uninstall.html" />
+</head>
+<body>
+  <div class="wrap">
+    <nav class="site-nav">
+      <a class="brand" href="./">Simulador Mobile</a>
+      <div class="nav-links">
+        <span class="lang-switch" aria-label="Idioma">
+          <a href="./uninstall.html" aria-current="page">PT</a>
+          <a href="en/uninstall.html">EN</a>
+        </span>
+      </div>
+    </nav>
+  </div>
+
+  <article class="prose">
+    <h1>Sentiremos sua falta</h1>
+    <p class="meta">
+      Esta página abre após a desinstalação. <strong>Nada é enviado a nós</strong> —
+      as dicas abaixo ficam só no seu navegador. Se quiser contar o motivo,
+      <a href="mailto:mrrealcaldeira@gmail.com?subject=Feedback%20Simulador%20Mobile">mande um e-mail</a>
+      ou abra uma
+      <a href="https://github.com/realcaldeira/device-preview/issues/new">issue no GitHub</a>.
+    </p>
+
+    <h2>O que mais se aproximou do motivo?</h2>
+    <ul class="reason-list" id="reasons">
+      <li data-tip="Alguns sites bloqueiam iframe mesmo sem XFO. Veja o FAQ — às vezes um domínio público sem login funciona melhor.">
+        O site não carregava / ficava em branco
+        <div class="tip"></div>
+      </li>
+      <li data-tip="A extensão pede host permissions só para UA + iframe na aba da prévia. Detalhes na política de privacidade.">
+        Pediu permissões demais
+        <div class="tip"></div>
+      </li>
+      <li data-tip="O DevTools Device Mode é mais leve; o Simulador vale quando você precisa de moldura, UA, toque ou captura.">
+        Preferi o DevTools / outra ferramenta
+        <div class="tip"></div>
+      </li>
+      <li data-tip="Novos aparelhos entram em releases curtas. Acompanhe o GitHub ou reinstale quando sair update.">
+        Faltava o dispositivo que eu precisava
+        <div class="tip"></div>
+      </li>
+      <li data-tip="Se foi só um teste, obrigado — a porta está aberta na Chrome Web Store.">
+        Só estava testando
+        <div class="tip"></div>
+      </li>
+      <li data-tip="Relatos no GitHub ajudam a priorizar bugs. Inclua o site e o Chrome version se puder.">
+        Bug ou travamento
+        <div class="tip"></div>
+      </li>
+    </ul>
+
+    <p style="margin-top:1.5rem">
+      <a href="faq.html">Ler o FAQ completo</a> ·
+      <a href="https://chromewebstore.google.com/detail/ebnbfkejdddkbpkljbbcnchnlekombef?utm_source=uninstall&utm_medium=web&utm_campaign=winback">Reinstalar</a>
+    </p>
+  </article>
+
+  <script>
+    document.getElementById('reasons').addEventListener('click', (e) => {
+      const li = e.target.closest('li');
+      if (!li) return;
+      document.querySelectorAll('.reason-list li').forEach((x) => x.classList.remove('open'));
+      li.classList.add('open');
+      const tip = li.querySelector('.tip');
+      tip.textContent = li.dataset.tip || '';
+    });
+  </script>
+</body>
+</html>

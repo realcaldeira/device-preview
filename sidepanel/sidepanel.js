@@ -3,16 +3,24 @@ let favorites = new Set();
 const deviceById = {};
 const deviceOrder = [];
 let activeId = null;
+let onboardingStep = 0;
 
 const STAR_SVG =
   '<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">' +
   '<path d="M12 3.5l2.6 5.3 5.9.86-4.27 4.16 1.01 5.87L12 17.9l-5.25 2.79 1.01-5.87L3.5 9.66l5.9-.86z"/></svg>';
 
+const ONBOARDING_STEPS = [
+  { titleKey: 'ob1Title', bodyKey: 'ob1Body', suggest: ['iphone-16', 'pixel-8'] },
+  { titleKey: 'ob2Title', bodyKey: 'ob2Body', suggest: [] },
+  { titleKey: 'ob3Title', bodyKey: 'ob3Body', suggest: [] }
+];
+
 async function init() {
+  applyI18n();
   const root = document.getElementById('groups');
   try {
-    const storedFav = await chrome.storage.local.get([FAV_KEY]);
-    favorites = new Set(Array.isArray(storedFav[FAV_KEY]) ? storedFav[FAV_KEY] : []);
+    const stored = await chrome.storage.local.get([FAV_KEY, DP_ONBOARDING_KEY, DP_HISTORY_KEY]);
+    favorites = new Set(Array.isArray(stored[FAV_KEY]) ? stored[FAV_KEY] : []);
 
     const res = await fetch(chrome.runtime.getURL('data/devices.json'));
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -22,15 +30,28 @@ async function init() {
       deviceOrder.push(d.id);
     }
 
+    renderPresets();
+    renderRecent(stored[DP_HISTORY_KEY]);
     root.appendChild(renderFavorites());
     for (const cat of data.categories) root.appendChild(renderCategory(cat));
     refreshFavorites();
+
+    if (!stored[DP_ONBOARDING_KEY]) showOnboarding(0);
   } catch (e) {
-    showError('Não foi possível carregar a lista de dispositivos: ' + e.message +
-      '. Recarregue a extensão em chrome://extensions.');
+    showError(t('errDevices', [e.message]));
     return;
   }
   document.getElementById('search').addEventListener('input', (e) => filter(e.target.value));
+
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local') return;
+    if (changes[FAV_KEY]) {
+      favorites = new Set(Array.isArray(changes[FAV_KEY].newValue) ? changes[FAV_KEY].newValue : []);
+      deviceOrder.forEach((id) => syncStars(id));
+      refreshFavorites();
+    }
+    if (changes[DP_HISTORY_KEY]) renderRecent(changes[DP_HISTORY_KEY].newValue);
+  });
 }
 
 function showError(message) {
@@ -43,6 +64,81 @@ function hideError() {
   document.getElementById('panelError').classList.add('hidden');
 }
 
+function renderPresets() {
+  const list = document.getElementById('presetList');
+  list.innerHTML = '';
+  for (const p of DP_PRESETS) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'preset-chip';
+    btn.title = t('presetApplyTitle');
+    const name = t(p.nameKey);
+    const hint = t(p.hintKey);
+    btn.innerHTML = `<span class="pn">${escapeHtml(name)}</span><span class="ph">${escapeHtml(hint)}</span>`;
+    btn.addEventListener('click', () => runPreset(p.id));
+    list.appendChild(btn);
+  }
+}
+
+function runPreset(presetId) {
+  chrome.runtime.sendMessage({ type: 'open-preset', presetId })
+    .then((res) => {
+      if (res && res.ok) {
+        hideError();
+        if (Array.isArray(res.favorites)) {
+          favorites = new Set(res.favorites);
+          deviceOrder.forEach((id) => syncStars(id));
+          refreshFavorites();
+        }
+        const preset = DP_PRESETS.find((p) => p.id === presetId);
+        if (preset) {
+          activeId = preset.devices[0];
+          document.querySelectorAll('.device.active').forEach((el) => el.classList.remove('active'));
+          document.querySelectorAll(`.device[data-id="${CSS.escape(activeId)}"]`)
+            .forEach((el) => el.classList.add('active'));
+        }
+      } else {
+        showError(t('errPreset', [(res && res.error) || t('errNoResponse')]));
+      }
+    })
+    .catch((e) => showError(t('errPreset', [e.message])));
+}
+
+function renderRecent(raw) {
+  const section = document.getElementById('recentSection');
+  const list = document.getElementById('recentList');
+  const items = Array.isArray(raw) ? raw : [];
+  list.innerHTML = '';
+  const usable = items.filter((e) => e && deviceById[e.deviceId]);
+  section.classList.toggle('hidden', usable.length === 0);
+  for (const e of usable.slice(0, DP_HISTORY_MAX)) {
+    const d = deviceById[e.deviceId];
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'recent-item';
+    const host = hostOf(e.url);
+    btn.innerHTML =
+      `<span class="rn">${escapeHtml(d.name)}</span>` +
+      `<span class="ru">${escapeHtml(host || t('urlOfTab'))}</span>`;
+    btn.title = e.url || d.name;
+    btn.addEventListener('click', () => openDevice(e.deviceId, e.url || null));
+    list.appendChild(btn);
+  }
+}
+
+function hostOf(url) {
+  if (!url) return '';
+  try { return new URL(url).hostname; } catch (_) { return url; }
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function renderFavorites() {
   const details = document.createElement('details');
   details.id = 'favGroup';
@@ -51,7 +147,7 @@ function renderFavorites() {
 
   const summary = document.createElement('summary');
   const title = document.createElement('span');
-  title.textContent = 'Favoritos';
+  title.textContent = t('favorites');
   const count = document.createElement('span');
   count.className = 'count';
   summary.append(title, count);
@@ -95,7 +191,7 @@ function syncStars(id) {
   document.querySelectorAll(`.device[data-id="${CSS.escape(id)}"] .star`).forEach((star) => {
     star.classList.toggle('on', on);
     star.setAttribute('aria-pressed', String(on));
-    star.title = on ? 'Remover dos favoritos' : 'Adicionar aos favoritos';
+    star.title = on ? t('favRemove') : t('favAdd');
   });
 }
 
@@ -106,7 +202,7 @@ function renderCategory(cat) {
 
   const summary = document.createElement('summary');
   const title = document.createElement('span');
-  title.textContent = cat.name;
+  title.textContent = catLabel(cat.id, cat.name);
   const count = document.createElement('span');
   count.className = 'count';
   count.textContent = cat.devices.length;
@@ -122,14 +218,13 @@ function renderCategory(cat) {
 }
 
 function renderDevice(d) {
-
   const btn = document.createElement('div');
   btn.className = 'device';
   btn.setAttribute('role', 'button');
   btn.setAttribute('tabindex', '0');
   btn.dataset.id = d.id;
   btn.dataset.search = d.name.toLowerCase();
-  btn.title = `Resolução física: ${d.physical} px`;
+  btn.title = t('physicalRes', [d.physical]);
   if (d.id === activeId) btn.classList.add('active');
 
   const icon = document.createElement('span');
@@ -155,7 +250,7 @@ function renderDevice(d) {
   star.setAttribute('role', 'button');
   star.setAttribute('tabindex', '0');
   star.setAttribute('aria-pressed', String(fav));
-  star.title = fav ? 'Remover dos favoritos' : 'Adicionar aos favoritos';
+  star.title = fav ? t('favRemove') : t('favAdd');
   star.innerHTML = STAR_SVG;
 
   const toggle = (e) => { e.stopPropagation(); e.preventDefault(); toggleFavorite(d.id); };
@@ -166,19 +261,7 @@ function renderDevice(d) {
 
   btn.append(icon, info, star);
 
-  const open = () => {
-    chrome.runtime.sendMessage({ type: 'open-preview', deviceId: d.id })
-      .then((res) => {
-        if (res && res.ok) hideError();
-        else showError('Falha ao abrir a prévia: ' + ((res && res.error) || 'sem resposta do service worker'));
-      })
-      .catch((e) => showError('Falha ao abrir a prévia: ' + e.message +
-        '. Recarregue a extensão em chrome://extensions.'));
-    activeId = d.id;
-    document.querySelectorAll('.device.active').forEach((el) => el.classList.remove('active'));
-    document.querySelectorAll(`.device[data-id="${CSS.escape(d.id)}"]`)
-      .forEach((el) => el.classList.add('active'));
-  };
+  const open = () => openDevice(d.id);
   btn.addEventListener('click', open);
   btn.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
@@ -187,11 +270,69 @@ function renderDevice(d) {
   return btn;
 }
 
+function openDevice(deviceId, url) {
+  const msg = { type: 'open-preview', deviceId };
+  if (url) msg.url = url;
+  chrome.runtime.sendMessage(msg)
+    .then((res) => {
+      if (res && res.ok) hideError();
+      else showError(t('errPreview', [(res && res.error) || t('errNoResponse')]));
+    })
+    .catch((e) => showError(t('errPreviewReload', [e.message])));
+  activeId = deviceId;
+  document.querySelectorAll('.device.active').forEach((el) => el.classList.remove('active'));
+  document.querySelectorAll(`.device[data-id="${CSS.escape(deviceId)}"]`)
+    .forEach((el) => el.classList.add('active'));
+}
+
+function showOnboarding(step) {
+  onboardingStep = step;
+  const root = document.getElementById('onboarding');
+  const s = ONBOARDING_STEPS[step];
+  if (!s) { finishOnboarding(); return; }
+
+  document.getElementById('obStepLabel').textContent =
+    t('obStep', [String(step + 1), String(ONBOARDING_STEPS.length)]);
+  document.getElementById('obTitle').textContent = t(s.titleKey);
+  document.getElementById('obBody').textContent = t(s.bodyKey);
+
+  const suggest = document.getElementById('obSuggest');
+  suggest.innerHTML = '';
+  for (const id of s.suggest) {
+    const d = deviceById[id];
+    if (!d) continue;
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'ob-chip';
+    chip.textContent = d.name;
+    chip.addEventListener('click', () => {
+      finishOnboarding();
+      openDevice(id);
+    });
+    suggest.appendChild(chip);
+  }
+
+  const next = document.getElementById('obNext');
+  next.textContent = step >= ONBOARDING_STEPS.length - 1 ? t('obStart') : t('obNext');
+  next.onclick = () => {
+    if (onboardingStep >= ONBOARDING_STEPS.length - 1) finishOnboarding();
+    else showOnboarding(onboardingStep + 1);
+  };
+  document.getElementById('obSkip').onclick = finishOnboarding;
+
+  root.classList.remove('hidden');
+}
+
+function finishOnboarding() {
+  document.getElementById('onboarding').classList.add('hidden');
+  chrome.storage.local.set({ [DP_ONBOARDING_KEY]: true });
+}
+
 let openBeforeSearch = null;
 
 function filter(query) {
   const q = query.trim().toLowerCase();
-  const groups = document.querySelectorAll('details');
+  const groups = document.querySelectorAll('#groups details');
 
   if (q && openBeforeSearch === null) {
     openBeforeSearch = new Map();

@@ -1,0 +1,338 @@
+{
+  "extName": {
+    "message": "Simulador Mobile: Celular, Tablet e Smart TV"
+  },
+  "extShortName": {
+    "message": "Simulador"
+  },
+  "extDescription": {
+    "message": "Teste responsivo real: mockup de celular, tablet, notebook e TV com moldura, toque, teclado virtual, UA e FPS."
+  },
+  "actionTitle": {
+    "message": "Simulador Mobile — abrir painel de dispositivos"
+  },
+  "cmdReopenLast": {
+    "message": "Reabrir o último dispositivo e URL na prévia"
+  },
+  "appTitle": {
+    "message": "Simulador Mobile"
+  },
+  "panelSubtitle": {
+    "message": "Escolha um dispositivo para visualizar o site da aba atual"
+  },
+  "searchPlaceholder": {
+    "message": "Buscar dispositivo…"
+  },
+  "presetsLabel": {
+    "message": "Presets"
+  },
+  "recentLabel": {
+    "message": "Recentes"
+  },
+  "favorites": {
+    "message": "Favoritos"
+  },
+  "footerPreview": {
+    "message": "A prévia abre na própria aba atual, com moldura realista."
+  },
+  "footerCredit": {
+    "message": "Desenvolvido por Lucas Caldeira"
+  },
+  "footerShortcut": {
+    "message": "Atalho: Alt+Shift+P reabre o último"
+  },
+  "ariaPresets": {
+    "message": "Presets de workflow"
+  },
+  "ariaRecent": {
+    "message": "Histórico recente"
+  },
+  "ariaGroups": {
+    "message": "Categorias de dispositivos"
+  },
+  "presetApplyTitle": {
+    "message": "Favorita o set e abre o primeiro aparelho"
+  },
+  "urlOfTab": {
+    "message": "URL da aba"
+  },
+  "favAdd": {
+    "message": "Adicionar aos favoritos"
+  },
+  "favRemove": {
+    "message": "Remover dos favoritos"
+  },
+  "physicalRes": {
+    "message": "Resolução física: $1$ px"
+  },
+  "cat_android": {
+    "message": "Telefones Android"
+  },
+  "cat_apple": {
+    "message": "Telefones Apple"
+  },
+  "cat_tablets": {
+    "message": "Tablets"
+  },
+  "cat_notebooks": {
+    "message": "Notebooks"
+  },
+  "cat_tvs": {
+    "message": "Smart TVs"
+  },
+  "preset_qa_ios_name": {
+    "message": "QA iOS"
+  },
+  "preset_qa_ios_hint": {
+    "message": "iPhone novo, SE e iPad"
+  },
+  "preset_android_mid_name": {
+    "message": "Android mid"
+  },
+  "preset_android_mid_hint": {
+    "message": "Entrada, Pixel e flagship"
+  },
+  "preset_tv_living_name": {
+    "message": "TV sala"
+  },
+  "preset_tv_living_hint": {
+    "message": "Full HD e 4K"
+  },
+  "obStep": {
+    "message": "Passo $1$ de $2$"
+  },
+  "obSkip": {
+    "message": "Pular"
+  },
+  "obNext": {
+    "message": "Próximo"
+  },
+  "obStart": {
+    "message": "Começar"
+  },
+  "ob1Title": {
+    "message": "Escolha um aparelho"
+  },
+  "ob1Body": {
+    "message": "Toque num iPhone ou Pixel abaixo — a prévia abre na aba atual com moldura realista e User-Agent do dispositivo."
+  },
+  "ob2Title": {
+    "message": "Use o site que já está aberto"
+  },
+  "ob2Body": {
+    "message": "A URL da aba atual vai para o mockup automaticamente. Se a aba for chrome:// ou estiver vazia, abrimos um demo (Wikipedia)."
+  },
+  "ob3Title": {
+    "message": "Gire, capture e meça FPS"
+  },
+  "ob3Body": {
+    "message": "Na barra da prévia: girar, teclado virtual ao focar um campo, Capturar PNG e FPS. Alt+Shift+P reabre o último aparelho."
+  },
+  "errDevices": {
+    "message": "Não foi possível carregar a lista de dispositivos: $1$. Recarregue a extensão em chrome://extensions."
+  },
+  "errPreset": {
+    "message": "Falha no preset: $1$"
+  },
+  "errPreview": {
+    "message": "Falha ao abrir a prévia: $1$"
+  },
+  "errPreviewReload": {
+    "message": "Falha ao abrir a prévia: $1$. Recarregue a extensão em chrome://extensions."
+  },
+  "errNoResponse": {
+    "message": "sem resposta do service worker"
+  },
+  "btnRotate": {
+    "message": "Girar (retrato/paisagem)"
+  },
+  "btnFrameless": {
+    "message": "Tela cheia: oculta a moldura e exibe só a tela, na resolução do dispositivo (mantém a proporção)"
+  },
+  "btnStretch": {
+    "message": "Esticar: preenche toda a janela distorcendo a proporção (ativa a tela cheia)"
+  },
+  "btnBrowser": {
+    "message": "Barra do navegador: mostra a interface do Chrome/Safari do celular dentro do mockup"
+  },
+  "btnTouch": {
+    "message": "Toque: o site passa a receber eventos de toque em vez de mouse, arrastar rola a página e o ponteiro vira um dedo (só em celular e tablet)"
+  },
+  "btnBack": {
+    "message": "Voltar"
+  },
+  "btnReload": {
+    "message": "Recarregar"
+  },
+  "addressPlaceholder": {
+    "message": "Digite a URL e pressione Enter"
+  },
+  "addressAria": {
+    "message": "Endereço do site (URL)"
+  },
+  "btnGo": {
+    "message": "Ir"
+  },
+  "btnGoTitle": {
+    "message": "Navegar para a URL"
+  },
+  "btnZoomOut": {
+    "message": "Reduzir zoom"
+  },
+  "btnZoomIn": {
+    "message": "Aumentar zoom"
+  },
+  "btnZoomFit": {
+    "message": "Ajustar à janela"
+  },
+  "btnZoomFitLabel": {
+    "message": "Ajustar"
+  },
+  "zoomLabel": {
+    "message": "Zoom atual"
+  },
+  "btnTheme": {
+    "message": "Alternar tema claro/escuro"
+  },
+  "btnFps": {
+    "message": "Medidor de FPS: mede os quadros por segundo do site embutido."
+  },
+  "btnCapture": {
+    "message": "Capturar"
+  },
+  "btnCaptureTitle": {
+    "message": "Capturar imagem do mockup"
+  },
+  "btnReport": {
+    "message": "Relatório"
+  },
+  "btnReportTitle": {
+    "message": "Copiar relatório (viewport, UA, FPS) para colar em PR/Jira"
+  },
+  "btnExit": {
+    "message": "Sair"
+  },
+  "btnExitTitle": {
+    "message": "Sair da prévia e voltar ao site normal"
+  },
+  "deviceSelectAria": {
+    "message": "Trocar dispositivo"
+  },
+  "reviewBody": {
+    "message": "A captura ajudou? Uma avaliação na Chrome Web Store impulsiona a descoberta da extensão."
+  },
+  "reviewLater": {
+    "message": "Agora não"
+  },
+  "reviewNever": {
+    "message": "Não perguntar"
+  },
+  "reviewGo": {
+    "message": "Avaliar ★★★★★"
+  },
+  "toastOpenViaExt": {
+    "message": "Abra esta página pela extensão (ícone na barra do Chrome), não como arquivo local."
+  },
+  "toastInitError": {
+    "message": "Erro ao iniciar a prévia: $1$"
+  },
+  "toastPortrait": {
+    "message": "Retrato"
+  },
+  "toastLandscape": {
+    "message": "Paisagem"
+  },
+  "toastFramelessOn": {
+    "message": "Tela cheia: só a tela do dispositivo"
+  },
+  "toastFramelessOff": {
+    "message": "Moldura do dispositivo visível"
+  },
+  "toastStretchOn": {
+    "message": "Esticado: preenche a janela (distorce a proporção)"
+  },
+  "toastStretchOff": {
+    "message": "Proporção do dispositivo restaurada"
+  },
+  "toastBrowserOn": {
+    "message": "Barra do navegador visível"
+  },
+  "toastBrowserOff": {
+    "message": "Barra do navegador oculta"
+  },
+  "toastPickDevice": {
+    "message": "Escolha um dispositivo primeiro."
+  },
+  "toastCaptureExtOnly": {
+    "message": "Captura disponível apenas pela extensão."
+  },
+  "toastCaptureSaved": {
+    "message": "Captura salva ($1$×$2$ px)"
+  },
+  "toastCaptureError": {
+    "message": "Erro na captura: $1$"
+  },
+  "toastUaFail": {
+    "message": "Falha ao aplicar o User-Agent: $1$"
+  },
+  "toastFpsOn": {
+    "message": "Medidor de FPS ativado"
+  },
+  "toastFpsOff": {
+    "message": "Medidor de FPS desativado"
+  },
+  "toastFpsExtOnly": {
+    "message": "Medidor de FPS disponível apenas pela extensão."
+  },
+  "toastFpsNeedSite": {
+    "message": "Carregue um site antes de medir o FPS."
+  },
+  "toastFpsFail": {
+    "message": "Não foi possível medir o FPS: $1$"
+  },
+  "toastFpsUnavailable": {
+    "message": "Recurso de medição indisponível para $1$. Recarregue a extensão em chrome://extensions."
+  },
+  "toastReportCopied": {
+    "message": "Relatório copiado — cole no PR ou Jira"
+  },
+  "toastReportFail": {
+    "message": "Não foi possível copiar; selecione o texto no console"
+  },
+  "toastTouchDesktop": {
+    "message": "Este aparelho é usado com mouse — o toque fica desligado."
+  },
+  "toastTouchOn": {
+    "message": "Toque ligado: arraste para rolar, como no aparelho de verdade."
+  },
+  "toastTouchOff": {
+    "message": "Toque desligado: o site volta a receber eventos de mouse."
+  },
+  "toastZoomStretch": {
+    "message": "Esticado para preencher a janela"
+  },
+  "reportTitle": {
+    "message": "## Simulador Mobile — relatório"
+  },
+  "reportDevice": {
+    "message": "Dispositivo"
+  },
+  "reportViewport": {
+    "message": "Viewport"
+  },
+  "reportOrientation": {
+    "message": "Orientação"
+  },
+  "reportPlatform": {
+    "message": "Plataforma"
+  },
+  "reportFpsMissing": {
+    "message": "(ative o medidor FPS na toolbar para incluir)"
+  },
+  "reportGenerated": {
+    "message": "_Gerado pelo Simulador Mobile $1$_"
+  },
+  "reportPhysical": {
+    "message": "Físico"
+  }
+}

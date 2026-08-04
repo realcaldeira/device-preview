@@ -1,0 +1,39 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>ext-test</title>
+<link rel="stylesheet" href="../preview/preview.css"></head>
+<body data-theme="dark">
+<script>
+window.addEventListener('error', (e) => console.log('PAGE-ERROR:', e.message, e.filename, e.lineno));
+const noopL = { addListener() {} };
+const root = new URL('../', location.href);
+window.chrome = {
+  tabs: { getCurrent: async () => ({ id: 1 }) },
+  storage: { local: { get: async () => ({}), set: async () => {} } },
+  runtime: {
+    id: 'test',
+    getURL: (p) => new URL(p, root).href,
+    sendMessage: async () => ({ ok: true }),
+    onMessage: noopL
+  },
+  webNavigation: { onCommitted: noopL, onHistoryStateUpdated: noopL, onReferenceFragmentUpdated: noopL }
+};
+</script>
+<script>
+(async () => {
+  const html = await fetch('../preview/preview.html').then((r) => r.text());
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  document.body.innerHTML = '';
+  for (const el of doc.body.children) {
+    if (el.tagName !== 'SCRIPT') document.body.appendChild(el.cloneNode(true));
+  }
+  const load = (src) => new Promise((ok, err) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = ok; s.onerror = err;
+    document.body.appendChild(s);
+  });
+  await load('../shared/url.js');
+  await load('../shared/frames.js');
+  await load('../preview/preview.js');
+  console.log('INIT-DONE');
+})();
+</script>
+</body></html>

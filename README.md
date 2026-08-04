@@ -7,7 +7,7 @@
 ![Manifest V3](https://img.shields.io/badge/Manifest-V3-blue)
 ![Chrome 116+](https://img.shields.io/badge/Chrome-116%2B-success)
 ![Edge](https://img.shields.io/badge/Edge-compatível-0078D7)
-![Versão](https://img.shields.io/badge/versão-1.6.0-orange)
+![Versão](https://img.shields.io/badge/versão-1.6.1-orange)
 ![Dispositivos](https://img.shields.io/badge/dispositivos-50-purple)
 
 </div>
@@ -18,7 +18,7 @@ Extensão para **Chrome/Edge (Manifest V3)** que abre uma prévia fiel de qualqu
 
 ## ✨ Destaques
 
-- 🖼️ **Moldura 100% CSS/SVG** — aço inox nos aparelhos Apple, alumínio fosco nos Android, recortes com lente de câmera, status bar por plataforma (iOS vs Android) com **hora e bateria reais** do computador.
+- 🖼️ **Moldura fotorrealista** — renders gerados por arquétipo (aro de metal com varrido cônico, bisel polido, vidro negro, linhas de antena, queixo de TV com LED) aplicados como imagem 9-slice, com recortes de câmera, botões por marca e status bar por plataforma (iOS vs Android) com **hora e bateria reais** do computador. Veja `frames/README.md`.
 - 🌐 **50 dispositivos** com specs reais (viewport, DPR físico e User-Agent) — telefones, tablets, notebooks e TVs.
 - 👆 **Toque de verdade** — em celular e tablet o site recebe eventos de toque no lugar do mouse: arrastar rola a página (com inércia), o ponteiro vira um dedo e a detecção `pointer: coarse` passa a valer.
 - 💻 **Notebooks** — MacBook e notebooks Windows/Chromebook com tampa, base e a barra do navegador de desktop (abas, semáforo do macOS ou botões de janela).
@@ -72,8 +72,9 @@ Na tela de prévia você pode:
 | 🤖 Telefones Android | 18 | Galaxy S20 / S21 Ultra / S22, Pixel, OnePlus… |
 | 🍎 Telefones Apple | 14 | iPhone 5, SE, X, XR, e modelos com notch / Dynamic Island |
 | 📒 Tablets | 6 | iPad Mini, iPad Air, iPad Pro 11", iPad Pro 12.9"… |
+| 💻 Notebooks | 8 | MacBook Air 13", MacBook Pro 14"/16", notebooks HD e Full HD, Surface Laptop, Chromebook |
 | 📺 Smart TVs | 4 | HD 720p, Full HD, 4K UHD, 8K |
-| **Total** | **42** | |
+| **Total** | **50** | |
 
 Cada dispositivo carrega `viewport`, `dpr` (resolução física), tipo de moldura e `User-Agent` reais — definidos em [`data/devices.json`](data/devices.json).
 
@@ -93,31 +94,54 @@ A cor muda por faixa (verde ≥ 50, amarelo ≥ 30, vermelho < 30). É uma medid
 
 - **User-Agent real por dispositivo**: ao selecionar um aparelho, o service worker cria regras de sessão do `chrome.declarativeNetRequest` restritas à aba da prévia (`condition.tabIds`), substituindo o cabeçalho `User-Agent` (e os client hints `sec-ch-ua-*`) em todas as requisições do iframe.
 - **Sites dentro de iframe**: a mesma técnica remove os cabeçalhos `X-Frame-Options` e `Content-Security-Policy` apenas nas respostas de `sub_frame` daquela aba, permitindo carregar sites que normalmente bloqueiam iframes.
-- **Moldura**: aro metálico em gradiente, recortes com lente de câmera e brilho azulado (notch, Dynamic Island, furo central/lateral, gota), status bar específica por plataforma com hora e bateria reais, indicador de gesto, botões físicos posicionados conforme cada marca (mute do iPhone, alert slider do OnePlus, power acima do volume no Pixel) e chassi de TV com chin, logo, LED de standby e pedestal. Em paisagem, recortes e botões migram de borda.
-- **Teclado virtual**: uma sonda injetada via `chrome.scripting` nos frames do site detecta o foco em campos editáveis e avisa a prévia por `postMessage`; as teclas inserem texto com comandos de edição nativos (compatível com React e afins) e o campo focado rola para ficar visível acima do teclado.
+- **Moldura**: render fotorrealista gerado por `tools/make_frames.py` (aro metálico com varrido cônico e bisel polido, vidro negro da borda, linhas de antena, squircle nos aparelhos Apple) aplicado como `border-image` de 9 fatias — os cantos ficam intactos e só as faixas do meio esticam. Por cima da arte, em CSS, ficam os recortes com lente de câmera e brilho azulado (notch, Dynamic Island, furo central/lateral, gota), a status bar por plataforma com hora e bateria reais, o indicador de gesto e os botões físicos posicionados conforme cada marca (mute do iPhone, alert slider do OnePlus, power acima do volume no Pixel); a TV ganha queixo com logo, LED de standby e pedestal. Em paisagem, a arte usa uma variante própria (a luz continua vindo de cima) e recortes e botões migram de borda.
+- **Teclado virtual**: uma sonda injetada via `chrome.scripting` nos frames do site avisa a prévia, por `postMessage`, que um campo ganhou foco. Esse aviso é só um gatilho: a prévia não confia no remetente (qualquer iframe da página conseguiria forjá-lo) e pergunta a cada frame quem está de fato focado, via `document.hasFocus()`. As teclas então vão por `chrome.scripting`, direto no frame confirmado — nunca por `postMessage` —, inserindo texto com comandos de edição nativos (compatível com React e afins), e o campo rola para ficar visível acima do teclado.
 - **Limpeza**: as regras de rede são removidas quando a aba da prévia é fechada ou navega para fora da extensão.
 
 ## 🗂️ Estrutura do projeto
 
 ```
 device-preview/
-├── manifest.json               # Manifest V3
+├── manifest.json               # Manifest V3 (+ atalho Alt+Shift+P)
 ├── background/
-│   └── service-worker.js       # Regras de rede (UA + iframe), abertura da prévia, captura
+│   └── service-worker.js       # UA/iframe, prévia, captura, uninstall URL, presets
 ├── content/
 │   └── device-probe.js         # Identidade do aparelho e eventos de toque dentro do site
 ├── sidepanel/
-│   └── sidepanel.html/.css/.js # Painel lateral com os dispositivos por categoria
+│   └── sidepanel.html/.css/.js # Painel: dispositivos, presets, recentes, onboarding
 ├── preview/
-│   └── preview.html/.css/.js   # Mockup com moldura, status bar e controles
+│   └── preview.html/.css/.js   # Mockup, captura, relatório, prompt de avaliação
+├── frames/
+│   ├── *.webp                  # Molduras fotorrealistas geradas (9-slice) + variantes .rot
+│   └── README.md               # Como a moldura por imagem funciona e como regenerá-la
 ├── data/
 │   └── devices.json            # 50 dispositivos com specs reais (viewport, DPR, UA)
 ├── shared/
-│   └── icons.js                # Silhuetas SVG por tipo de moldura
+│   ├── icons.js                # Silhuetas SVG por tipo de moldura
+│   ├── frames.js               # Geometria das molduras (pads, raios, 9-slice) — fonte única
+│   ├── growth.js               # URLs da loja/landing e presets compartilhados
+│   ├── i18n.js                 # chrome.i18n helpers (t / applyI18n / catLabel)
+│   └── url.js                  # Validação de URL compartilhada
+├── _locales/                   # en, pt_BR, es, fr, de (messages.json)
+├── store/                      # Textos CWS PT/EN/ES/FR/DE + release notes
+├── docs/                       # Landing GitHub Pages (PT + en/) + FAQ + uninstall
 ├── icons/                      # Ícones PNG da extensão
 └── tools/
-    └── make_icons.py           # Gerador dos ícones (somente stdlib)
+    ├── gen_locales.js          # Gera _locales/*/messages.json
+    ├── make_icons.py           # Gerador dos ícones (somente stdlib)
+    ├── make_frames.py          # Gerador das molduras fotorrealistas (Pillow)
+    ├── ext-test.html           # Roda a prévia inteira fora da extensão (APIs chrome simuladas)
+    └── t-bench.html            # Bancada da moldura por imagem (?frame=island&rot=1&scale=0.5)
 ```
+
+## 📣 Loja e landing
+
+- Textos PT/EN/ES/FR/DE e checklist: [`store/`](store/)
+- UI da extensão: `_locales/` (`en`, `pt_BR`, `es`, `fr`, `de`) via `chrome.i18n` — segue o idioma do Chrome
+- Landing PT + EN (GitHub Pages `/docs`): https://realcaldeira.github.io/device-preview/ · https://realcaldeira.github.io/device-preview/en/
+- Chrome Web Store: https://chromewebstore.google.com/detail/ebnbfkejdddkbpkljbbcnchnlekombef
+
+Regenerar strings: `node tools/gen_locales.js`
 
 ## ⚠️ Limitações conhecidas
 
@@ -126,6 +150,8 @@ device-preview/
 - O motor de renderização é sempre o **Blink** do seu Chrome: detalhes específicos de Safari/WebKit (iOS) e de navegadores de TV não são reproduzidos por nenhuma ferramenta desktop.
 - Sites com *frame-busting* via JavaScript (`if (top !== self) ...`) ainda podem se recusar a renderizar.
 - Logins que dependem de cookies `SameSite=Lax/Strict` podem falhar dentro do iframe.
+- **O site perde a própria CSP enquanto está na prévia.** Para conseguir embutir qualquer site, a extensão remove `Content-Security-Policy` e `X-Frame-Options` das respostas de `sub_frame` **da aba da prévia** (nenhuma outra aba é afetada). Isso também desliga, ali dentro, a proteção que o site configurou contra XSS e injeção de conteúdo. Vale lembrar disso antes de navegar logado, em páginas de pagamento ou em sites com conteúdo de terceiros.
+- Um site consegue **detectar a extensão**: a sonda se ativa quando o `window.name` do frame começa com `__sim_dev__`, e essa marca é legível por qualquer página carregada nele.
 - A captura usa `chrome.tabs.captureVisibleTab`: o zoom é ajustado automaticamente para caber o mockup inteiro na janela antes do clique.
 
 ## 🎨 Regenerar ícones

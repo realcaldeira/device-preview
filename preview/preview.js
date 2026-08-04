@@ -1,14 +1,4 @@
-const FRAME_PRESETS = {
-  'notch':      { padTop: 16, padSide: 16, padBottom: 16, radius: 54, screenRadius: 40, sb: 40, kind: 'phone' },
-  'island':     { padTop: 14, padSide: 14, padBottom: 14, radius: 56, screenRadius: 44, sb: 54, kind: 'phone' },
-  'punch':      { padTop: 11, padSide: 11, padBottom: 13, radius: 38, screenRadius: 26, sb: 30, kind: 'phone' },
-  'punch-left': { padTop: 11, padSide: 11, padBottom: 13, radius: 38, screenRadius: 26, sb: 30, kind: 'phone' },
-  'drop':       { padTop: 12, padSide: 12, padBottom: 20, radius: 34, screenRadius: 22, sb: 28, kind: 'phone' },
-  'home':       { padTop: 80, padSide: 18, padBottom: 86, radius: 56, screenRadius: 4,  sb: 22, kind: 'phone' },
-  'tablet':     { padTop: 32, padSide: 32, padBottom: 32, radius: 36, screenRadius: 12, sb: 26, kind: 'tablet' },
-  'laptop':     { padTop: 15, padSide: 11, padBottom: 26, radius: 16, screenRadius: 4,  sb: 0,  kind: 'laptop' },
-  'tv':         { padTop: 10, padSide: 10, padBottom: 6,  radius: 12, screenRadius: 3,  sb: 0,  kind: 'tv' }
-};
+const FRAME_PRESETS = DP_FRAME_PRESETS;
 
 function kindOf(d) {
   return (FRAME_PRESETS[d.frame] || FRAME_PRESETS.punch).kind;
@@ -79,25 +69,30 @@ const els = {
   back: $('backBtn'), reload: $('reloadBtn'), address: $('addressInput'), go: $('goBtn'),
   zoomIn: $('zoomInBtn'), zoomOut: $('zoomOutBtn'), zoomFit: $('zoomFitBtn'), zoomLabel: $('zoomLabel'),
   theme: $('themeBtn'), iconMoon: $('iconMoon'), iconSun: $('iconSun'), shot: $('shotBtn'),
+  report: $('reportBtn'),
   fps: $('fpsBtn'), fpsMeter: $('fpsMeter'), fpsValue: $('fpsValue'), fpsDetail: $('fpsDetail'),
   exit: $('exitBtn'),
   stage: $('stage'), zoomBox: $('zoomBox'), mockup: $('mockup'),
   viewport: $('viewport'), sbTime: $('sbTime'),
   vkb: $('vkb'), vkbKeys: $('vkbKeys'),
   infoName: $('infoName'), infoViewport: $('infoViewport'), infoDpr: $('infoDpr'),
-  infoPhysical: $('infoPhysical'), infoUa: $('infoUa'), toast: $('toast')
+  infoPhysical: $('infoPhysical'), infoUa: $('infoUa'), toast: $('toast'),
+  reviewPrompt: $('reviewPrompt'), reviewLater: $('reviewLater'),
+  reviewNever: $('reviewNever'), reviewGo: $('reviewGo')
 };
+
+let lastFpsStats = null;
 
 const hasExtensionApis =
   typeof chrome !== 'undefined' && !!(chrome.tabs && chrome.runtime && chrome.runtime.id);
 
 async function init() {
-
+  applyI18n();
   bindUiEvents();
   startClock();
 
   if (!hasExtensionApis) {
-    toast('Abra esta página pela extensão (ícone na barra do Chrome), não como arquivo local.');
+    toast(t('toastOpenViaExt'));
     return;
   }
 
@@ -136,14 +131,14 @@ async function init() {
     setFrameless(!!last.frameless, false);
     if (last.stretch) setStretch(true, false);
   } catch (e) {
-    toast('Erro ao iniciar a prévia: ' + ((e && e.message) || e));
+    toast(t('toastInitError', [(e && e.message) || String(e)]));
   }
 }
 
 function populateSelect() {
   for (const cat of categories) {
     const group = document.createElement('optgroup');
-    group.label = cat.name;
+    group.label = catLabel(cat.id, cat.name);
     for (const d of cat.devices) {
       const opt = document.createElement('option');
       opt.value = d.id;
@@ -165,7 +160,7 @@ function bindUiEvents() {
     buildFrame();
     applyZoom();
     pushDeviceCfg();
-    toast(state.orientation === 'portrait' ? 'Retrato' : 'Paisagem');
+    toast(state.orientation === 'portrait' ? t('toastPortrait') : t('toastLandscape'));
     saveState();
   });
 
@@ -199,8 +194,13 @@ function bindUiEvents() {
     setTheme(state.theme === 'dark' ? 'light' : 'dark', true));
 
   els.shot.addEventListener('click', captureShot);
+  if (els.report) els.report.addEventListener('click', exportReport);
   els.fps.addEventListener('click', () => setFpsMeter(!fpsOn));
   els.exit.addEventListener('click', exitPreview);
+
+  if (els.reviewLater) els.reviewLater.addEventListener('click', () => snoozeReview(7));
+  if (els.reviewNever) els.reviewNever.addEventListener('click', dismissReviewForever);
+  if (els.reviewGo) els.reviewGo.addEventListener('click', openStoreReview);
 
   window.addEventListener('message', onKbMessage);
   els.vkb.addEventListener('pointerdown', onKbPointerDown);
@@ -292,7 +292,7 @@ async function setDevice(id, { navigate: doNavigate = false, orientation = null 
   updateInfo();
   renderClock();
   applyZoom();
-  document.title = `Simulador Mobile — ${device.name}`;
+  document.title = `${t('appTitle')} — ${device.name}`;
 
   // Só reaplica o User-Agent quando ele muda de fato. Trocar entre aparelhos de mesmo
   // UA (só muda o tamanho da tela) dispensa o round-trip ao service worker.
@@ -310,14 +310,14 @@ async function setDevice(id, { navigate: doNavigate = false, orientation = null 
         mobile: device.mobile
       });
       if (!res || !res.ok) {
-        toast('Falha ao aplicar o User-Agent: ' + ((res && res.error) || 'sem resposta do service worker'));
+        toast(t('toastUaFail', [(res && res.error) || t('errNoResponse')]));
       } else {
         appliedUa = device.ua;
         appliedPlatform = device.platform;
         appliedMobile = device.mobile;
       }
     } catch (e) {
-      toast('Falha ao aplicar o User-Agent: ' + e.message);
+      toast(t('toastUaFail', [e.message]));
     }
   }
 
@@ -349,6 +349,105 @@ function browserBarKind() {
   return 'chrome';
 }
 
+const FRAME_IMAGES = DP_FRAME_IMAGES;
+
+let frameImageToken = 0;
+
+function clearFrameImage(style) {
+  delete els.mockup.dataset.frameImage;
+  for (const p of ['--frame-img', '--frame-slice', '--frame-bw', '--frame-corner']) {
+    style.removeProperty(p);
+  }
+}
+
+function frameImageSpec(preset, rotated) {
+  // Arte própria por aparelho (devices.json > frameImage) tem precedência e
+  // vale como está — quem a define responde pela orientação (ver frames/README.md).
+  const custom = device.frameImage;
+  if (custom && custom.src && Array.isArray(custom.slice)) {
+    const inset = Array.isArray(custom.inset) ? custom.inset
+      : [preset.padTop, preset.padSide, preset.padBottom, preset.padSide];
+    return {
+      src: custom.src,
+      slice: custom.slice,
+      inset,
+      width: Array.isArray(custom.width) ? custom.width : inset,
+      corner: custom.corner === 'squircle' ? 'squircle' : 'round'
+    };
+  }
+
+  let key = device.frame;
+  if (key === 'laptop' && brandOf(device) === 'macbook') key = 'laptop-macbook';
+  const cfg = FRAME_IMAGES[key];
+  if (!cfg) return null;
+
+  const base = cfg.inset || [preset.padTop, preset.padSide, preset.padBottom, preset.padSide];
+  const useRot = rotated && cfg.rot !== false;
+  // Girado, o que era a borda de cima vai para a esquerda — mesma convenção
+  // dos pads e dos recortes no CSS.
+  const inset = useRot ? [base[1], base[2], base[3], base[0]] : base;
+  const width = inset.map((v) => Math.max(v, preset.radius));
+  return {
+    src: `frames/${key}${useRot ? '.rot' : ''}.webp`,
+    slice: width.map((v) => Math.max(1, Math.round(v * cfg.scale))),
+    inset,
+    width,
+    corner: cfg.corner || 'round'
+  };
+}
+
+function setPadVars(style, pads) {
+  style.setProperty('--pad-top', pads.top + 'px');
+  style.setProperty('--pad-right', pads.right + 'px');
+  style.setProperty('--pad-bottom', pads.bottom + 'px');
+  style.setProperty('--pad-left', pads.left + 'px');
+}
+
+function applyFrameImage(pads, preset, rotated) {
+  const spec = frameImageSpec(preset, rotated);
+  const s = els.mockup.style;
+  const token = ++frameImageToken;
+
+  if (!spec) {
+    clearFrameImage(s);
+    return pads;
+  }
+
+  // Precisa ser absoluta: url() dentro de custom property resolve em relação à
+  // folha de estilo, não ao documento.
+  const url = hasExtensionApis
+    ? chrome.runtime.getURL(spec.src)
+    : new URL('../' + spec.src, location.href).href;
+
+  // Enquanto a arte não carrega (ou se falhar), o bisel CSS continua — sem
+  // data-frame-image o ::before metálico e o queixo da TV não são desligados.
+  clearFrameImage(s);
+
+  const [top, right, bottom, left] = spec.inset;
+  const imagePads = { top, right, bottom, left };
+
+  const img = new Image();
+  img.onload = () => {
+    if (token !== frameImageToken) return;
+    els.mockup.dataset.frameImage = 'on';
+    s.setProperty('--frame-img', `url("${url}")`);
+    s.setProperty('--frame-slice', spec.slice.join(' '));
+    s.setProperty('--frame-bw', spec.width.map((v) => v + 'px').join(' '));
+    s.setProperty('--frame-corner', spec.corner);
+    setPadVars(s, imagePads);
+  };
+  img.onerror = () => {
+    if (token !== frameImageToken) return;
+    clearFrameImage(s);
+    setPadVars(s, pads);
+  };
+  img.src = url;
+
+  // A espessura da moldura na arte vira o padding do mockup; sem isso a tela
+  // não cairia no recorte da imagem. Se o load falhar, onerror restaura `pads`.
+  return imagePads;
+}
+
 function buildFrame() {
   const preset = FRAME_PRESETS[device.frame] || FRAME_PRESETS.punch;
   const { w, h } = dims();
@@ -368,9 +467,10 @@ function buildFrame() {
 
   const natural = device.width > device.height ? 'landscape' : 'portrait';
   const rotated = state.orientation !== natural;
-  const pads = rotated
+  const pads = applyFrameImage(rotated
     ? { top: preset.padSide, right: preset.padBottom, bottom: preset.padSide, left: preset.padTop }
-    : { top: preset.padTop, right: preset.padSide, bottom: preset.padBottom, left: preset.padSide };
+    : { top: preset.padTop, right: preset.padSide, bottom: preset.padBottom, left: preset.padSide },
+    preset, rotated);
 
   // Notebook não se gira: a tampa tem lado certo.
   els.rotate.disabled = preset.kind === 'laptop';
@@ -411,7 +511,7 @@ function setFrameless(on, persist) {
   if (!on && state.stretch) disableStretch(true);
   applyZoom();
   if (persist) {
-    toast(on ? 'Tela cheia: só a tela do dispositivo' : 'Moldura do dispositivo visível');
+    toast(on ? t('toastFramelessOn') : t('toastFramelessOff'));
     saveState();
   }
 }
@@ -442,7 +542,7 @@ function setStretch(on, persist) {
   }
   applyZoom();
   if (persist) {
-    toast(on ? 'Esticado: preenche a janela (distorce a proporção)' : 'Proporção do dispositivo restaurada');
+    toast(on ? t('toastStretchOn') : t('toastStretchOff'));
     saveState();
   }
 }
@@ -464,7 +564,7 @@ function setBrowserUi(on, persist) {
   renderBrowserHost();
   applyZoom();
   if (persist) {
-    toast(on ? 'Barra do navegador visível' : 'Barra do navegador oculta');
+    toast(on ? t('toastBrowserOn') : t('toastBrowserOff'));
     saveState();
   }
 }
@@ -488,6 +588,7 @@ function deviceCfg() {
   const { w, h } = dims();
   const p = PLATFORMS[device.platform] || PLATFORMS.Linux;
   return {
+    origin: location.origin,
     ua: device.ua,
     navPlatform: device.platform === 'iOS' && kindOf(device) === 'tablet' ? 'iPad' : p.nav,
     uaPlatform: p.ua,
@@ -530,10 +631,10 @@ function setTouch(on, persist) {
   pushDeviceCfg();
   if (persist) {
     toast(!supported
-      ? 'Este aparelho é usado com mouse — o toque fica desligado.'
+      ? t('toastTouchDesktop')
       : on
-        ? 'Toque ligado: arraste para rolar, como no aparelho de verdade.'
-        : 'Toque desligado: o site volta a receber eventos de mouse.');
+        ? t('toastTouchOn')
+        : t('toastTouchOff'));
     saveState();
   }
 }
@@ -605,7 +706,7 @@ function applyZoom() {
     els.zoomBox.style.width = mw * sx + 'px';
     els.zoomBox.style.height = mh * sy + 'px';
     els.zoomLabel.textContent = `${Math.round(sx * 100)}×${Math.round(sy * 100)}`;
-    els.zoomLabel.title = 'Esticado para preencher a janela';
+    els.zoomLabel.title = t('toastZoomStretch');
     return;
   }
 
@@ -614,7 +715,7 @@ function applyZoom() {
   els.zoomBox.style.width = mw * scale + 'px';
   els.zoomBox.style.height = mh * scale + 'px';
   els.zoomLabel.textContent = Math.round(scale * 100) + '%';
-  els.zoomLabel.title = state.zoom === 'fit' ? 'Zoom ajustado à janela' : 'Zoom manual';
+  els.zoomLabel.title = state.zoom === 'fit' ? t('btnZoomFit') : t('zoomLabel');
 }
 
 function stepZoom(delta) {
@@ -662,8 +763,8 @@ function saveState() {
 }
 
 async function captureShot() {
-  if (!device) { toast('Escolha um dispositivo primeiro.'); return; }
-  if (!hasExtensionApis) { toast('Captura disponível apenas pela extensão.'); return; }
+  if (!device) { toast(t('toastPickDevice')); return; }
+  if (!hasExtensionApis) { toast(t('toastCaptureExtOnly')); return; }
 
   if (kbVisible) {
     hideKeyboard();
@@ -732,9 +833,10 @@ async function captureShot() {
     link.download = `simulador_${device.id}_${physW}x${physH}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
-    toast(`Captura salva (${outW}×${outH} px)`);
+    toast(t('toastCaptureSaved', [String(outW), String(outH)]));
+    await bumpCaptureAndMaybeReview();
   } catch (e) {
-    toast('Erro na captura: ' + e.message);
+    toast(t('toastCaptureError', [e.message]));
   } finally {
     if (fpsWasVisible) {
       suppressFpsRender = false;
@@ -826,11 +928,12 @@ function withTimeout(promise, ms, onTimeout) {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
-async function runInFrame(frameId, func) {
+async function runInFrame(frameId, func, args) {
   const exec = chrome.scripting.executeScript({
     target: { tabId: myTabId, frameIds: [frameId] },
     world: 'MAIN',
-    func
+    func,
+    args: args || []
   });
   const out = await withTimeout(exec, EXEC_TIMEOUT, () => noTarget('tempo esgotado ao acessar o frame'));
   return out && out[0] ? out[0].result : null;
@@ -917,7 +1020,7 @@ async function applyProbe() {
 
 function scriptingReady(reason) {
   if (!chrome.scripting) {
-    toast('Recurso de medição indisponível para ' + reason + '. Recarregue a extensão em chrome://extensions.');
+    toast(t('toastFpsUnavailable', [reason]));
     return false;
   }
   return true;
@@ -943,21 +1046,21 @@ async function setFpsMeter(on) {
   try {
     if (on) {
       if (!hasExtensionApis) {
-        toast('Medidor de FPS disponível apenas pela extensão.');
+        toast(t('toastFpsExtOnly'));
         return;
       }
       if (!device || !state.currentUrl) {
-        toast('Carregue um site antes de medir o FPS.');
+        toast(t('toastFpsNeedSite'));
         return;
       }
-      if (!scriptingReady('o medidor de FPS')) return;
+      if (!scriptingReady('FPS')) return;
       fpsOn = true;
       reattachTries = 0;
       showFps(null);
       try {
         await applyWithRetries();
         startFpsPolling();
-        toast('Medidor de FPS ativado');
+        toast(t('toastFpsOn'));
       } catch (e) {
         fpsOn = false;
         stopFpsPolling();
@@ -967,9 +1070,9 @@ async function setFpsMeter(on) {
         fpsFrameId = null;
         if (e.code !== 'CANCELLED') {
           const msg = e.code === 'NO_TARGET'
-            ? 'não foi possível acessar o conteúdo do site (ele pode bloquear exibição em iframe; recarregue a página e tente de novo)'
+            ? 'site content unreachable (may block iframe; reload and try again)'
             : e.message;
-          toast('Não foi possível medir o FPS: ' + msg);
+          toast(t('toastFpsFail', [msg]));
         }
       }
     } else {
@@ -985,7 +1088,7 @@ async function setFpsMeter(on) {
         } catch (_) {  }
       }
       fpsFrameId = null;
-      toast('Medidor de FPS desativado');
+      toast(t('toastFpsOff'));
     }
     updateFpsButton();
   } finally {
@@ -1011,10 +1114,12 @@ function showFps(stats) {
     els.fpsValue.textContent = '··· FPS';
     els.fpsDetail.textContent = '';
     els.fpsMeter.removeAttribute('data-level');
+    lastFpsStats = null;
   } else {
     els.fpsValue.textContent = stats.fps + ' FPS';
     els.fpsDetail.textContent = '1% ' + stats.low1 + '  ·  ' + stats.ms + ' ms';
     els.fpsMeter.dataset.level = fpsLevel(stats.fps);
+    lastFpsStats = stats;
   }
   els.fpsMeter.classList.remove('hidden');
 }
@@ -1030,7 +1135,7 @@ function scheduleReattach() {
     } catch (_) {
       if (!fpsOn) return;
       if (++reattachTries >= MAX_REATTACH_TRIES) {
-        resetFpsState('Medição de FPS interrompida: não foi possível reconectar ao site.');
+        resetFpsState(t('toastFpsFail', ['could not reconnect to the site']));
       } else {
         scheduleReattach();
       }
@@ -1063,19 +1168,25 @@ function kbProbe() {
   var fieldSeq = 0;
   var frameTag = Math.random().toString(36).slice(2, 10);
 
-  function announce() {
+  function focusInfo() {
     var el = document.activeElement;
     var mode = modeOf(el);
-    if (mode) {
-      if (!el.__ddKbField) el.__ddKbField = frameTag + ':' + (++fieldSeq);
-      send({
-        __simulador: 'kb-focus',
-        mode: mode,
-        multiline: el.tagName === 'TEXTAREA' || !!el.isContentEditable,
-        field: el.__ddKbField
-      });
+    if (!mode) return null;
+    if (!el.__ddKbField) el.__ddKbField = frameTag + ':' + (++fieldSeq);
+    return {
+      mode: mode,
+      multiline: el.tagName === 'TEXTAREA' || !!el.isContentEditable,
+      field: el.__ddKbField
+    };
+  }
+
+  function announce() {
+    var info = focusInfo();
+    if (info) {
+      info.__simulador = 'kb-focus';
+      send(info);
     }
-    return !!mode;
+    return !!info;
   }
 
   document.addEventListener('focusin', announce, true);
@@ -1105,32 +1216,36 @@ function kbProbe() {
     if (!ok && 'value' in el && el.value) nativeSetValue(el, el.value.slice(0, -1));
   }
 
-  window.addEventListener('message', function (e) {
-    var d = e.data;
-    if (!d || d.__simulador !== 'kb-key' || typeof d.key !== 'string') return;
+  window.__ddKbFocus = function () {
+    return document.hasFocus() ? focusInfo() : null;
+  };
+
+  window.__ddKbApply = function (key) {
+    if (typeof key !== 'string') return false;
     var el = document.activeElement;
     var mode = modeOf(el);
-    if (d.key === '__hide__') { if (mode) el.blur(); return; }
-    if (!mode) return;
-    if (d.key === '__reveal__') {
+    if (key === '__hide__') { if (mode) el.blur(); return true; }
+    if (!mode) return false;
+    if (key === '__reveal__') {
       try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {}
-      return;
+      return true;
     }
-    if (d.key === 'Backspace') { deleteBack(el); return; }
-    if (d.key === 'Enter') {
+    if (key === 'Backspace') { deleteBack(el); return true; }
+    if (key === 'Enter') {
       var opts = { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true };
       var allowed = el.dispatchEvent(new KeyboardEvent('keydown', opts));
       el.dispatchEvent(new KeyboardEvent('keyup', opts));
-      if (!allowed) return;
+      if (!allowed) return true;
       if (el.tagName === 'TEXTAREA' || el.isContentEditable) {
         insertText(el, '\n');
       } else if (el.form) {
         try { el.form.requestSubmit ? el.form.requestSubmit() : el.form.submit(); } catch (_) {}
       }
-      return;
+      return true;
     }
-    insertText(el, d.key === 'Space' ? ' ' : d.key);
-  });
+    insertText(el, key === 'Space' ? ' ' : key);
+    return true;
+  };
 
   announce();
 }
@@ -1140,8 +1255,10 @@ let kbMultiline = false;
 let kbShift = false;
 let kbPage = 'letters';
 let kbVisible = false;
-let kbFocusWin = null;
+let kbFrameId = null;
 let kbFieldId = null;
+let kbResolving = false;
+let kbResolvePending = false;
 let kbInjectTimer = null;
 let kbRepeatDelay = null;
 let kbRepeatTimer = null;
@@ -1178,33 +1295,57 @@ function frameBroadcast(msg) {
   if (els.viewport.contentWindow) post(els.viewport.contentWindow, 3);
 }
 
-function kbSend(msg) {
-  if (kbFocusWin) {
-    try {
-      kbFocusWin.postMessage(msg, '*');
-      return;
-    } catch (_) {}
-  }
-  frameBroadcast(msg);
+async function resolveKbFrame() {
+  if (!hasExtensionApis || !chrome.scripting || myTabId == null) return null;
+  const frames = await allHttpFrames();
+  const answers = await Promise.all(frames.map((f) =>
+    runInFrame(f.frameId, () => (window.__ddKbFocus ? window.__ddKbFocus() : null))
+      .then((info) => (info ? { frameId: f.frameId, info } : null))
+      .catch(() => null)
+  ));
+  return answers.find(Boolean) || null;
 }
 
-function onKbMessage(e) {
+let kbQueue = Promise.resolve();
+
+function kbApply(key) {
+  if (kbFrameId == null || !hasExtensionApis || !chrome.scripting) return;
+  const frameId = kbFrameId;
+  kbQueue = kbQueue.then(() =>
+    runInFrame(frameId, (k) => (window.__ddKbApply ? window.__ddKbApply(k) : false), [key])
+      .catch(() => {}));
+}
+
+async function onKbMessage(e) {
   const d = e.data;
-  if (!d || typeof d !== 'object') return;
-  if (d.__simulador === 'kb-focus') {
-    if (!isHandheld()) return;
-    const field = typeof d.field === 'string' ? d.field : null;
-    if (kbVisible && field && field === kbFieldId) {
-      if (e.source) kbFocusWin = e.source;
-      return;
+  if (!d || typeof d !== 'object' || typeof d.__simulador !== 'string') return;
+  if (d.__simulador !== 'kb-focus' && d.__simulador !== 'kb-blur') return;
+  if (!isHandheld()) return;
+  if (kbResolving) { kbResolvePending = true; return; }
+
+  kbResolving = true;
+  let found = null;
+  try {
+    found = await resolveKbFrame();
+  } finally {
+    kbResolving = false;
+    if (kbResolvePending) {
+      kbResolvePending = false;
+      setTimeout(() => onKbMessage(e), 0);
     }
-    kbFieldId = field;
-    showKeyboard(typeof d.mode === 'string' ? d.mode : 'text', !!d.multiline);
-    kbFocusWin = e.source || null;
-    setTimeout(() => kbSend({ __simulador: 'kb-key', key: '__reveal__' }), 260);
-  } else if (d.__simulador === 'kb-blur') {
-    if (!kbFocusWin || e.source === kbFocusWin) hideKeyboard();
   }
+
+  if (!found) {
+    if (kbVisible) hideKeyboard();
+    return;
+  }
+
+  kbFrameId = found.frameId;
+  if (kbVisible && found.info.field && found.info.field === kbFieldId) return;
+
+  kbFieldId = found.info.field || null;
+  showKeyboard(typeof found.info.mode === 'string' ? found.info.mode : 'text', !!found.info.multiline);
+  setTimeout(() => kbApply('__reveal__'), 260);
 }
 
 function kbBottomRow() {
@@ -1294,7 +1435,8 @@ function showKeyboard(mode, multiline) {
 }
 
 function hideKeyboard() {
-  kbFocusWin = null;
+  kbFrameId = null;
+  kbFieldId = null;
   if (!kbVisible) return;
   kbVisible = false;
   stopKbRepeat();
@@ -1304,7 +1446,7 @@ function hideKeyboard() {
 
 function pressKey(key) {
   if (key === '__hide__') {
-    kbSend({ __simulador: 'kb-key', key: '__hide__' });
+    kbApply('__hide__');
     hideKeyboard();
     return;
   }
@@ -1313,7 +1455,7 @@ function pressKey(key) {
   if (key === '__sym2__') { kbPage = 'sym2'; renderKeyboard(); return; }
   if (key === '__abc__') { kbPage = 'letters'; renderKeyboard(); return; }
 
-  kbSend({ __simulador: 'kb-key', key });
+  kbApply(key);
 
   if (kbShift && kbPage === 'letters' && /^[A-Z]$/.test(key)) {
     kbShift = false;
@@ -1363,14 +1505,23 @@ function renderClock() {
 
 function startClock() {
   renderClock();
-  setInterval(renderClock, 15000);
+  setInterval(() => { renderClock(); updateBattery(); }, 15000);
   updateBattery();
 }
+
+let batteryHooked = false;
 
 async function updateBattery() {
   let level = 1;
   try {
-    if (navigator.getBattery) level = (await navigator.getBattery()).level;
+    if (navigator.getBattery) {
+      const bat = await navigator.getBattery();
+      level = bat.level;
+      if (!batteryHooked) {
+        batteryHooked = true;
+        bat.addEventListener('levelchange', updateBattery);
+      }
+    }
   } catch (_) {  }
   const fillIos = document.getElementById('battFillIos');
   const fillAnd = document.getElementById('battFillAnd');
@@ -1386,6 +1537,93 @@ function toast(message) {
   els.toast.classList.remove('hidden');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => els.toast.classList.add('hidden'), 3000);
+}
+
+async function bumpCaptureAndMaybeReview() {
+  if (!hasExtensionApis) return;
+  try {
+    const data = await chrome.storage.local.get([DP_REVIEW_KEY]);
+    const r = Object.assign(
+      { captures: 0, opens: 0, dismissed: false, snoozeUntil: 0 },
+      data[DP_REVIEW_KEY] || {}
+    );
+    r.captures = (r.captures || 0) + 1;
+    await chrome.storage.local.set({ [DP_REVIEW_KEY]: r });
+    if (r.dismissed) return;
+    if (r.snoozeUntil && Date.now() < r.snoozeUntil) return;
+    // Momento de valor: 1ª captura PNG (ou reabertura após snooze).
+    if (r.captures >= 1) showReviewPrompt();
+  } catch (_) {}
+}
+
+function showReviewPrompt() {
+  if (!els.reviewPrompt) return;
+  els.reviewPrompt.classList.remove('hidden');
+}
+
+function hideReviewPrompt() {
+  if (els.reviewPrompt) els.reviewPrompt.classList.add('hidden');
+}
+
+async function snoozeReview(days) {
+  hideReviewPrompt();
+  if (!hasExtensionApis) return;
+  const data = await chrome.storage.local.get([DP_REVIEW_KEY]);
+  const r = Object.assign({ captures: 0, opens: 0, dismissed: false, snoozeUntil: 0 }, data[DP_REVIEW_KEY] || {});
+  r.snoozeUntil = Date.now() + days * 24 * 60 * 60 * 1000;
+  await chrome.storage.local.set({ [DP_REVIEW_KEY]: r });
+}
+
+async function dismissReviewForever() {
+  hideReviewPrompt();
+  if (!hasExtensionApis) return;
+  const data = await chrome.storage.local.get([DP_REVIEW_KEY]);
+  const r = Object.assign({ captures: 0, opens: 0, dismissed: false, snoozeUntil: 0 }, data[DP_REVIEW_KEY] || {});
+  r.dismissed = true;
+  await chrome.storage.local.set({ [DP_REVIEW_KEY]: r });
+}
+
+function openStoreReview() {
+  hideReviewPrompt();
+  dismissReviewForever();
+  const url = typeof DP_REVIEW_URL !== 'undefined' ? DP_REVIEW_URL
+    : 'https://chromewebstore.google.com/detail/ebnbfkejdddkbpkljbbcnchnlekombef/reviews';
+  window.open(url, '_blank', 'noopener');
+}
+
+async function exportReport() {
+  if (!device) { toast(t('toastPickDevice')); return; }
+  const { w, h } = dims();
+  const physW = Math.round(w * device.dpr);
+  const physH = Math.round(h * device.dpr);
+  const lines = [
+    t('reportTitle'),
+    '',
+    `- **${t('reportDevice')}:** ${device.name} (\`${device.id}\`)`,
+    `- **${t('reportViewport')}:** ${w} × ${h} CSS px`,
+    `- **DPR:** ${device.dpr}`,
+    `- **${t('reportPhysical')}:** ${physW} × ${physH} px`,
+    `- **${t('reportOrientation')}:** ${state.orientation}`,
+    `- **${t('reportPlatform')}:** ${device.platform || '—'}`,
+    `- **URL:** ${state.currentUrl || '—'}`,
+    `- **User-Agent:** \`${device.ua}\``
+  ];
+  if (lastFpsStats) {
+    lines.push(
+      `- **FPS:** ${lastFpsStats.fps} (1% low: ${lastFpsStats.low1}, frame: ${lastFpsStats.ms} ms)`
+    );
+  } else {
+    lines.push(`- **FPS:** ${t('reportFpsMissing')}`);
+  }
+  lines.push('', t('reportGenerated', [chrome.runtime.getManifest().version]));
+  const text = lines.join('\n');
+  try {
+    await navigator.clipboard.writeText(text);
+    toast(t('toastReportCopied'));
+  } catch (_) {
+    toast(t('toastReportFail'));
+    console.log(text);
+  }
 }
 
 init();

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simulador Mobile</title>
+  <title data-i18n="appTitle">Mobile Simulator</title>
   <link rel="stylesheet" href="sidepanel.css">
 </head>
 <body>
@@ -17,28 +17,54 @@
         </svg>
       </span>
       <div class="brand-text">
-        <h1>Simulador Mobile</h1>
-        <p>Escolha um dispositivo para visualizar o site da aba atual</p>
+        <h1 data-i18n="appTitle">Mobile Simulator</h1>
+        <p data-i18n="panelSubtitle">Pick a device to preview the current tab’s site</p>
       </div>
     </div>
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
       </svg>
-      <input id="search" type="search" placeholder="Buscar dispositivo…" autocomplete="off">
+      <input id="search" type="search" data-i18n-placeholder="searchPlaceholder" placeholder="Search device…" autocomplete="off">
     </div>
   </header>
 
   <div id="panelError" class="panel-error hidden" role="alert"></div>
 
-  <main id="groups" aria-label="Categorias de dispositivos"></main>
+  <section id="presets" class="presets" data-i18n-aria="ariaPresets" aria-label="Workflow presets">
+    <div class="section-label" data-i18n="presetsLabel">Presets</div>
+    <div id="presetList" class="preset-list"></div>
+  </section>
+
+  <section id="recentSection" class="recent hidden" data-i18n-aria="ariaRecent" aria-label="Recent history">
+    <div class="section-label" data-i18n="recentLabel">Recent</div>
+    <div id="recentList" class="recent-list"></div>
+  </section>
+
+  <main id="groups" data-i18n-aria="ariaGroups" aria-label="Device categories"></main>
 
   <footer class="panel-footer">
-    A prévia abre na própria aba atual, com moldura realista.
-    <span class="credit">Desenvolvido por Lucas Caldeira</span>
+    <span data-i18n="footerPreview">Preview opens in the current tab, with a realistic frame.</span>
+    <span class="credit" data-i18n="footerCredit">Built by Lucas Caldeira</span>
+    <span class="hint-key" data-i18n="footerShortcut">Shortcut: Alt+Shift+P reopens the last device</span>
   </footer>
 
+  <div id="onboarding" class="onboarding hidden" role="dialog" aria-modal="true" aria-labelledby="obTitle">
+    <div class="ob-card">
+      <p class="ob-step" id="obStepLabel">Step 1 of 3</p>
+      <h2 id="obTitle">Pick a device</h2>
+      <p id="obBody" class="ob-body"></p>
+      <div class="ob-suggest" id="obSuggest"></div>
+      <div class="ob-actions">
+        <button type="button" class="ob-btn ghost" id="obSkip" data-i18n="obSkip">Skip</button>
+        <button type="button" class="ob-btn primary" id="obNext" data-i18n="obNext">Next</button>
+      </div>
+    </div>
+  </div>
+
   <script src="../shared/icons.js"></script>
+  <script src="../shared/i18n.js"></script>
+  <script src="../shared/growth.js"></script>
   <script src="sidepanel.js"></script>
 </body>
 </html>

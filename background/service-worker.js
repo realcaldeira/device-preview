@@ -1,4 +1,4 @@
-importScripts('/shared/url.js');
+importScripts('/shared/url.js', '/shared/growth.js');
 
 const PREVIEW_PATH = 'preview/preview.html';
 const SIDEPANEL_PATH = 'sidepanel/sidepanel.html';
@@ -14,15 +14,52 @@ function enablePanel(tabId) {
   }).catch(() => {});
 }
 
+chrome.runtime.onInstalled.addListener((details) => {
+  chrome.runtime.setUninstallURL(DP_UNINSTALL_URL).catch(() => {});
+  if (details.reason === 'install') {
+    chrome.storage.local.set({
+      [DP_ONBOARDING_KEY]: false,
+      [DP_REVIEW_KEY]: { captures: 0, opens: 0, dismissed: false, snoozeUntil: 0 }
+    }).catch(() => {});
+  } else if (details.reason === 'update') {
+    // Usuários antigos não devem ver o tour de primeira instalação.
+    chrome.storage.local.get([DP_ONBOARDING_KEY]).then((data) => {
+      if (data[DP_ONBOARDING_KEY] === undefined) {
+        return chrome.storage.local.set({ [DP_ONBOARDING_KEY]: true });
+      }
+    }).catch(() => {});
+  }
+});
+
+chrome.runtime.setUninstallURL(DP_UNINSTALL_URL).catch(() => {});
+
 chrome.action.onClicked.addListener((tab) => {
   if (!tab || typeof tab.id !== 'number') return;
   enablePanel(tab.id);
   chrome.sidePanel.open({ tabId: tab.id }).catch(() => {});
+  bumpWeekSession();
 });
 
+chrome.commands.onCommand.addListener((command) => {
+  if (command === 'reopen-last-preview') reopenLastPreview().catch(() => {});
+});
+
+async function bumpWeekSession() {
+  try {
+    const data = await chrome.storage.local.get([DP_SESSIONS_KEY]);
+    const now = Date.now();
+    const weekMs = 7 * 24 * 60 * 60 * 1000;
+    let rec = data[DP_SESSIONS_KEY] || { weekStart: now, count: 0 };
+    if (!rec.weekStart || now - rec.weekStart > weekMs) {
+      rec = { weekStart: now, count: 0 };
+    }
+    rec.count += 1;
+    await chrome.storage.local.set({ [DP_SESSIONS_KEY]: rec });
+  } catch (_) {}
+}
+
 function ruleIds(tabId) {
-  const base = (tabId % 100000000) * 10;
-  return { ua: base + 1, frame: base + 2 };
+  return { ua: tabId * 2 + 1, frame: tabId * 2 + 2 };
 }
 
 const RULE_TABS_KEY = 'ruleTabs';
@@ -93,18 +130,44 @@ async function clearRules(tabId) {
     await chrome.declarativeNetRequest.updateSessionRules({
       removeRuleIds: [ids.ua, ids.frame]
     });
-  } catch (_) {  }
+  } catch (_) {}
   await chrome.storage.session.set({ [RULE_TABS_KEY]: [...set] });
 }
 
-async function openPreview(deviceId) {
+async function pushHistory(deviceId, url) {
+  if (!deviceId) return;
+  try {
+    const data = await chrome.storage.local.get([DP_HISTORY_KEY]);
+    const list = Array.isArray(data[DP_HISTORY_KEY]) ? data[DP_HISTORY_KEY] : [];
+    const next = [
+      { deviceId, url: url || '', at: Date.now() },
+      ...list.filter((e) => !(e.deviceId === deviceId && e.url === (url || '')))
+    ].slice(0, DP_HISTORY_MAX);
+    await chrome.storage.local.set({ [DP_HISTORY_KEY]: next });
+  } catch (_) {}
+}
+
+async function bumpReviewOpens() {
+  try {
+    const data = await chrome.storage.local.get([DP_REVIEW_KEY]);
+    const r = data[DP_REVIEW_KEY] || { captures: 0, opens: 0, dismissed: false, snoozeUntil: 0 };
+    r.opens = (r.opens || 0) + 1;
+    await chrome.storage.local.set({ [DP_REVIEW_KEY]: r });
+  } catch (_) {}
+}
+
+async function openPreview(deviceId, forcedUrl) {
   const [active] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
 
   const activeIsPreview = !!(active && active.url && active.url.startsWith(previewBase()));
-  let siteUrl = null;
-  if (active && active.url && dpIsHttpUrl(active.url) && !activeIsPreview) {
+  let siteUrl = forcedUrl || null;
+  if (!siteUrl && active && active.url && dpIsHttpUrl(active.url) && !activeIsPreview) {
     siteUrl = active.url;
   }
+
+  await pushHistory(deviceId, siteUrl);
+  await bumpReviewOpens();
+  bumpWeekSession();
 
   const existing = await chrome.tabs.query({ url: previewBase() + '*' });
   if (existing.length) {
@@ -113,7 +176,6 @@ async function openPreview(deviceId) {
     await chrome.tabs.update(tab.id, { active: true });
     await chrome.windows.update(tab.windowId, { focused: true });
     try {
-
       await chrome.runtime.sendMessage({ type: 'set-device', deviceId, tabId: tab.id, url: siteUrl });
     } catch (_) {
       const query = `device=${encodeURIComponent(deviceId)}` +
@@ -123,26 +185,63 @@ async function openPreview(deviceId) {
     return;
   }
 
-  const url = siteUrl || 'https://www.wikipedia.org/';
+  const url = siteUrl || DP_DEMO_URL;
   const previewUrl =
     `${previewBase()}?device=${encodeURIComponent(deviceId)}&url=${encodeURIComponent(url)}`;
 
   if (active && typeof active.id === 'number' && !activeIsPreview) {
     await chrome.tabs.update(active.id, { url: previewUrl });
+    await enablePanel(active.id);
   } else {
     const created = await chrome.tabs.create({ url: previewUrl });
     if (created && typeof created.id === 'number') await enablePanel(created.id);
   }
 }
 
+async function reopenLastPreview() {
+  const data = await chrome.storage.local.get(['lastState', DP_HISTORY_KEY]);
+  const last = data.lastState || {};
+  const hist = Array.isArray(data[DP_HISTORY_KEY]) ? data[DP_HISTORY_KEY] : [];
+  const deviceId = last.deviceId || (hist[0] && hist[0].deviceId);
+  if (!deviceId) {
+    const [active] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (active && typeof active.id === 'number') {
+      await enablePanel(active.id);
+      await chrome.sidePanel.open({ tabId: active.id }).catch(() => {});
+    }
+    return;
+  }
+  const url = last.url || (hist[0] && hist[0].url) || null;
+  await openPreview(deviceId, url && dpIsHttpUrl(url) ? url : null);
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
+    const needsTab = ['apply-device', 'capture', 'reset-tab'];
+    if (msg && needsTab.includes(msg.type) && !(sender.tab && typeof sender.tab.id === 'number')) {
+      sendResponse({ ok: false, error: 'esta ação só vale para a aba da prévia' });
+      return;
+    }
     try {
       switch (msg && msg.type) {
         case 'open-preview':
-          await openPreview(msg.deviceId);
+          await openPreview(msg.deviceId, msg.url || null);
           sendResponse({ ok: true });
           break;
+        case 'open-preset': {
+          const preset = DP_PRESETS.find((p) => p.id === msg.presetId);
+          if (!preset) {
+            sendResponse({ ok: false, error: 'preset desconhecido' });
+            break;
+          }
+          const stored = await chrome.storage.local.get(['favorites']);
+          const favs = new Set(Array.isArray(stored.favorites) ? stored.favorites : []);
+          for (const id of preset.devices) favs.add(id);
+          await chrome.storage.local.set({ favorites: [...favs] });
+          await openPreview(preset.devices[0], msg.url || null);
+          sendResponse({ ok: true, favorites: [...favs] });
+          break;
+        }
         case 'apply-device':
           await applyDevice(sender.tab.id, msg);
           sendResponse({ ok: true });
@@ -155,6 +254,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         case 'reset-tab':
           await clearRules(sender.tab.id);
           sendResponse({ ok: true });
+          break;
+        case 'get-growth-urls':
+          sendResponse({
+            ok: true,
+            store: DP_STORE_URL,
+            review: DP_REVIEW_URL,
+            faq: DP_FAQ_URL,
+            landing: DP_LANDING_URL
+          });
           break;
         default:
           sendResponse({ ok: false, error: 'mensagem desconhecida' });

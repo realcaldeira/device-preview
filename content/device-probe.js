@@ -253,11 +253,13 @@
 
   function scrollBy(el, dx, dy) {
     if (!el) return;
+    // behavior:'instant' é obrigatório: sites com scroll-behavior:smooth fariam
+    // cada incremento do arraste animar até o destino — a página correria atrás
+    // do dedo, com aquela sensação de rolagem em câmera lenta.
     if (el === doc.scrollingElement || el === doc.documentElement || el === doc.body) {
-      win.scrollBy(-dx, -dy);
+      win.scrollBy({ left: -dx, top: -dy, behavior: 'instant' });
     } else {
-      el.scrollLeft -= dx;
-      el.scrollTop -= dy;
+      el.scrollBy({ left: -dx, top: -dy, behavior: 'instant' });
     }
   }
 
@@ -269,11 +271,19 @@
     stopGlide();
     if (Math.abs(vx) < 0.15 && Math.abs(vy) < 0.15) return;
     glide = { el: el, vx: vx, vy: vy, raf: 0 };
+    var last = win.performance.now();
     var step = function () {
       if (!glide) return;
-      glide.vx *= 0.94;
-      glide.vy *= 0.94;
-      scrollBy(glide.el, glide.vx * 16, glide.vy * 16);
+      // Decaimento e deslocamento por milissegundo, não por quadro: num monitor
+      // de 120/144 Hz o rAF dobra e uma inércia presa ao quadro morre duas
+      // vezes mais rápido — a página para seca ao soltar o dedo.
+      var now = win.performance.now();
+      var dt = Math.min(now - last, 50);
+      last = now;
+      var decay = Math.pow(0.94, dt / 16.67);
+      glide.vx *= decay;
+      glide.vy *= decay;
+      scrollBy(glide.el, glide.vx * dt, glide.vy * dt);
       if (Math.abs(glide.vx) < 0.05 && Math.abs(glide.vy) < 0.05) { glide = null; return; }
       glide.raf = win.requestAnimationFrame(step);
     };
@@ -294,7 +304,10 @@
       'border-radius:50%;pointer-events:none;opacity:0;z-index:2147483647;' +
       'background:radial-gradient(circle at 38% 32%,rgba(255,255,255,0.5),rgba(40,50,70,0.32) 70%);' +
       'border:1.5px solid rgba(30,40,60,0.45);box-shadow:0 1px 4px rgba(0,0,0,0.28);' +
-      'transition:opacity .12s linear,transform .09s ease-out,box-shadow .12s ease-out;';
+      // O transform NÃO entra na transição: com ease-out o círculo flutuaria
+      // atrás do ponteiro e todo toque pareceria lento. Só opacidade e halo.
+      'will-change:transform;' +
+      'transition:opacity .12s linear,box-shadow .12s ease-out;';
     doc.documentElement.appendChild(cursorEl);
     return true;
   }
@@ -372,8 +385,11 @@
     if (gesture.moved && !gesture.handledBySite) {
       if (!gesture.scroller) gesture.scroller = scrollTargetFor(gesture.target, dx, dy);
       scrollBy(gesture.scroller, dx, dy);
-      gesture.vx = dx / dt;
-      gesture.vy = dy / dt;
+      // Velocidade suavizada: medir só o último evento faz o arremesso sair
+      // trêmulo (ou morto) conforme o jitter do mouse.
+      var w = Math.pow(0.65, dt / 16.67);
+      gesture.vx = gesture.vx * w + (dx / dt) * (1 - w);
+      gesture.vy = gesture.vy * w + (dy / dt) * (1 - w);
     }
 
     gesture.lastX = e.clientX;
@@ -487,6 +503,12 @@
 
   win.addEventListener('message', function (e) {
     var d = e.data;
-    if (d && d.__simulador === 'dev-cfg' && d.cfg) win.__simDeviceProbe(d.cfg);
+    if (!d || d.__simulador !== 'dev-cfg' || !d.cfg) return;
+    if (e.source !== win.top) return;
+    // Só rejeita quando os dois lados declaram origem e discordam — cfg
+    // antigo sem origin (iframe de antes do campo existir) ainda recebe update.
+    if (cfg.origin && e.origin && e.origin !== cfg.origin) return;
+    if (cfg.origin && d.cfg.origin && d.cfg.origin !== cfg.origin) return;
+    win.__simDeviceProbe(d.cfg);
   });
 })();

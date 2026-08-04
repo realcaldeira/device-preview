@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "Simulador Mobile: Celular, Tablet e Smart TV",
-  "short_name": "Simulador",
-  "version": "1.6.0",
-  "description": "Teste responsivo: veja qualquer site no celular, tablet, notebook e TV com moldura realista, toque, teclado virtual e FPS.",
+  "name": "__MSG_extName__",
+  "short_name": "__MSG_extShortName__",
+  "version": "1.6.2",
+  "default_locale": "en",
+  "description": "__MSG_extDescription__",
   "author": "Lucas Caldeira",
   "minimum_chrome_version": "116",
   "icons": {
@@ -13,7 +14,7 @@
     "128": "icons/icon128.png"
   },
   "action": {
-    "default_title": "Simulador Mobile — abrir painel de dispositivos",
+    "default_title": "__MSG_actionTitle__",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png"
@@ -24,6 +25,15 @@
   },
   "background": {
     "service_worker": "background/service-worker.js"
+  },
+  "commands": {
+    "reopen-last-preview": {
+      "suggested_key": {
+        "default": "Alt+Shift+P",
+        "mac": "Alt+Shift+P"
+      },
+      "description": "__MSG_cmdReopenLast__"
+    }
   },
   "content_scripts": [
     {

@@ -1,0 +1,338 @@
+{
+  "extName": {
+    "message": "Mobile Simulator: Handy, Tablet, Laptop & Smart TV"
+  },
+  "extShortName": {
+    "message": "Simulator"
+  },
+  "extDescription": {
+    "message": "Echtes Responsive-Testing: Handy-, Tablet-, Laptop- und TV-Mockups mit Rahmen, Touch, Tastatur, UA und FPS."
+  },
+  "actionTitle": {
+    "message": "Mobile Simulator — Gerätepanel öffnen"
+  },
+  "cmdReopenLast": {
+    "message": "Letztes Gerät und URL in der Vorschau erneut öffnen"
+  },
+  "appTitle": {
+    "message": "Mobile Simulator"
+  },
+  "panelSubtitle": {
+    "message": "Gerät wählen, um die Seite des aktuellen Tabs anzuzeigen"
+  },
+  "searchPlaceholder": {
+    "message": "Gerät suchen…"
+  },
+  "presetsLabel": {
+    "message": "Presets"
+  },
+  "recentLabel": {
+    "message": "Zuletzt"
+  },
+  "favorites": {
+    "message": "Favoriten"
+  },
+  "footerPreview": {
+    "message": "Die Vorschau öffnet sich im aktuellen Tab mit realistischem Rahmen."
+  },
+  "footerCredit": {
+    "message": "Entwickelt von Lucas Caldeira"
+  },
+  "footerShortcut": {
+    "message": "Kürzel: Alt+Shift+P öffnet das letzte Gerät erneut"
+  },
+  "ariaPresets": {
+    "message": "Workflow-Presets"
+  },
+  "ariaRecent": {
+    "message": "Letzte Einträge"
+  },
+  "ariaGroups": {
+    "message": "Gerätekategorien"
+  },
+  "presetApplyTitle": {
+    "message": "Set favorisieren und erstes Gerät öffnen"
+  },
+  "urlOfTab": {
+    "message": "Tab-URL"
+  },
+  "favAdd": {
+    "message": "Zu Favoriten hinzufügen"
+  },
+  "favRemove": {
+    "message": "Aus Favoriten entfernen"
+  },
+  "physicalRes": {
+    "message": "Physische Auflösung: $1$ px"
+  },
+  "cat_android": {
+    "message": "Android-Handys"
+  },
+  "cat_apple": {
+    "message": "Apple-Handys"
+  },
+  "cat_tablets": {
+    "message": "Tablets"
+  },
+  "cat_notebooks": {
+    "message": "Laptops"
+  },
+  "cat_tvs": {
+    "message": "Smart-TVs"
+  },
+  "preset_qa_ios_name": {
+    "message": "iOS-QA"
+  },
+  "preset_qa_ios_hint": {
+    "message": "Neues iPhone, SE und iPad"
+  },
+  "preset_android_mid_name": {
+    "message": "Android Midrange"
+  },
+  "preset_android_mid_hint": {
+    "message": "Einstieg, Pixel und Flagship"
+  },
+  "preset_tv_living_name": {
+    "message": "Wohnzimmer-TV"
+  },
+  "preset_tv_living_hint": {
+    "message": "Full HD und 4K"
+  },
+  "obStep": {
+    "message": "Schritt $1$ von $2$"
+  },
+  "obSkip": {
+    "message": "Überspringen"
+  },
+  "obNext": {
+    "message": "Weiter"
+  },
+  "obStart": {
+    "message": "Loslegen"
+  },
+  "ob1Title": {
+    "message": "Gerät wählen"
+  },
+  "ob1Body": {
+    "message": "Tippen Sie unten auf iPhone oder Pixel — die Vorschau öffnet sich im Tab mit realistischem Rahmen und dem User-Agent des Geräts."
+  },
+  "ob2Title": {
+    "message": "Bereits geöffnete Seite nutzen"
+  },
+  "ob2Body": {
+    "message": "Die URL des aktuellen Tabs wird automatisch geladen. Bei chrome:// oder leerem Tab öffnen wir eine Demo (Wikipedia)."
+  },
+  "ob3Title": {
+    "message": "Drehen, erfassen und FPS messen"
+  },
+  "ob3Body": {
+    "message": "In der Vorschauleiste: drehen, virtuelle Tastatur bei Fokus, PNG erfassen und FPS. Alt+Shift+P öffnet das letzte Gerät erneut."
+  },
+  "errDevices": {
+    "message": "Geräteliste konnte nicht geladen werden: $1$. Erweiterung unter chrome://extensions neu laden."
+  },
+  "errPreset": {
+    "message": "Preset fehlgeschlagen: $1$"
+  },
+  "errPreview": {
+    "message": "Vorschau konnte nicht geöffnet werden: $1$"
+  },
+  "errPreviewReload": {
+    "message": "Vorschau fehlgeschlagen: $1$. Erweiterung unter chrome://extensions neu laden."
+  },
+  "errNoResponse": {
+    "message": "keine Antwort vom Service Worker"
+  },
+  "btnRotate": {
+    "message": "Drehen (Hoch-/Querformat)"
+  },
+  "btnFrameless": {
+    "message": "Vollbild: Rahmen ausblenden und nur den Bildschirm in Geräteauflösung zeigen (Seitenverhältnis bleibt)"
+  },
+  "btnStretch": {
+    "message": "Strecken: füllt das Fenster und verzerrt das Seitenverhältnis (aktiviert Vollbild)"
+  },
+  "btnBrowser": {
+    "message": "Browserleiste: Chrome/Safari-Oberfläche im Mockup anzeigen"
+  },
+  "btnTouch": {
+    "message": "Touch: Die Seite erhält Touch- statt Mausereignisse; Ziehen scrollt; Zeiger wird zum Finger (nur Handy/Tablet)"
+  },
+  "btnBack": {
+    "message": "Zurück"
+  },
+  "btnReload": {
+    "message": "Neu laden"
+  },
+  "addressPlaceholder": {
+    "message": "URL eingeben und Enter drücken"
+  },
+  "addressAria": {
+    "message": "Seitenadresse (URL)"
+  },
+  "btnGo": {
+    "message": "Los"
+  },
+  "btnGoTitle": {
+    "message": "Zur URL navigieren"
+  },
+  "btnZoomOut": {
+    "message": "Verkleinern"
+  },
+  "btnZoomIn": {
+    "message": "Vergrößern"
+  },
+  "btnZoomFit": {
+    "message": "An Fenster anpassen"
+  },
+  "btnZoomFitLabel": {
+    "message": "Anpassen"
+  },
+  "zoomLabel": {
+    "message": "Aktueller Zoom"
+  },
+  "btnTheme": {
+    "message": "Hell-/Dunkelmodus umschalten"
+  },
+  "btnFps": {
+    "message": "FPS-Anzeige: misst die Bilder pro Sekunde der eingebetteten Seite."
+  },
+  "btnCapture": {
+    "message": "Erfassen"
+  },
+  "btnCaptureTitle": {
+    "message": "Mockup-Bild erfassen"
+  },
+  "btnReport": {
+    "message": "Bericht"
+  },
+  "btnReportTitle": {
+    "message": "Bericht kopieren (Viewport, UA, FPS) für PR/Jira"
+  },
+  "btnExit": {
+    "message": "Beenden"
+  },
+  "btnExitTitle": {
+    "message": "Vorschau beenden und zur normalen Seite zurück"
+  },
+  "deviceSelectAria": {
+    "message": "Gerät wechseln"
+  },
+  "reviewBody": {
+    "message": "Hat die Aufnahme geholfen? Eine Bewertung im Chrome Web Store verbessert die Sichtbarkeit."
+  },
+  "reviewLater": {
+    "message": "Nicht jetzt"
+  },
+  "reviewNever": {
+    "message": "Nicht mehr fragen"
+  },
+  "reviewGo": {
+    "message": "Bewerten ★★★★★"
+  },
+  "toastOpenViaExt": {
+    "message": "Öffnen Sie diese Seite über die Erweiterung (Symbolleiste), nicht als lokale Datei."
+  },
+  "toastInitError": {
+    "message": "Vorschau-Start fehlgeschlagen: $1$"
+  },
+  "toastPortrait": {
+    "message": "Hochformat"
+  },
+  "toastLandscape": {
+    "message": "Querformat"
+  },
+  "toastFramelessOn": {
+    "message": "Vollbild: nur Gerätebildschirm"
+  },
+  "toastFramelessOff": {
+    "message": "Geräterahmen sichtbar"
+  },
+  "toastStretchOn": {
+    "message": "Gestreckt: füllt das Fenster (verzerrt Seitenverhältnis)"
+  },
+  "toastStretchOff": {
+    "message": "Geräte-Seitenverhältnis wiederhergestellt"
+  },
+  "toastBrowserOn": {
+    "message": "Browserleiste sichtbar"
+  },
+  "toastBrowserOff": {
+    "message": "Browserleiste ausgeblendet"
+  },
+  "toastPickDevice": {
+    "message": "Bitte zuerst ein Gerät wählen."
+  },
+  "toastCaptureExtOnly": {
+    "message": "Aufnahme nur über die Erweiterung verfügbar."
+  },
+  "toastCaptureSaved": {
+    "message": "Aufnahme gespeichert ($1$×$2$ px)"
+  },
+  "toastCaptureError": {
+    "message": "Aufnahmefehler: $1$"
+  },
+  "toastUaFail": {
+    "message": "User-Agent konnte nicht gesetzt werden: $1$"
+  },
+  "toastFpsOn": {
+    "message": "FPS-Anzeige aktiv"
+  },
+  "toastFpsOff": {
+    "message": "FPS-Anzeige aus"
+  },
+  "toastFpsExtOnly": {
+    "message": "FPS-Anzeige nur über die Erweiterung verfügbar."
+  },
+  "toastFpsNeedSite": {
+    "message": "Laden Sie zuerst eine Seite, bevor Sie FPS messen."
+  },
+  "toastFpsFail": {
+    "message": "FPS konnte nicht gemessen werden: $1$"
+  },
+  "toastFpsUnavailable": {
+    "message": "Messung für $1$ nicht verfügbar. Erweiterung unter chrome://extensions neu laden."
+  },
+  "toastReportCopied": {
+    "message": "Bericht kopiert — in PR oder Jira einfügen"
+  },
+  "toastReportFail": {
+    "message": "Kopieren fehlgeschlagen; Text in der Konsole prüfen"
+  },
+  "toastTouchDesktop": {
+    "message": "Dieses Gerät wird mit Maus bedient — Touch bleibt aus."
+  },
+  "toastTouchOn": {
+    "message": "Touch an: Ziehen zum Scrollen, wie auf einem echten Gerät."
+  },
+  "toastTouchOff": {
+    "message": "Touch aus: Die Seite erhält wieder Mausereignisse."
+  },
+  "toastZoomStretch": {
+    "message": "Gestreckt, um das Fenster zu füllen"
+  },
+  "reportTitle": {
+    "message": "## Mobile Simulator — Bericht"
+  },
+  "reportDevice": {
+    "message": "Gerät"
+  },
+  "reportViewport": {
+    "message": "Viewport"
+  },
+  "reportOrientation": {
+    "message": "Ausrichtung"
+  },
+  "reportPlatform": {
+    "message": "Plattform"
+  },
+  "reportFpsMissing": {
+    "message": "(FPS-Anzeige in der Leiste aktivieren, um einzuschließen)"
+  },
+  "reportGenerated": {
+    "message": "_Erstellt mit Mobile Simulator $1$_"
+  },
+  "reportPhysical": {
+    "message": "Physisch"
+  }
+}

@@ -8,3 +8,22 @@ __pycache__/
 *.pyc
 
 *.zip
+
+# Ferramentas de AI / IDE — nunca versionar
+.cursor/
+.claude/
+.codex/
+.github/copilot/
+.windsurf/
+.continue/
+.aider*
+.agent/
+.agents/
+AGENTS.md
+CLAUDE.md
+.cursorrules
+
+# Logs e artefatos de debug de agentes
+**/debug-*.log
+**/.cursor/debug*.log
+agent-transcripts/

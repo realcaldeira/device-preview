@@ -8,6 +8,7 @@ body[data-theme="dark"] {
   --accent: #6366f1;
   --accent-text: #ffffff;
   --dot: rgba(255, 255, 255, 0.05);
+  --floor: rgba(120, 140, 190, 0.09);
 }
 body[data-theme="light"] {
   --bg: #eef0f4;
@@ -19,6 +20,7 @@ body[data-theme="light"] {
   --accent: #4f46e5;
   --accent-text: #ffffff;
   --dot: rgba(0, 0, 0, 0.06);
+  --floor: rgba(90, 110, 150, 0.10);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -132,6 +134,8 @@ body {
   color: var(--muted);
 }
 
+/* Palco: luz caindo de cima e um piso insinuado embaixo. Sem essas duas
+   camadas o aparelho flutua num vazio e a moldura perde credibilidade. */
 #stage {
   flex: 1;
   display: flex;
@@ -139,6 +143,8 @@ body {
   padding: 28px;
   background:
     radial-gradient(var(--dot) 1px, transparent 1.5px) 0 0 / 22px 22px,
+    radial-gradient(70% 42% at 50% -8%, rgba(255, 255, 255, 0.07), transparent 68%),
+    radial-gradient(120% 55% at 50% 112%, var(--floor), transparent 72%),
     var(--stage-bg);
 }
 
@@ -152,58 +158,141 @@ body {
   transform-origin: 0 0;
 }
 
+/* Granulado do metal jateado: sem ele o chassi lê como plástico chapado.
+   Vai no próprio background, em cima do gradiente, com intensidade quase
+   imperceptível. */
+:root {
+  --metal-grain:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
 .device-frame {
   position: relative;
-  background: linear-gradient(150deg, #1d2026 0%, #0f1116 55%, #171a20 100%);
+  background:
+    var(--metal-grain) 0 0 / 120px 120px,
+    linear-gradient(150deg, #212530 0%, #0f1116 52%, #1b1f27 100%);
   border-radius: var(--frame-radius, 48px);
   padding: var(--pad-top, 14px) var(--pad-right, 14px) var(--pad-bottom, 14px) var(--pad-left, 14px);
+  /* Contato, meia-distância e ambiente: uma sombra só achata o aparelho. */
   box-shadow:
-    0 28px 70px rgba(0, 0, 0, 0.45),
-    0 8px 22px rgba(0, 0, 0, 0.35),
+    0 1px 2px rgba(0, 0, 0, 0.55),
+    0 7px 16px rgba(0, 0, 0, 0.32),
+    0 30px 64px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
     inset 0 0 14px rgba(0, 0, 0, 0.6);
 }
 
+/* Moldura vinda de imagem: a arte (gerada por tools/make_frames.py) entra como
+   border-image de 9 fatias num anel ::after que cobre só a área do bezel — o
+   padding continua valendo, então botões, recortes, câmera e home button em
+   CSS seguem nas posições de sempre, agora por cima do metal fotorrealista.
+   O 9-slice preserva os cantos e estica só as faixas do meio. */
+#mockup[data-frame-image="on"] .device-frame {
+  background: #05070b;
+  /* O raio da silhueta da arte é o --frame-radius, então a sombra em caixa
+     acompanha os cantos transparentes sem custo — um drop-shadow filtraria o
+     iframe inteiro a cada frame de rolagem (toque lento). */
+  border-radius: var(--frame-radius, 48px);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.55),
+    0 7px 16px rgba(0, 0, 0, 0.32),
+    0 30px 64px rgba(0, 0, 0, 0.45);
+}
+#mockup[data-frame-image="on"] .device-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  border-style: solid;
+  border-width: var(--frame-bw, var(--pad-top) var(--pad-right) var(--pad-bottom) var(--pad-left));
+  border-image: var(--frame-img) var(--frame-slice) stretch;
+  pointer-events: none;
+}
+/* O bisel cônico em CSS sai de cena — o da arte é melhor — e o queixo da TV
+   passa a vir embutido na imagem (logo + LED). Os demais detalhes continuam,
+   mas precisam subir uma camada para ficar acima do anel da moldura. */
+#mockup[data-frame-image="on"] .device-frame::before { display: none; }
+#mockup[data-frame-image="on"] .tv-chin { display: none; }
+#mockup[data-frame-image="on"] .hw-btn,
+#mockup[data-frame-image="on"] .earpiece,
+#mockup[data-frame-image="on"] .front-cam,
+#mockup[data-frame-image="on"] .home-btn,
+#mockup[data-frame-image="on"] .lid-logo {
+  z-index: 11;
+}
+
+/* Cantos contínuos, como os dos aparelhos de verdade — o arco elíptico do
+   border-radius é o detalhe que mais denuncia um mockup.
+   Só no chassi: a tela precisa continuar com border-radius comum, porque é ele
+   que o Chrome usa para recortar o iframe do site. */
+@supports (corner-shape: squircle) {
+  [data-kind="phone"] .device-frame,
+  [data-kind="tablet"] .device-frame {
+    corner-shape: var(--frame-corner, squircle);
+  }
+}
+
+/* Bisel: o gradiente cônico devolve os dois pontos de luz que uma borda
+   usinada faz ao girar. */
 .device-frame::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
+  corner-shape: inherit;
   padding: 3.5px;
-  background: linear-gradient(155deg,
-    #6c727d 0%, #2b2e35 22%, #989ea9 42%,
-    #23262c 58%, #7d838e 78%, #32353c 100%);
+  background: conic-gradient(from 218deg,
+    #4d535e 0%, #1a1d23 9%, #c3cad5 20%, #292c33 31%,
+    #848a95 44%, #1a1d23 56%, #d6dce6 67%, #292c33 79%,
+    #656b76 90%, #4d535e 100%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask-composite: exclude;
   pointer-events: none;
-  opacity: 0.65;
-}
-
-[data-brand="iphone"] .device-frame::before,
-[data-brand="ipad"] .device-frame::before {
-  background: linear-gradient(155deg,
-    #c8ccd3 0%, #4a4e56 18%, #eef0f3 38%,
-    #3a3d44 55%, #d4d8de 75%, #565b63 92%, #aab0b8 100%);
   opacity: 0.8;
 }
 
-[data-kind="tv"] .device-frame {
-  background: linear-gradient(180deg, #16181d 0%, #0a0c10 100%);
-  box-shadow:
-    0 40px 90px rgba(0, 0, 0, 0.55),
-    0 10px 26px rgba(0, 0, 0, 0.4);
+[data-brand="iphone"] .device-frame,
+[data-brand="ipad"] .device-frame {
+  background:
+    var(--metal-grain) 0 0 / 120px 120px,
+    linear-gradient(150deg, #2f333c 0%, #14161b 52%, #262a33 100%);
 }
+[data-brand="iphone"] .device-frame::before,
+[data-brand="ipad"] .device-frame::before {
+  background: conic-gradient(from 212deg,
+    #8f95a0 0%, #35383f 8%, #f2f4f7 20%, #494d55 30%,
+    #c9ced6 42%, #3a3d44 54%, #ffffff 66%, #4a4e56 78%,
+    #b6bcc5 88%, #8f95a0 100%);
+  opacity: 0.85;
+}
+
+[data-kind="tv"] .device-frame {
+  background:
+    var(--metal-grain) 0 0 / 120px 120px,
+    linear-gradient(180deg, #1b1e24 0%, #0a0c10 100%);
+  box-shadow:
+    0 2px 3px rgba(0, 0, 0, 0.6),
+    0 14px 30px rgba(0, 0, 0, 0.4),
+    0 46px 92px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+/* Painel de TV: a borda de baixo pega a luz do ambiente, a de cima fica na
+   sombra — o inverso de um aparelho de mão. */
 [data-kind="tv"] .device-frame::before {
   padding: 2px;
-  background: linear-gradient(180deg, #3a3f48, #16181d 60%, #2a2e36);
-  opacity: 0.7;
+  background: linear-gradient(180deg, #5a616d 0%, #1b1e24 42%, #0f1218 68%, #454c58 100%);
+  opacity: 0.9;
 }
 
 .screen {
   position: relative;
   width: var(--vw, 390px);
   background: #000;
+  /* É este arredondamento que recorta o site dentro da tela. Ele precisa ser
+     border-radius comum: com corner-shape o Chrome deixa de aplicar o recorte
+     ao iframe, e o site vira um retângulo colado sobre o aparelho. */
   border-radius: var(--screen-radius, 36px);
   overflow: hidden;
 }
@@ -216,16 +305,31 @@ body {
   background: #fff;
 }
 
+/* Vidro: reflexo principal na diagonal, um segundo mais fraco vindo do lado
+   oposto e a borda escurecida. A área central fica intocada — quem testa cor
+   precisa ver a cor real do site. */
 .screen-glare {
   position: absolute;
   inset: 0;
   z-index: 8;
   pointer-events: none;
   border-radius: inherit;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0) 24%);
+  corner-shape: inherit;
+  background:
+    linear-gradient(162deg,
+      rgba(255, 255, 255, 0.085) 0%,
+      rgba(255, 255, 255, 0.03) 11%,
+      rgba(255, 255, 255, 0) 27%),
+    linear-gradient(342deg,
+      rgba(255, 255, 255, 0.045) 0%,
+      rgba(255, 255, 255, 0) 15%);
+  /* A tela é uma peça encaixada, não um adesivo: aro preto do vidro, filete de
+     luz onde o metal encosta nele e a sombra do chassi caindo por dentro. */
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.045),
-    inset 0 2px 8px rgba(0, 0, 0, 0.18);
+    inset 0 0 0 1.5px rgba(0, 0, 0, 0.72),
+    inset 0 0 0 2.5px rgba(255, 255, 255, 0.055),
+    inset 0 2px 7px rgba(0, 0, 0, 0.3),
+    inset 0 0 22px rgba(0, 0, 0, 0.2);
 }
 
 .status-bar {
@@ -446,27 +550,51 @@ body {
 .hw-btn {
   display: none;
   position: absolute;
-  background: linear-gradient(90deg, #565b66, #22252b 45%, #454a54);
+  --hw-jut: -1.5px;
+  /* Quina iluminada em cima, corpo em sombra e reflexo de volta na base: é o
+     que dá volume a uma peça de 4px. */
+  background: linear-gradient(90deg, #767c88 0%, #2d313a 38%, #1b1e24 62%, #565b66 100%);
   border-radius: 3px;
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.7);
+  box-shadow:
+    0 0 2px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45);
 }
 
-[data-buttons="right"] .btn-volup   { display: block; right: -4.5px; top: 17%; width: 4.5px; height: 40px; }
-[data-buttons="right"] .btn-voldown { display: block; right: -4.5px; top: calc(17% + 48px); width: 4.5px; height: 40px; }
-[data-buttons="right"] .btn-power   { display: block; right: -4.5px; top: calc(17% + 108px); width: 4.5px; height: 46px; }
+/* Aço e titânio dos aparelhos Apple refletem bem mais que o alumínio fosco. */
+[data-brand="iphone"] .hw-btn,
+[data-brand="ipad"] .hw-btn {
+  background-image: linear-gradient(90deg, #cfd4db 0%, #71767f 38%, #43474e 62%, #a7adb6 100%);
+}
 
-[data-buttons="pixel"] .btn-power   { display: block; right: -4.5px; top: 16%; width: 4.5px; height: 46px; }
-[data-buttons="pixel"] .btn-volup   { display: block; right: -4.5px; top: calc(16% + 58px); width: 4.5px; height: 38px; }
-[data-buttons="pixel"] .btn-voldown { display: block; right: -4.5px; top: calc(16% + 104px); width: 4.5px; height: 38px; }
+/* Botões deitados (topo do iPad/Surface e qualquer aparelho em paisagem)
+   precisam da luz vindo da mesma direção. */
+[data-buttons="top"] .hw-btn,
+[data-buttons="ipad"] .btn-power,
+[data-orientation="landscape"][data-kind="phone"] .hw-btn {
+  background-image: linear-gradient(180deg, #767c88 0%, #2d313a 38%, #1b1e24 62%, #565b66 100%);
+}
+[data-orientation="landscape"][data-brand="iphone"] .hw-btn,
+[data-buttons="ipad"] .btn-power {
+  background-image: linear-gradient(180deg, #cfd4db 0%, #71767f 38%, #43474e 62%, #a7adb6 100%);
+}
 
-[data-buttons="iphone"] .btn-power   { display: block; right: -4.5px; top: 25%; width: 4.5px; height: 74px; }
-[data-buttons="iphone"] .btn-mute    { display: block; left: -4.5px; top: calc(25% - 42px); width: 4.5px; height: 24px; }
-[data-buttons="iphone"] .btn-volup   { display: block; left: -4.5px; top: 25%; width: 4.5px; height: 36px; }
-[data-buttons="iphone"] .btn-voldown { display: block; left: -4.5px; top: calc(25% + 46px); width: 4.5px; height: 36px; }
+[data-buttons="right"] .btn-volup   { display: block; right: var(--hw-jut); top: 17%; width: 4.5px; height: 40px; }
+[data-buttons="right"] .btn-voldown { display: block; right: var(--hw-jut); top: calc(17% + 48px); width: 4.5px; height: 40px; }
+[data-buttons="right"] .btn-power   { display: block; right: var(--hw-jut); top: calc(17% + 108px); width: 4.5px; height: 46px; }
+
+[data-buttons="pixel"] .btn-power   { display: block; right: var(--hw-jut); top: 16%; width: 4.5px; height: 46px; }
+[data-buttons="pixel"] .btn-volup   { display: block; right: var(--hw-jut); top: calc(16% + 58px); width: 4.5px; height: 38px; }
+[data-buttons="pixel"] .btn-voldown { display: block; right: var(--hw-jut); top: calc(16% + 104px); width: 4.5px; height: 38px; }
+
+[data-buttons="iphone"] .btn-power   { display: block; right: var(--hw-jut); top: 25%; width: 4.5px; height: 74px; }
+[data-buttons="iphone"] .btn-mute    { display: block; left: var(--hw-jut); top: calc(25% - 42px); width: 4.5px; height: 24px; }
+[data-buttons="iphone"] .btn-volup   { display: block; left: var(--hw-jut); top: 25%; width: 4.5px; height: 36px; }
+[data-buttons="iphone"] .btn-voldown { display: block; left: var(--hw-jut); top: calc(25% + 46px); width: 4.5px; height: 36px; }
 
 [data-brand="oneplus"] .btn-mute {
   display: block;
-  right: -4.5px;
+  right: var(--hw-jut);
   left: auto;
   top: 8%;
   width: 4.5px;
@@ -474,29 +602,29 @@ body {
   background: linear-gradient(90deg, #3b414c, #1d2026);
 }
 
-[data-buttons="ipad"] .btn-power   { display: block; top: -4.5px; right: 10%; width: 46px; height: 4.5px; }
-[data-buttons="ipad"] .btn-volup   { display: block; right: -4.5px; top: 3%; width: 4.5px; height: 32px; }
-[data-buttons="ipad"] .btn-voldown { display: block; right: -4.5px; top: calc(3% + 40px); width: 4.5px; height: 32px; }
+[data-buttons="ipad"] .btn-power   { display: block; top: var(--hw-jut); right: 10%; width: 46px; height: 4.5px; }
+[data-buttons="ipad"] .btn-volup   { display: block; right: var(--hw-jut); top: 3%; width: 4.5px; height: 32px; }
+[data-buttons="ipad"] .btn-voldown { display: block; right: var(--hw-jut); top: calc(3% + 40px); width: 4.5px; height: 32px; }
 
-[data-buttons="top"] .btn-power { display: block; top: -4.5px; left: 7%; width: 42px; height: 4.5px; }
-[data-buttons="top"] .btn-volup { display: block; top: -4.5px; left: calc(7% + 54px); width: 64px; height: 4.5px; }
+[data-buttons="top"] .btn-power { display: block; top: var(--hw-jut); left: 7%; width: 42px; height: 4.5px; }
+[data-buttons="top"] .btn-volup { display: block; top: var(--hw-jut); left: calc(7% + 54px); width: 64px; height: 4.5px; }
 
 [data-orientation="landscape"][data-kind="phone"] .hw-btn { right: auto; bottom: auto; }
 
-[data-orientation="landscape"][data-buttons="right"] .btn-volup   { top: -4.5px; left: 17%; width: 40px; height: 4.5px; }
-[data-orientation="landscape"][data-buttons="right"] .btn-voldown { top: -4.5px; left: calc(17% + 48px); width: 40px; height: 4.5px; }
-[data-orientation="landscape"][data-buttons="right"] .btn-power   { top: -4.5px; left: calc(17% + 108px); width: 46px; height: 4.5px; }
+[data-orientation="landscape"][data-buttons="right"] .btn-volup   { top: var(--hw-jut); left: 17%; width: 40px; height: 4.5px; }
+[data-orientation="landscape"][data-buttons="right"] .btn-voldown { top: var(--hw-jut); left: calc(17% + 48px); width: 40px; height: 4.5px; }
+[data-orientation="landscape"][data-buttons="right"] .btn-power   { top: var(--hw-jut); left: calc(17% + 108px); width: 46px; height: 4.5px; }
 
-[data-orientation="landscape"][data-buttons="pixel"] .btn-power   { top: -4.5px; left: 16%; width: 46px; height: 4.5px; }
-[data-orientation="landscape"][data-buttons="pixel"] .btn-volup   { top: -4.5px; left: calc(16% + 58px); width: 38px; height: 4.5px; }
-[data-orientation="landscape"][data-buttons="pixel"] .btn-voldown { top: -4.5px; left: calc(16% + 104px); width: 38px; height: 4.5px; }
+[data-orientation="landscape"][data-buttons="pixel"] .btn-power   { top: var(--hw-jut); left: 16%; width: 46px; height: 4.5px; }
+[data-orientation="landscape"][data-buttons="pixel"] .btn-volup   { top: var(--hw-jut); left: calc(16% + 58px); width: 38px; height: 4.5px; }
+[data-orientation="landscape"][data-buttons="pixel"] .btn-voldown { top: var(--hw-jut); left: calc(16% + 104px); width: 38px; height: 4.5px; }
 
-[data-orientation="landscape"][data-buttons="iphone"] .btn-power   { top: -4.5px; left: auto; right: 25%; width: 74px; height: 4.5px; }
-[data-orientation="landscape"][data-buttons="iphone"] .btn-mute    { top: auto; bottom: -4.5px; left: calc(25% - 42px); width: 24px; height: 4.5px; }
-[data-orientation="landscape"][data-buttons="iphone"] .btn-volup   { top: auto; bottom: -4.5px; left: 25%; width: 36px; height: 4.5px; }
-[data-orientation="landscape"][data-buttons="iphone"] .btn-voldown { top: auto; bottom: -4.5px; left: calc(25% + 46px); width: 36px; height: 4.5px; }
+[data-orientation="landscape"][data-buttons="iphone"] .btn-power   { top: var(--hw-jut); left: auto; right: 25%; width: 74px; height: 4.5px; }
+[data-orientation="landscape"][data-buttons="iphone"] .btn-mute    { top: auto; bottom: var(--hw-jut); left: calc(25% - 42px); width: 24px; height: 4.5px; }
+[data-orientation="landscape"][data-buttons="iphone"] .btn-volup   { top: auto; bottom: var(--hw-jut); left: 25%; width: 36px; height: 4.5px; }
+[data-orientation="landscape"][data-buttons="iphone"] .btn-voldown { top: auto; bottom: var(--hw-jut); left: calc(25% + 46px); width: 36px; height: 4.5px; }
 
-[data-orientation="landscape"][data-brand="oneplus"] .btn-mute { top: -4.5px; bottom: auto; left: 8%; width: 26px; height: 4.5px; }
+[data-orientation="landscape"][data-brand="oneplus"] .btn-mute { top: var(--hw-jut); bottom: auto; left: 8%; width: 26px; height: 4.5px; }
 
 .earpiece, .front-cam, .home-btn { display: none; }
 
@@ -612,18 +740,30 @@ body {
 /* ---------------------------------------------------------------- notebook */
 
 [data-kind="laptop"] .device-frame {
-  background: linear-gradient(165deg, #23262c 0%, #101318 60%, #1b1e24 100%);
+  background:
+    var(--metal-grain) 0 0 / 120px 120px,
+    linear-gradient(165deg, #262a31 0%, #101318 58%, #1d2027 100%);
   box-shadow:
-    0 34px 70px rgba(0, 0, 0, 0.5),
-    0 10px 24px rgba(0, 0, 0, 0.38);
+    0 2px 3px rgba(0, 0, 0, 0.5),
+    0 12px 26px rgba(0, 0, 0, 0.34),
+    0 40px 78px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 [data-kind="laptop"] .device-frame::before {
   padding: 2px;
-  background: linear-gradient(160deg, #9aa1ac, #3a3e46 45%, #7c828d 80%, #2c3037);
-  opacity: 0.55;
+  background: linear-gradient(160deg, #b4bbc6 0%, #3a3e46 42%, #8d94a0 78%, #2c3037 100%);
+  opacity: 0.7;
 }
+/* Alumínio claro do MacBook: a luz vem de cima e some na base da tampa. */
 [data-brand="macbook"] .device-frame {
-  background: linear-gradient(165deg, #d9dbdf 0%, #b8bcc2 55%, #cdd0d5 100%);
+  background:
+    var(--metal-grain) 0 0 / 120px 120px,
+    linear-gradient(165deg, #e4e6e9 0%, #c4c8ce 42%, #aeb2b9 72%, #d2d5da 100%);
+  box-shadow:
+    0 2px 3px rgba(0, 0, 0, 0.35),
+    0 12px 26px rgba(0, 0, 0, 0.26),
+    0 40px 78px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 [data-brand="macbook"] .device-frame::before {
   background: linear-gradient(160deg, #ffffff, #9fa4ab 40%, #f1f2f4 70%, #8d939b);
@@ -729,19 +869,20 @@ body {
 .tv-neck {
   width: 110px;
   height: 30px;
-  background: linear-gradient(180deg, #15171c, #0a0c10);
+  background: linear-gradient(100deg, #2c313b 0%, #14171c 38%, #0a0c10 62%, #23272f 100%);
   clip-path: polygon(20% 0, 80% 0, 96% 100%, 4% 100%);
 }
 .tv-base {
   width: 44%;
   min-width: 260px;
   max-width: 460px;
-  height: 13px;
+  height: 14px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #2b303a, #11141a);
+  background: linear-gradient(180deg, #3a404c 0%, #1d212a 45%, #0e1116 100%);
   box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.12),
-    0 8px 20px rgba(0, 0, 0, 0.5);
+    inset 0 1px 1px rgba(255, 255, 255, 0.18),
+    0 2px 3px rgba(0, 0, 0, 0.55),
+    0 10px 24px rgba(0, 0, 0, 0.5);
 }
 
 #mockup.frameless .device-frame {
@@ -750,7 +891,8 @@ body {
   background: none;
   box-shadow: none;
 }
-#mockup.frameless .device-frame::before { display: none; }
+#mockup.frameless .device-frame::before,
+#mockup.frameless .device-frame::after { display: none; }
 #mockup.frameless .screen { border-radius: 0; }
 #mockup.frameless .status-bar,
 #mockup.frameless .browser-bar,
@@ -782,13 +924,17 @@ body.frameless #addressInput { height: 26px; font-size: 11.5px; }
 body.frameless #zoomLabel { min-width: 38px; font-size: 11px; }
 body.frameless #infoBar { padding: 3px 10px; font-size: 10.5px; }
 
+/* Sombra projetada em duas camadas: um núcleo curto e denso onde o aparelho
+   toca o piso e uma penumbra larga em volta. */
 .ground {
   width: 74%;
   max-width: 560px;
-  height: 24px;
-  margin-top: 20px;
+  height: 26px;
+  margin-top: 16px;
   border-radius: 50%;
-  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0) 70%);
+  background:
+    radial-gradient(ellipse 26% 38% at 50% 46%, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0) 74%),
+    radial-gradient(ellipse 50% 52% at 50% 50%, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0) 72%);
 }
 [data-kind="tv"] .ground { margin-top: 8px; width: 64%; max-width: none; }
 body[data-theme="light"] .ground { opacity: 0.5; }
@@ -1213,4 +1359,28 @@ body[data-theme="light"] .ground { opacity: 0.5; }
 @keyframes toast-in {
   from { opacity: 0; transform: translate(-50%, 8px); }
   to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.review-prompt {
+  position: fixed;
+  bottom: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 110;
+  width: min(440px, calc(100vw - 24px));
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--panel, #1c1f27);
+  color: var(--text, #e8eaf0);
+  border: 1px solid var(--border, #2c3340);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.review-prompt p { margin: 0 0 10px; }
+.review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
 }
