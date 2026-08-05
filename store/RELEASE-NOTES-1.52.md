@@ -1,4 +1,4 @@
-# Notas de versão — 1.6.3
+# Notas de versão — 1.52
 
 ## Português
 
