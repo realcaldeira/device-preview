@@ -63,7 +63,7 @@
     "message": "Remover dos favoritos"
   },
   "physicalRes": {
-    "message": "Resolução física: $1$ px"
+    "message": "Resolução física: $1 px"
   },
   "cat_android": {
     "message": "Telefones Android"
@@ -99,7 +99,7 @@
     "message": "Full HD e 4K"
   },
   "obStep": {
-    "message": "Passo $1$ de $2$"
+    "message": "Passo $1 de $2"
   },
   "obSkip": {
     "message": "Pular"
@@ -129,16 +129,16 @@
     "message": "Na barra da prévia: girar, teclado virtual ao focar um campo, Capturar PNG e FPS. Alt+Shift+P reabre o último aparelho."
   },
   "errDevices": {
-    "message": "Não foi possível carregar a lista de dispositivos: $1$. Recarregue a extensão em chrome://extensions."
+    "message": "Não foi possível carregar a lista de dispositivos: $1. Recarregue a extensão em chrome://extensions."
   },
   "errPreset": {
-    "message": "Falha no preset: $1$"
+    "message": "Falha no preset: $1"
   },
   "errPreview": {
-    "message": "Falha ao abrir a prévia: $1$"
+    "message": "Falha ao abrir a prévia: $1"
   },
   "errPreviewReload": {
-    "message": "Falha ao abrir a prévia: $1$. Recarregue a extensão em chrome://extensions."
+    "message": "Falha ao abrir a prévia: $1. Recarregue a extensão em chrome://extensions."
   },
   "errNoResponse": {
     "message": "sem resposta do service worker"
@@ -234,7 +234,7 @@
     "message": "Abra esta página pela extensão (ícone na barra do Chrome), não como arquivo local."
   },
   "toastInitError": {
-    "message": "Erro ao iniciar a prévia: $1$"
+    "message": "Erro ao iniciar a prévia: $1"
   },
   "toastPortrait": {
     "message": "Retrato"
@@ -267,13 +267,13 @@
     "message": "Captura disponível apenas pela extensão."
   },
   "toastCaptureSaved": {
-    "message": "Captura salva ($1$×$2$ px)"
+    "message": "Captura salva ($1×$2 px)"
   },
   "toastCaptureError": {
-    "message": "Erro na captura: $1$"
+    "message": "Erro na captura: $1"
   },
   "toastUaFail": {
-    "message": "Falha ao aplicar o User-Agent: $1$"
+    "message": "Falha ao aplicar o User-Agent: $1"
   },
   "toastFpsOn": {
     "message": "Medidor de FPS ativado"
@@ -288,10 +288,10 @@
     "message": "Carregue um site antes de medir o FPS."
   },
   "toastFpsFail": {
-    "message": "Não foi possível medir o FPS: $1$"
+    "message": "Não foi possível medir o FPS: $1"
   },
   "toastFpsUnavailable": {
-    "message": "Recurso de medição indisponível para $1$. Recarregue a extensão em chrome://extensions."
+    "message": "Recurso de medição indisponível para $1. Recarregue a extensão em chrome://extensions."
   },
   "toastReportCopied": {
     "message": "Relatório copiado — cole no PR ou Jira"
@@ -330,7 +330,7 @@
     "message": "(ative o medidor FPS na toolbar para incluir)"
   },
   "reportGenerated": {
-    "message": "_Gerado pelo Simulador Mobile $1$_"
+    "message": "_Gerado pelo Simulador Mobile $1_"
   },
   "reportPhysical": {
     "message": "Físico"

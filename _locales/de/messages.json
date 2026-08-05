@@ -63,7 +63,7 @@
     "message": "Aus Favoriten entfernen"
   },
   "physicalRes": {
-    "message": "Physische Auflösung: $1$ px"
+    "message": "Physische Auflösung: $1 px"
   },
   "cat_android": {
     "message": "Android-Handys"
@@ -99,7 +99,7 @@
     "message": "Full HD und 4K"
   },
   "obStep": {
-    "message": "Schritt $1$ von $2$"
+    "message": "Schritt $1 von $2"
   },
   "obSkip": {
     "message": "Überspringen"
@@ -129,16 +129,16 @@
     "message": "In der Vorschauleiste: drehen, virtuelle Tastatur bei Fokus, PNG erfassen und FPS. Alt+Shift+P öffnet das letzte Gerät erneut."
   },
   "errDevices": {
-    "message": "Geräteliste konnte nicht geladen werden: $1$. Erweiterung unter chrome://extensions neu laden."
+    "message": "Geräteliste konnte nicht geladen werden: $1. Erweiterung unter chrome://extensions neu laden."
   },
   "errPreset": {
-    "message": "Preset fehlgeschlagen: $1$"
+    "message": "Preset fehlgeschlagen: $1"
   },
   "errPreview": {
-    "message": "Vorschau konnte nicht geöffnet werden: $1$"
+    "message": "Vorschau konnte nicht geöffnet werden: $1"
   },
   "errPreviewReload": {
-    "message": "Vorschau fehlgeschlagen: $1$. Erweiterung unter chrome://extensions neu laden."
+    "message": "Vorschau fehlgeschlagen: $1. Erweiterung unter chrome://extensions neu laden."
   },
   "errNoResponse": {
     "message": "keine Antwort vom Service Worker"
@@ -234,7 +234,7 @@
     "message": "Öffnen Sie diese Seite über die Erweiterung (Symbolleiste), nicht als lokale Datei."
   },
   "toastInitError": {
-    "message": "Vorschau-Start fehlgeschlagen: $1$"
+    "message": "Vorschau-Start fehlgeschlagen: $1"
   },
   "toastPortrait": {
     "message": "Hochformat"
@@ -267,13 +267,13 @@
     "message": "Aufnahme nur über die Erweiterung verfügbar."
   },
   "toastCaptureSaved": {
-    "message": "Aufnahme gespeichert ($1$×$2$ px)"
+    "message": "Aufnahme gespeichert ($1×$2 px)"
   },
   "toastCaptureError": {
-    "message": "Aufnahmefehler: $1$"
+    "message": "Aufnahmefehler: $1"
   },
   "toastUaFail": {
-    "message": "User-Agent konnte nicht gesetzt werden: $1$"
+    "message": "User-Agent konnte nicht gesetzt werden: $1"
   },
   "toastFpsOn": {
     "message": "FPS-Anzeige aktiv"
@@ -288,10 +288,10 @@
     "message": "Laden Sie zuerst eine Seite, bevor Sie FPS messen."
   },
   "toastFpsFail": {
-    "message": "FPS konnte nicht gemessen werden: $1$"
+    "message": "FPS konnte nicht gemessen werden: $1"
   },
   "toastFpsUnavailable": {
-    "message": "Messung für $1$ nicht verfügbar. Erweiterung unter chrome://extensions neu laden."
+    "message": "Messung für $1 nicht verfügbar. Erweiterung unter chrome://extensions neu laden."
   },
   "toastReportCopied": {
     "message": "Bericht kopiert — in PR oder Jira einfügen"
@@ -330,7 +330,7 @@
     "message": "(FPS-Anzeige in der Leiste aktivieren, um einzuschließen)"
   },
   "reportGenerated": {
-    "message": "_Erstellt mit Mobile Simulator $1$_"
+    "message": "_Erstellt mit Mobile Simulator $1_"
   },
   "reportPhysical": {
     "message": "Physisch"
