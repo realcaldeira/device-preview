@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "__MSG_extName__",
   "short_name": "__MSG_extShortName__",
-  "version": "1.52",
+  "version": "1.53",
   "default_locale": "en",
   "description": "__MSG_extDescription__",
   "author": "Lucas Caldeira",
