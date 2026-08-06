@@ -58,26 +58,59 @@ async function bumpWeekSession() {
   } catch (_) {}
 }
 
-function ruleIds(tabId) {
-  return { ua: tabId * 2 + 1, frame: tabId * 2 + 2 };
-}
-
+// O id de regra do declarativeNetRequest é um int32: derivá-lo do tabId estoura
+// o limite assim que o Chrome entrega uma aba com id alto (eles passam da casa
+// do bilhão em perfis de uso contínuo) e a chamada inteira falha. Por isso cada
+// aba recebe uma vaga pequena, guardada na sessão para sobreviver ao service
+// worker dormir.
 const RULE_TABS_KEY = 'ruleTabs';
 
-async function getRuleTabs() {
-  const data = await chrome.storage.session.get(RULE_TABS_KEY);
-  return new Set(Array.isArray(data[RULE_TABS_KEY]) ? data[RULE_TABS_KEY] : []);
+function idsForSlot(slot) {
+  return { ua: slot * 2 - 1, frame: slot * 2 };
 }
 
-async function rememberRuleTab(tabId) {
-  const set = await getRuleTabs();
-  if (set.has(tabId)) return;
-  set.add(tabId);
-  await chrome.storage.session.set({ [RULE_TABS_KEY]: [...set] });
+async function getRuleSlots() {
+  const data = await chrome.storage.session.get(RULE_TABS_KEY);
+  const map = data[RULE_TABS_KEY];
+  return map && typeof map === 'object' && !Array.isArray(map) ? map : {};
+}
+
+// Alocar vaga é ler-modificar-gravar: duas abas aplicando ao mesmo tempo
+// pegariam a mesma se as chamadas se cruzassem.
+let slotQueue = Promise.resolve();
+
+function serialize(task) {
+  const next = slotQueue.then(task, task);
+  slotQueue = next.catch(() => {});
+  return next;
+}
+
+function takeRuleSlot(tabId) {
+  return serialize(async () => {
+    const map = await getRuleSlots();
+    if (map[tabId]) return idsForSlot(map[tabId]);
+    const used = new Set(Object.values(map));
+    let slot = 1;
+    while (used.has(slot)) slot++;
+    map[tabId] = slot;
+    await chrome.storage.session.set({ [RULE_TABS_KEY]: map });
+    return idsForSlot(slot);
+  });
+}
+
+function dropRuleSlot(tabId) {
+  return serialize(async () => {
+    const map = await getRuleSlots();
+    const slot = map[tabId];
+    if (!slot) return null;
+    delete map[tabId];
+    await chrome.storage.session.set({ [RULE_TABS_KEY]: map });
+    return idsForSlot(slot);
+  });
 }
 
 async function applyDevice(tabId, { userAgent, platform = 'Android', mobile = true }) {
-  const ids = ruleIds(tabId);
+  const ids = await takeRuleSlot(tabId);
   await chrome.declarativeNetRequest.updateSessionRules({
     removeRuleIds: [ids.ua, ids.frame],
     addRules: [
@@ -119,19 +152,16 @@ async function applyDevice(tabId, { userAgent, platform = 'Android', mobile = tr
       }
     ]
   });
-  await rememberRuleTab(tabId);
 }
 
 async function clearRules(tabId) {
-  const set = await getRuleTabs();
-  if (!set.delete(tabId)) return;
-  const ids = ruleIds(tabId);
+  const ids = await dropRuleSlot(tabId);
+  if (!ids) return;
   try {
     await chrome.declarativeNetRequest.updateSessionRules({
       removeRuleIds: [ids.ua, ids.frame]
     });
   } catch (_) {}
-  await chrome.storage.session.set({ [RULE_TABS_KEY]: [...set] });
 }
 
 async function pushHistory(deviceId, url) {
@@ -265,7 +295,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           });
           break;
         default:
-          sendResponse({ ok: false, error: 'mensagem desconhecida' });
+          // Acontece quando o service worker em memória é de uma versão anterior
+          // à das páginas (extensão editada sem recarregar): o painel novo pede
+          // algo que este código ainda não conhece. Nomear a mensagem e a versão
+          // evita o diagnóstico às cegas.
+          sendResponse({
+            ok: false,
+            error: `mensagem desconhecida "${(msg && msg.type) || '—'}" ` +
+              `(service worker ${chrome.runtime.getManifest().version}; ` +
+              'recarregue a extensão em chrome://extensions)'
+          });
       }
     } catch (e) {
       sendResponse({ ok: false, error: String((e && e.message) || e) });

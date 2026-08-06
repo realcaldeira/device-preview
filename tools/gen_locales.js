@@ -173,11 +173,11 @@ add('favRemove', {
   de: 'Aus Favoriten entfernen'
 });
 add('physicalRes', {
-  en: 'Physical resolution: $1$ px',
-  pt_BR: 'Resolução física: $1$ px',
-  es: 'Resolución física: $1$ px',
-  fr: 'Résolution physique : $1$ px',
-  de: 'Physische Auflösung: $1$ px'
+  en: 'Physical resolution: $1 px',
+  pt_BR: 'Resolução física: $1 px',
+  es: 'Resolución física: $1 px',
+  fr: 'Résolution physique : $1 px',
+  de: 'Physische Auflösung: $1 px'
 });
 
 add('cat_android', {
@@ -260,11 +260,11 @@ add('preset_tv_living_hint', {
 });
 
 add('obStep', {
-  en: 'Step $1$ of $2$',
-  pt_BR: 'Passo $1$ de $2$',
-  es: 'Paso $1$ de $2$',
-  fr: 'Étape $1$ sur $2$',
-  de: 'Schritt $1$ von $2$'
+  en: 'Step $1 of $2',
+  pt_BR: 'Passo $1 de $2',
+  es: 'Paso $1 de $2',
+  fr: 'Étape $1 sur $2',
+  de: 'Schritt $1 von $2'
 });
 add('obSkip', {
   en: 'Skip',
@@ -331,32 +331,32 @@ add('ob3Body', {
 });
 
 add('errDevices', {
-  en: 'Could not load the device list: $1$. Reload the extension at chrome://extensions.',
-  pt_BR: 'Não foi possível carregar a lista de dispositivos: $1$. Recarregue a extensão em chrome://extensions.',
-  es: 'No se pudo cargar la lista de dispositivos: $1$. Recarga la extensión en chrome://extensions.',
-  fr: 'Impossible de charger la liste des appareils : $1$. Rechargez l’extension sur chrome://extensions.',
-  de: 'Geräteliste konnte nicht geladen werden: $1$. Erweiterung unter chrome://extensions neu laden.'
+  en: 'Could not load the device list: $1. Reload the extension at chrome://extensions.',
+  pt_BR: 'Não foi possível carregar a lista de dispositivos: $1. Recarregue a extensão em chrome://extensions.',
+  es: 'No se pudo cargar la lista de dispositivos: $1. Recarga la extensión en chrome://extensions.',
+  fr: 'Impossible de charger la liste des appareils : $1. Rechargez l’extension sur chrome://extensions.',
+  de: 'Geräteliste konnte nicht geladen werden: $1. Erweiterung unter chrome://extensions neu laden.'
 });
 add('errPreset', {
-  en: 'Preset failed: $1$',
-  pt_BR: 'Falha no preset: $1$',
-  es: 'Error en el preset: $1$',
-  fr: 'Échec du preset : $1$',
-  de: 'Preset fehlgeschlagen: $1$'
+  en: 'Preset failed: $1',
+  pt_BR: 'Falha no preset: $1',
+  es: 'Error en el preset: $1',
+  fr: 'Échec du preset : $1',
+  de: 'Preset fehlgeschlagen: $1'
 });
 add('errPreview', {
-  en: 'Failed to open preview: $1$',
-  pt_BR: 'Falha ao abrir a prévia: $1$',
-  es: 'Error al abrir la vista previa: $1$',
-  fr: 'Échec de l’ouverture de l’aperçu : $1$',
-  de: 'Vorschau konnte nicht geöffnet werden: $1$'
+  en: 'Failed to open preview: $1',
+  pt_BR: 'Falha ao abrir a prévia: $1',
+  es: 'Error al abrir la vista previa: $1',
+  fr: 'Échec de l’ouverture de l’aperçu : $1',
+  de: 'Vorschau konnte nicht geöffnet werden: $1'
 });
 add('errPreviewReload', {
-  en: 'Failed to open preview: $1$. Reload the extension at chrome://extensions.',
-  pt_BR: 'Falha ao abrir a prévia: $1$. Recarregue a extensão em chrome://extensions.',
-  es: 'Error al abrir la vista previa: $1$. Recarga la extensión en chrome://extensions.',
-  fr: 'Échec de l’ouverture de l’aperçu : $1$. Rechargez l’extension sur chrome://extensions.',
-  de: 'Vorschau fehlgeschlagen: $1$. Erweiterung unter chrome://extensions neu laden.'
+  en: 'Failed to open preview: $1. Reload the extension at chrome://extensions.',
+  pt_BR: 'Falha ao abrir a prévia: $1. Recarregue a extensão em chrome://extensions.',
+  es: 'Error al abrir la vista previa: $1. Recarga la extensión en chrome://extensions.',
+  fr: 'Échec de l’ouverture de l’aperçu : $1. Rechargez l’extension sur chrome://extensions.',
+  de: 'Vorschau fehlgeschlagen: $1. Erweiterung unter chrome://extensions neu laden.'
 });
 add('errNoResponse', {
   en: 'no response from service worker',
@@ -495,11 +495,11 @@ add('toastOpenViaExt', {
   de: 'Öffnen Sie diese Seite über die Erweiterung (Symbolleiste), nicht als lokale Datei.'
 });
 add('toastInitError', {
-  en: 'Failed to start preview: $1$',
-  pt_BR: 'Erro ao iniciar a prévia: $1$',
-  es: 'Error al iniciar la vista previa: $1$',
-  fr: 'Erreur au démarrage de l’aperçu : $1$',
-  de: 'Vorschau-Start fehlgeschlagen: $1$'
+  en: 'Failed to start preview: $1',
+  pt_BR: 'Erro ao iniciar a prévia: $1',
+  es: 'Error al iniciar la vista previa: $1',
+  fr: 'Erreur au démarrage de l’aperçu : $1',
+  de: 'Vorschau-Start fehlgeschlagen: $1'
 });
 add('toastPortrait', { en: 'Portrait', pt_BR: 'Retrato', es: 'Retrato', fr: 'Portrait', de: 'Hochformat' });
 add('toastLandscape', { en: 'Landscape', pt_BR: 'Paisagem', es: 'Paisaje', fr: 'Paysage', de: 'Querformat' });
@@ -560,25 +560,25 @@ add('toastCaptureExtOnly', {
   de: 'Aufnahme nur über die Erweiterung verfügbar.'
 });
 add('toastCaptureSaved', {
-  en: 'Capture saved ($1$×$2$ px)',
-  pt_BR: 'Captura salva ($1$×$2$ px)',
-  es: 'Captura guardada ($1$×$2$ px)',
-  fr: 'Capture enregistrée ($1$×$2$ px)',
-  de: 'Aufnahme gespeichert ($1$×$2$ px)'
+  en: 'Capture saved ($1×$2 px)',
+  pt_BR: 'Captura salva ($1×$2 px)',
+  es: 'Captura guardada ($1×$2 px)',
+  fr: 'Capture enregistrée ($1×$2 px)',
+  de: 'Aufnahme gespeichert ($1×$2 px)'
 });
 add('toastCaptureError', {
-  en: 'Capture error: $1$',
-  pt_BR: 'Erro na captura: $1$',
-  es: 'Error de captura: $1$',
-  fr: 'Erreur de capture : $1$',
-  de: 'Aufnahmefehler: $1$'
+  en: 'Capture error: $1',
+  pt_BR: 'Erro na captura: $1',
+  es: 'Error de captura: $1',
+  fr: 'Erreur de capture : $1',
+  de: 'Aufnahmefehler: $1'
 });
 add('toastUaFail', {
-  en: 'Failed to apply User-Agent: $1$',
-  pt_BR: 'Falha ao aplicar o User-Agent: $1$',
-  es: 'Error al aplicar el User-Agent: $1$',
-  fr: 'Échec de l’application de l’User-Agent : $1$',
-  de: 'User-Agent konnte nicht gesetzt werden: $1$'
+  en: 'Failed to apply User-Agent: $1',
+  pt_BR: 'Falha ao aplicar o User-Agent: $1',
+  es: 'Error al aplicar el User-Agent: $1',
+  fr: 'Échec de l’application de l’User-Agent : $1',
+  de: 'User-Agent konnte nicht gesetzt werden: $1'
 });
 add('toastFpsOn', {
   en: 'FPS meter on',
@@ -609,18 +609,47 @@ add('toastFpsNeedSite', {
   de: 'Laden Sie zuerst eine Seite, bevor Sie FPS messen.'
 });
 add('toastFpsFail', {
-  en: 'Could not measure FPS: $1$',
-  pt_BR: 'Não foi possível medir o FPS: $1$',
-  es: 'No se pudo medir el FPS: $1$',
-  fr: 'Impossible de mesurer les FPS : $1$',
-  de: 'FPS konnte nicht gemessen werden: $1$'
+  en: 'Could not measure FPS: $1',
+  pt_BR: 'Não foi possível medir o FPS: $1',
+  es: 'No se pudo medir el FPS: $1',
+  fr: 'Impossible de mesurer les FPS : $1',
+  de: 'FPS konnte nicht gemessen werden: $1'
+});
+add('fpsUnreachable', {
+  en: 'site content unreachable (may block iframe; reload and try again)',
+  pt_BR: 'conteúdo do site inacessível (pode bloquear iframe; recarregue e tente de novo)',
+  es: 'contenido del sitio inaccesible (puede bloquear el iframe; recarga e inténtalo de nuevo)',
+  fr: 'contenu du site inaccessible (il peut bloquer l’iframe ; rechargez et réessayez)',
+  de: 'Seiteninhalt nicht erreichbar (blockiert evtl. iframes; neu laden und erneut versuchen)'
+});
+add('fpsReconnectFail', {
+  en: 'could not reconnect to the site',
+  pt_BR: 'não foi possível reconectar ao site',
+  es: 'no se pudo reconectar al sitio',
+  fr: 'impossible de se reconnecter au site',
+  de: 'Verbindung zur Seite konnte nicht wiederhergestellt werden'
+});
+add('browserNewTab', {
+  en: 'New tab', pt_BR: 'Nova aba', es: 'Nueva pestaña', fr: 'Nouvel onglet', de: 'Neuer Tab'
+});
+add('kbSpace', {
+  en: 'space', pt_BR: 'espaço', es: 'espacio', fr: 'espace', de: 'Leer'
+});
+add('kbSearch', {
+  en: 'search', pt_BR: 'buscar', es: 'buscar', fr: 'rech.', de: 'Suche'
+});
+add('kbGo', {
+  en: 'go', pt_BR: 'ir', es: 'ir', fr: 'aller', de: 'los'
+});
+add('kbCurrency', {
+  en: '$', pt_BR: 'R$', es: '€', fr: '€', de: '€'
 });
 add('toastFpsUnavailable', {
-  en: 'Measurement unavailable for $1$. Reload the extension at chrome://extensions.',
-  pt_BR: 'Recurso de medição indisponível para $1$. Recarregue a extensão em chrome://extensions.',
-  es: 'Medición no disponible para $1$. Recarga la extensión en chrome://extensions.',
-  fr: 'Mesure indisponible pour $1$. Rechargez l’extension sur chrome://extensions.',
-  de: 'Messung für $1$ nicht verfügbar. Erweiterung unter chrome://extensions neu laden.'
+  en: 'Measurement unavailable for $1. Reload the extension at chrome://extensions.',
+  pt_BR: 'Recurso de medição indisponível para $1. Recarregue a extensão em chrome://extensions.',
+  es: 'Medición no disponible para $1. Recarga la extensión en chrome://extensions.',
+  fr: 'Mesure indisponible pour $1. Rechargez l’extension sur chrome://extensions.',
+  de: 'Messung für $1 nicht verfügbar. Erweiterung unter chrome://extensions neu laden.'
 });
 add('toastReportCopied', {
   en: 'Report copied — paste into PR or Jira',
@@ -683,11 +712,11 @@ add('reportFpsMissing', {
   de: '(FPS-Anzeige in der Leiste aktivieren, um einzuschließen)'
 });
 add('reportGenerated', {
-  en: '_Generated by Mobile Simulator $1$_',
-  pt_BR: '_Gerado pelo Simulador Mobile $1$_',
-  es: '_Generado por Simulador Móvil $1$_',
-  fr: '_Généré par Simulateur Mobile $1$_',
-  de: '_Erstellt mit Mobile Simulator $1$_'
+  en: '_Generated by Mobile Simulator $1_',
+  pt_BR: '_Gerado pelo Simulador Mobile $1_',
+  es: '_Generado por Simulador Móvil $1_',
+  fr: '_Généré par Simulateur Mobile $1_',
+  de: '_Erstellt mit Mobile Simulator $1_'
 });
 add('reportPhysical', { en: 'Physical', pt_BR: 'Físico', es: 'Físico', fr: 'Physique', de: 'Physisch' });
 

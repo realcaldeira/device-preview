@@ -98,6 +98,8 @@ function runPreset(presetId) {
             .forEach((el) => el.classList.add('active'));
         }
       } else {
+        // Sem resposta o promise resolve `undefined` em vez de rejeitar, então
+        // esse ramo também cobre o service worker que morreu no meio.
         showError(t('errPreset', [(res && res.error) || t('errNoResponse')]));
       }
     })

@@ -290,6 +290,27 @@
   "toastFpsFail": {
     "message": "FPS konnte nicht gemessen werden: $1"
   },
+  "fpsUnreachable": {
+    "message": "Seiteninhalt nicht erreichbar (blockiert evtl. iframes; neu laden und erneut versuchen)"
+  },
+  "fpsReconnectFail": {
+    "message": "Verbindung zur Seite konnte nicht wiederhergestellt werden"
+  },
+  "browserNewTab": {
+    "message": "Neuer Tab"
+  },
+  "kbSpace": {
+    "message": "Leer"
+  },
+  "kbSearch": {
+    "message": "Suche"
+  },
+  "kbGo": {
+    "message": "los"
+  },
+  "kbCurrency": {
+    "message": "€"
+  },
   "toastFpsUnavailable": {
     "message": "Messung für $1 nicht verfügbar. Erweiterung unter chrome://extensions neu laden."
   },

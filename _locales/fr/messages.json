@@ -290,6 +290,27 @@
   "toastFpsFail": {
     "message": "Impossible de mesurer les FPS : $1"
   },
+  "fpsUnreachable": {
+    "message": "contenu du site inaccessible (il peut bloquer l’iframe ; rechargez et réessayez)"
+  },
+  "fpsReconnectFail": {
+    "message": "impossible de se reconnecter au site"
+  },
+  "browserNewTab": {
+    "message": "Nouvel onglet"
+  },
+  "kbSpace": {
+    "message": "espace"
+  },
+  "kbSearch": {
+    "message": "rech."
+  },
+  "kbGo": {
+    "message": "aller"
+  },
+  "kbCurrency": {
+    "message": "€"
+  },
   "toastFpsUnavailable": {
     "message": "Mesure indisponible pour $1. Rechargez l’extension sur chrome://extensions."
   },

@@ -116,7 +116,11 @@ async function init() {
     const requested = params.get('device');
     const deviceId = deviceMap[requested] ? requested
       : (deviceMap[last.deviceId] ? last.deviceId : categories[0].devices[0].id);
-    state.currentUrl = params.get('url') || last.url || 'https://www.wikipedia.org/';
+    // Só http(s) entra no iframe: um javascript:/data:/file: vindo da query ou
+    // de um lastState corrompido deixaria a prévia em branco e ainda seria
+    // regravado no storage na próxima troca de aparelho.
+    state.currentUrl = [params.get('url'), last.url].find(dpIsHttpUrl) ||
+      'https://www.wikipedia.org/';
 
     if (last.zoom === 'fit' ||
         (typeof last.zoom === 'number' && isFinite(last.zoom) &&
@@ -170,9 +174,9 @@ function bindUiEvents() {
   els.touch.addEventListener('click', () => setTouch(!state.touch, true));
 
   els.back.addEventListener('click', () => {
-    if (frameNavs < 2) return;
+    if (frameNavs < 1) return;
 
-    frameNavs -= 2;
+    frameNavs--;
     updateBackButton();
     history.back();
   });
@@ -229,11 +233,18 @@ function bindUiEvents() {
 
 function bindExtensionEvents() {
 
-  const onNav = (details) => {
+  // Só as navegações que o próprio site faz (clique em link, troca de hash)
+  // empilham entrada no histórico da aba — o Chrome as marca como
+  // `manual_subframe`. As que a prévia provoca ao recriar o iframe chegam como
+  // `auto_subframe` e substituem a entrada atual. Contar as duas habilitava o
+  // botão sem haver o que desfazer, e aí o history.back() desfazia a navegação
+  // da própria aba: a prévia fechava e voltava para o site original.
+  const onNav = (details, stacks) => {
     if (details.tabId !== myTabId || details.frameId === 0 || details.parentFrameId !== 0) return;
     if (details.url === 'about:blank') return;
 
-    if (details.transitionType !== 'reload') {
+    const goingBack = (details.transitionQualifiers || []).includes('forward_back');
+    if (stacks && !goingBack) {
       frameNavs++;
       updateBackButton();
     }
@@ -252,11 +263,13 @@ function bindExtensionEvents() {
         scheduleKbInject();
       }
     }
-    onNav(details);
+    onNav(details, details.transitionType === 'manual_subframe');
   };
   chrome.webNavigation.onCommitted.addListener(onCommitted);
-  chrome.webNavigation.onHistoryStateUpdated.addListener(onNav);
-  chrome.webNavigation.onReferenceFragmentUpdated.addListener(onNav);
+  // replaceState também cai em onHistoryStateUpdated e não empilha nada; na
+  // dúvida o botão fica desligado, que é o lado seguro do erro.
+  chrome.webNavigation.onHistoryStateUpdated.addListener((d) => onNav(d, false));
+  chrome.webNavigation.onReferenceFragmentUpdated.addListener((d) => onNav(d, true));
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg && msg.type === 'set-device' && msg.tabId === myTabId) {
@@ -498,7 +511,7 @@ function updateInfo() {
 }
 
 function updateBackButton() {
-  els.back.disabled = frameNavs < 2;
+  els.back.disabled = frameNavs < 1;
 }
 
 function setFrameless(on, persist) {
@@ -553,7 +566,7 @@ function renderBrowserHost() {
   els.bbHostTop.textContent = host || '—';
   els.bbHostBot.textContent = host || '—';
   els.bdHost.textContent = state.currentUrl || '—';
-  els.bdTab.textContent = host || 'Nova aba';
+  els.bdTab.textContent = host || t('browserNewTab');
 }
 
 function setBrowserUi(on, persist) {
@@ -613,6 +626,10 @@ function loadViewport(url) {
   next.src = url;
   old.replaceWith(next);
   els.viewport = next;
+  // Browsing context novo: o que o site tinha empilhado antes não é mais
+  // alcançável por este iframe.
+  frameNavs = 0;
+  updateBackButton();
 }
 
 // Atualização a quente: girar a tela ou trocar de aparelho de mesmo User-Agent
@@ -798,7 +815,7 @@ async function captureShot() {
 
   try {
     const res = await chrome.runtime.sendMessage({ type: 'capture' });
-    if (!res || !res.ok) throw new Error((res && res.error) || 'falha na captura');
+    if (!res || !res.ok) throw new Error((res && res.error) || t('errNoResponse'));
 
     const img = new Image();
     await new Promise((ok, err) => { img.onload = ok; img.onerror = err; img.src = res.dataUrl; });
@@ -1069,9 +1086,7 @@ async function setFpsMeter(on) {
         els.fpsMeter.classList.add('hidden');
         fpsFrameId = null;
         if (e.code !== 'CANCELLED') {
-          const msg = e.code === 'NO_TARGET'
-            ? 'site content unreachable (may block iframe; reload and try again)'
-            : e.message;
+          const msg = e.code === 'NO_TARGET' ? t('fpsUnreachable') : e.message;
           toast(t('toastFpsFail', [msg]));
         }
       }
@@ -1135,7 +1150,7 @@ function scheduleReattach() {
     } catch (_) {
       if (!fpsOn) return;
       if (++reattachTries >= MAX_REATTACH_TRIES) {
-        resetFpsState(t('toastFpsFail', ['could not reconnect to the site']));
+        resetFpsState(t('toastFpsFail', [t('fpsReconnectFail')]));
       } else {
         scheduleReattach();
       }
@@ -1351,15 +1366,15 @@ async function onKbMessage(e) {
 function kbBottomRow() {
   const extra = kbMode === 'email' ? '@' : kbMode === 'url' ? '/' : ',';
   const enterLabel = kbMultiline ? '⏎'
-    : kbMode === 'search' ? 'buscar'
-    : kbMode === 'url' || kbMode === 'email' ? 'ir' : '⏎';
+    : kbMode === 'search' ? t('kbSearch')
+    : kbMode === 'url' || kbMode === 'email' ? t('kbGo') : '⏎';
   const toggle = kbPage === 'letters'
     ? { key: '__sym1__', cls: 'vk-fn vk-w15', label: '?123' }
     : { key: '__abc__', cls: 'vk-fn vk-w15', label: 'ABC' };
   return [
     toggle,
     extra,
-    { key: 'Space', cls: 'vk-space', label: 'espaço' },
+    { key: 'Space', cls: 'vk-space', label: t('kbSpace') },
     '.',
     { key: 'Enter', cls: 'vk-fn vk-enter vk-w15', label: enterLabel }
   ];
@@ -1377,7 +1392,7 @@ function kbRows() {
   if (kbPage === 'sym1' || kbPage === 'sym2') {
     const top = kbPage === 'sym1'
       ? [['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-         ['-', '/', ':', ';', '(', ')', 'R$', '&', '@', '"']]
+         ['-', '/', ':', ';', '(', ')', t('kbCurrency'), '&', '@', '"']]
       : [['[', ']', '{', '}', '#', '%', '^', '*', '+', '='],
          ['_', '\\', '|', '~', '<', '>', '€', '£', '¥', '•']];
     return [
@@ -1593,6 +1608,7 @@ function openStoreReview() {
 
 async function exportReport() {
   if (!device) { toast(t('toastPickDevice')); return; }
+  if (!hasExtensionApis) { toast(t('toastOpenViaExt')); return; }
   const { w, h } = dims();
   const physW = Math.round(w * device.dpr);
   const physH = Math.round(h * device.dpr);
