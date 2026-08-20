@@ -134,6 +134,8 @@ async function init() {
     setBrowserUi(last.browser !== false, false);
     setFrameless(!!last.frameless, false);
     if (last.stretch) setStretch(true, false);
+
+    bumpOpenAndMaybeReview();
   } catch (e) {
     toast(t('toastInitError', [(e && e.message) || String(e)]));
   }
@@ -1554,19 +1556,61 @@ function toast(message) {
   toastTimer = setTimeout(() => els.toast.classList.add('hidden'), 3000);
 }
 
+const DP_REVIEW_DEFAULTS = {
+  captures: 0, opens: 0, lastOpenDay: '', dismissed: false, snoozeUntil: 0
+};
+// Dias distintos com a prévia aberta antes de pedir avaliação.
+const DP_REVIEW_MIN_DAYS = 3;
+// Deixa o usuário usar a prévia antes de a faixa aparecer.
+const DP_REVIEW_DELAY_MS = 15000;
+
+function reviewDayKey() {
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+async function loadReviewState() {
+  const data = await chrome.storage.local.get([DP_REVIEW_KEY]);
+  return Object.assign({}, DP_REVIEW_DEFAULTS, data[DP_REVIEW_KEY] || {});
+}
+
+async function saveReviewState(r) {
+  await chrome.storage.local.set({ [DP_REVIEW_KEY]: r });
+}
+
+function reviewPromptAllowed(r) {
+  if (r.dismissed) return false;
+  if (r.snoozeUntil && Date.now() < r.snoozeUntil) return false;
+  return true;
+}
+
+// Gatilho 1 — uso recorrente: a prévia foi aberta em N dias distintos.
+// A maioria dos usuários nunca exporta PNG, então este é o caminho principal.
+async function bumpOpenAndMaybeReview() {
+  if (!hasExtensionApis) return;
+  try {
+    const r = await loadReviewState();
+    const day = reviewDayKey();
+    if (r.lastOpenDay !== day) {
+      r.opens = (r.opens || 0) + 1;
+      r.lastOpenDay = day;
+      await saveReviewState(r);
+    }
+    if (!reviewPromptAllowed(r)) return;
+    if (r.opens >= DP_REVIEW_MIN_DAYS) setTimeout(showReviewPrompt, DP_REVIEW_DELAY_MS);
+  } catch (_) {}
+}
+
+// Gatilho 2 — momento de valor: 1ª captura PNG (ou reabertura após snooze).
 async function bumpCaptureAndMaybeReview() {
   if (!hasExtensionApis) return;
   try {
-    const data = await chrome.storage.local.get([DP_REVIEW_KEY]);
-    const r = Object.assign(
-      { captures: 0, opens: 0, dismissed: false, snoozeUntil: 0 },
-      data[DP_REVIEW_KEY] || {}
-    );
+    const r = await loadReviewState();
     r.captures = (r.captures || 0) + 1;
-    await chrome.storage.local.set({ [DP_REVIEW_KEY]: r });
-    if (r.dismissed) return;
-    if (r.snoozeUntil && Date.now() < r.snoozeUntil) return;
-    // Momento de valor: 1ª captura PNG (ou reabertura após snooze).
+    await saveReviewState(r);
+    if (!reviewPromptAllowed(r)) return;
     if (r.captures >= 1) showReviewPrompt();
   } catch (_) {}
 }
@@ -1583,19 +1627,17 @@ function hideReviewPrompt() {
 async function snoozeReview(days) {
   hideReviewPrompt();
   if (!hasExtensionApis) return;
-  const data = await chrome.storage.local.get([DP_REVIEW_KEY]);
-  const r = Object.assign({ captures: 0, opens: 0, dismissed: false, snoozeUntil: 0 }, data[DP_REVIEW_KEY] || {});
+  const r = await loadReviewState();
   r.snoozeUntil = Date.now() + days * 24 * 60 * 60 * 1000;
-  await chrome.storage.local.set({ [DP_REVIEW_KEY]: r });
+  await saveReviewState(r);
 }
 
 async function dismissReviewForever() {
   hideReviewPrompt();
   if (!hasExtensionApis) return;
-  const data = await chrome.storage.local.get([DP_REVIEW_KEY]);
-  const r = Object.assign({ captures: 0, opens: 0, dismissed: false, snoozeUntil: 0 }, data[DP_REVIEW_KEY] || {});
+  const r = await loadReviewState();
   r.dismissed = true;
-  await chrome.storage.local.set({ [DP_REVIEW_KEY]: r });
+  await saveReviewState(r);
 }
 
 function openStoreReview() {

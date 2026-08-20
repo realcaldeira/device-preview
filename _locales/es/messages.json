@@ -1,12 +1,12 @@
 {
   "extName": {
-    "message": "Simulador Móvil: Teléfono, Tablet, Portátil y Smart TV"
+    "message": "Simulador Móvil: Test Responsive en 50 Dispositivos Reales"
   },
   "extShortName": {
     "message": "Simulador"
   },
   "extDescription": {
-    "message": "Prueba responsive real: mockups de teléfono, tablet, portátil y TV con marco, toque, teclado virtual, UA y FPS."
+    "message": "Prueba cualquier sitio en 50 móviles, tablets, portátiles y TV reales — User-Agent, toque, teclado virtual, FPS y captura PNG."
   },
   "actionTitle": {
     "message": "Simulador Móvil — abrir panel de dispositivos"

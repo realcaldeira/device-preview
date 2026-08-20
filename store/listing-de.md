@@ -1,25 +1,33 @@
 # Chrome Web Store — Deutsch
 
 Diese Texte in die German-Locale im Developer Dashboard einfügen.
+Name und Kurzbeschreibung müssen zu `_locales/de/messages.json` passen.
 
-## Name (max. 75)
-
-```
-Mobile Simulator: Handy, Tablet, Laptop & Smart TV
-```
-
-## Kurzbeschreibung (max. 132)
+## Name (max. 75) — 55 Zeichen
 
 ```
-Echtes Responsive-Testing: Handy-, Tablet-, Laptop- und TV-Mockups mit Rahmen, Touch, Tastatur, UA und FPS.
+Mobile Simulator: Responsive-Test auf 50 echten Geräten
+```
+
+## Kurzbeschreibung (max. 132) — 122 Zeichen
+
+```
+Teste jede Website auf 50 echten Handys, Tablets, Laptops und TVs — echter User-Agent, Touch, Tastatur, FPS, PNG-Aufnahme.
 ```
 
 ## Ausführliche Beschreibung
 
-```
-Responsive-Tests über Chrome DevTools hinaus.
+Nur die ersten zwei Zeilen erscheinen vor „Mehr ansehen“.
 
-Mobile Simulator öffnet jede Website in einem fotorealistischen Geräterahmen (Notch, Dynamic Island, Punch-Hole, Laptop und TV) mit echtem User-Agent, echtem Touch, virtueller Tastatur und FPS-Anzeige (live + 1 % low).
+```
+Responsive-Tests über Chrome DevTools hinaus: 50 echte Geräte, echter
+User-Agent und echter Touch, in einem fotorealistischen Rahmen.
+
+Mobile Simulator öffnet jede Website in einem Rahmen mit Notch, Dynamic
+Island, Punch-Hole, Laptop-Rand oder TV-Gehäuse, sendet den echten
+User-Agent des Geräts, scrollt per Touch mit Trägheit, blendet eine
+virtuelle Tastatur ein, die wirklich tippt, und misst FPS
+(live + 1 % low).
 
 FÜR WEN
 • Entwickler und QA zur Layout-Prüfung
@@ -29,20 +37,28 @@ FÜR WEN
 HIGHLIGHTS
 • 50 Geräte mit echtem Viewport, DPR und User-Agent
 • 9-Slice-Rahmen (iPhone, Android, iPad, MacBook, Smart TV)
-• Echter Touch auf Handy/Tablet
-• Virtuelle iOS-/Android-Tastatur
-• PNG-Aufnahme in physischer Auflösung
-• Favoriten, Presets und Verlauf
-• Keine Datenerfassung
+• Echter Touch auf Handy/Tablet (pointer: coarse, Trägheit)
+• Virtuelle iOS-/Android-Tastatur (Zahlen und Symbole)
+• Chrome-/Safari-Leiste im Mockup
+• PNG-Aufnahme in physischer Auflösung des Geräts
+• Favoriten, Workflow-Presets und Verlauf
+• Keine Datenerfassung — alles bleibt lokal im Browser
 
-SO GEHT’S
+SO GEHT'S
 1. Seite zum Testen öffnen
 2. Auf das Symbol klicken (oder Alt+Shift+P für das letzte Gerät)
 3. Gerät im Seitenpanel wählen
 4. Drehen, erfassen, FPS messen oder Gerät wechseln
 
 WARUM BERECHTIGUNGEN
-Die Erweiterung setzt den User-Agent und entfernt X-Frame-Options/CSP nur im Vorscha-Tab. URLs und Inhalte werden nicht an Server gesendet.
+Die Erweiterung setzt den User-Agent und entfernt X-Frame-Options/CSP
+nur im Vorschau-Tab, damit die Seite im Mockup laden kann. Andere Tabs
+sind nicht betroffen. URLs und Inhalte werden nicht an Server gesendet.
 
-Wenn es Zeit spart: eine ★★★★★-Bewertung hilft anderen Entwicklern, die Erweiterung zu finden.
+Kostenlos, ohne Konto und ohne Telemetrie. Code und Datenschutz:
+https://realcaldeira.github.io/device-preview
 ```
+
+## Kategorie
+
+Developer Tools

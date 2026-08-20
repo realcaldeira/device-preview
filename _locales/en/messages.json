@@ -1,12 +1,12 @@
 {
   "extName": {
-    "message": "Mobile Simulator: Phone, Tablet, Laptop & Smart TV"
+    "message": "Mobile Simulator: Responsive Testing on 50 Real Devices"
   },
   "extShortName": {
     "message": "Simulator"
   },
   "extDescription": {
-    "message": "Real responsive testing: phone, tablet, laptop & TV mockups with realistic frames, touch, virtual keyboard, UA & FPS."
+    "message": "Test any site on 50 real phones, tablets, laptops & TVs — real User-Agent, touch, virtual keyboard, FPS and PNG capture."
   },
   "actionTitle": {
     "message": "Mobile Simulator — open device panel"

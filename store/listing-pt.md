@@ -1,25 +1,33 @@
 # Chrome Web Store — texto em português
 
 Use estes campos no [Developer Dashboard](https://chrome.google.com/webstore/devconsole).
+Nome e resumo curto precisam bater com `_locales/pt_BR/messages.json`.
 
-## Nome (máx. 75)
-
-```
-Simulador Mobile: Celular, Tablet e Smart TV
-```
-
-## Resumo curto (máx. 132) — espelha o `manifest.json`
+## Nome (máx. 75) — 56 caracteres
 
 ```
-Teste responsivo real: mockup de celular, tablet, notebook e TV com moldura, toque, teclado virtual, UA e FPS.
+Simulador Mobile: Teste Responsivo em 50 Aparelhos Reais
+```
+
+## Resumo curto (máx. 132) — 124 caracteres
+
+```
+Teste qualquer site em 50 celulares, tablets, notebooks e TVs reais — User-Agent, toque, teclado virtual, FPS e captura PNG.
 ```
 
 ## Descrição detalhada
 
-```
-Teste responsivo de verdade — além do DevTools.
+Só as duas primeiras linhas aparecem antes do "Ler mais" — são elas que carregam
+os termos de busca e o gancho.
 
-O Simulador Mobile abre qualquer site numa prévia com moldura fotorrealista (notch, Dynamic Island, punch-hole, notebook e TV), User-Agent real do aparelho, toque com rolagem por gesto, teclado virtual que digita de verdade e medidor de FPS (ao vivo + 1% low).
+```
+Teste responsivo de verdade, além do DevTools: 50 aparelhos reais,
+User-Agent real e toque real, dentro de uma moldura fotorrealista.
+
+O Simulador Mobile abre qualquer site numa prévia com notch, Dynamic
+Island, punch-hole, moldura de notebook ou chassi de TV, envia o
+User-Agent real do aparelho, rola por gesto com inércia, sobe um teclado
+virtual que digita de verdade e mede FPS (ao vivo + 1% low).
 
 PARA QUEM É
 • Devs e QAs que validam layout mobile/tablet/TV
@@ -43,9 +51,12 @@ COMO USAR
 4. Gire, capture, meça FPS ou troque o aparelho sem sair da aba
 
 POR QUE PEDIMOS ACESSO AOS SITES
-A extensão troca o User-Agent e remove X-Frame-Options/CSP só na aba da prévia, para embutir o site no mockup. Nenhuma outra aba é afetada. Não enviamos URLs nem conteúdo a servidores.
+A extensão troca o User-Agent e remove X-Frame-Options/CSP só na aba da
+prévia, para embutir o site no mockup. Nenhuma outra aba é afetada. Não
+enviamos URLs nem conteúdo a servidores.
 
-Avalie com ★★★★★ se o Simulador ajudar no seu fluxo — isso melhora a descoberta para outros devs.
+Grátis, sem conta e sem telemetria. Código e política de privacidade:
+https://realcaldeira.github.io/device-preview
 ```
 
 ## Categoria
@@ -54,4 +65,12 @@ Developer Tools
 
 ## Idioma principal
 
-Português (Brasil) — adicione também o locale English (United States) com `listing-en.md`.
+Português (Brasil) — publique também os locales English, Español, Français e Deutsch
+com os arquivos correspondentes nesta pasta.
+
+## O que saiu do texto antigo
+
+- A linha `Keywords: …` — lista de palavras-chave sem contexto é exatamente o padrão de
+  metadado irrelevante que a política de listing pune. Os mesmos termos aparecem no corpo.
+- O pedido de `★★★★★` — pedir avaliação é permitido, pedir cinco estrelas especificamente
+  flerta com manipulação de nota. O prompt dentro da extensão faz isso melhor.

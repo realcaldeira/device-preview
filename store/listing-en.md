@@ -1,25 +1,32 @@
 # Chrome Web Store — English listing
 
 Paste into the English (United States) locale in the Developer Dashboard.
+Name and short description must match `_locales/en/messages.json`.
 
-## Name (max 75)
-
-```
-Mobile Simulator: Phone, Tablet, Laptop & Smart TV
-```
-
-## Short description (max 132)
+## Name (max 75) — 55 chars
 
 ```
-Real responsive testing: phone, tablet, laptop & TV mockups with realistic frames, touch, virtual keyboard, UA & FPS.
+Mobile Simulator: Responsive Testing on 50 Real Devices
+```
+
+## Short description (max 132) — 120 chars
+
+```
+Test any site on 50 real phones, tablets, laptops & TVs — real User-Agent, touch, virtual keyboard, FPS and PNG capture.
 ```
 
 ## Detailed description
 
-```
-Responsive testing that goes beyond Chrome DevTools.
+Only the first two lines show before "Read more" — they carry the search terms and the hook.
 
-Mobile Simulator opens any website inside a photorealistic device frame (notch, Dynamic Island, punch-hole, laptop bezel, TV chassis) with a real device User-Agent, true touch scrolling, a virtual keyboard that actually types, and an FPS meter (live + 1% low).
+```
+Responsive testing that goes beyond Chrome DevTools: 50 real devices,
+real User-Agents, real touch — inside a photorealistic device frame.
+
+Mobile Simulator opens any website in a frame with a notch, Dynamic
+Island, punch-hole, laptop bezel or TV chassis, sends the device's real
+User-Agent, scrolls by touch with inertia, pops a virtual keyboard that
+actually types, and measures FPS (live + 1% low).
 
 WHO IT'S FOR
 • Front-end developers and QA validating layouts
@@ -32,7 +39,7 @@ HIGHLIGHTS
 • Real touch on phones/tablets (coarse pointer, inertia)
 • iOS/Android virtual keyboard (symbols + numeric)
 • In-mockup Chrome/Safari browser chrome
-• PNG capture at the device’s physical resolution
+• PNG capture at the device's physical resolution
 • Favorites, workflow presets and recent history
 • Zero data collection — everything stays local in your browser
 
@@ -43,11 +50,12 @@ HOW TO USE
 4. Rotate, capture, measure FPS or switch devices in the same tab
 
 WHY HOST PERMISSIONS
-The extension sets the User-Agent and strips X-Frame-Options/CSP only on the preview tab so the site can load inside the mockup. No other tabs are affected. We never send URLs or page content to a server.
+The extension sets the User-Agent and strips X-Frame-Options/CSP only on
+the preview tab, so the site can load inside the mockup. No other tabs
+are affected. We never send URLs or page content to a server.
 
-Keywords: responsive design tester, device mockup, mobile preview, user agent switcher, QA viewport, tablet simulator, smart TV preview.
-
-If this saves you time, a ★★★★★ review helps other developers find it.
+Free, no account, no telemetry. Source and privacy policy:
+https://realcaldeira.github.io/device-preview
 ```
 
 ## Category
@@ -57,3 +65,10 @@ Developer Tools
 ## Suggested search terms (dashboard tags, if available)
 
 responsive, mockup, mobile preview, device mode, user agent, QA, tablet, smart TV, FPS
+
+## Removed on purpose
+
+- The `Keywords: …` line — a bare keyword list is the "irrelevant metadata" pattern the
+  listing policy can suspend an item for. The same terms now appear in context.
+- The `★★★★★ review` request — asking for a review is fine, asking for five stars
+  specifically edges into rating manipulation. The in-extension prompt does this better.

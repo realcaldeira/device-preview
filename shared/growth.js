@@ -1,7 +1,8 @@
 /* Shared growth/retention URLs — keep in sync with docs/ and service-worker. */
 const DP_STORE_ID = 'ebnbfkejdddkbpkljbbcnchnlekombef';
+// Sem slug: a loja resolve pelo ID, então renomear a extensão não quebra o link.
 const DP_STORE_URL =
-  'https://chromewebstore.google.com/detail/simulador-mobile/' + DP_STORE_ID;
+  'https://chromewebstore.google.com/detail/' + DP_STORE_ID;
 const DP_REVIEW_URL = DP_STORE_URL + '/reviews';
 const DP_SITE_BASE = 'https://realcaldeira.github.io/device-preview';
 const DP_UNINSTALL_URL = DP_SITE_BASE + '/uninstall.html';
