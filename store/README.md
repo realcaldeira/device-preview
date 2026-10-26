@@ -8,6 +8,6 @@
 | fr | [listing-fr.md](listing-fr.md) | Français |
 | de | [listing-de.md](listing-de.md) | Deutsch |
 
-Also paste matching “What’s new” from [RELEASE-NOTES-1.54.md](RELEASE-NOTES-1.54.md) (PT/EN) or translate the EN block for ES/FR/DE when publishing **1.54**.
+Also paste matching “What’s new” from [RELEASE-NOTES-1.55.md](RELEASE-NOTES-1.55.md) (PT/EN) or translate the EN block for ES/FR/DE when publishing **1.55**.
 
 The extension UI follows the Chrome UI language via `_locales/` (`en`, `pt_BR`, `es`, `fr`, `de`). Default locale: **en**.

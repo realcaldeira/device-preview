@@ -1,12 +1,12 @@
 {
   "extName": {
-    "message": "Mobile Simulator: Responsive Testing on 50 Real Devices"
+    "message": "Mobile Simulator: Phone, Tablet, Laptop & Smart TV"
   },
   "extShortName": {
     "message": "Simulator"
   },
   "extDescription": {
-    "message": "Test any site on 50 real phones, tablets, laptops & TVs — real User-Agent, touch, virtual keyboard, FPS and PNG capture."
+    "message": "Real responsive testing: phone, tablet, laptop & TV mockups with realistic frames, touch, virtual keyboard, UA & FPS."
   },
   "actionTitle": {
     "message": "Mobile Simulator — open device panel"
@@ -253,6 +253,15 @@
   },
   "toastStretchOff": {
     "message": "Device aspect ratio restored"
+  },
+  "btnFit": {
+    "message": "Fit content: lay the site out at desktop width and scale it down to the device screen (phones and tablets only)"
+  },
+  "toastFitOn": {
+    "message": "Fit content on: site laid out at desktop width"
+  },
+  "toastFitOff": {
+    "message": "Fit content off: site uses the device width"
   },
   "toastBrowserOn": {
     "message": "Browser bar visible"

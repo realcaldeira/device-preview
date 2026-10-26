@@ -305,6 +305,14 @@ body {
   background: #fff;
 }
 
+#mockup.fit-content #viewport {
+  width: calc(var(--vw, 390px) * var(--fit-inv, 1));
+  height: calc((var(--vh, 844px) - var(--bb-h, 0px)) * var(--fit-inv, 1));
+  margin-bottom: calc((var(--vh, 844px) - var(--bb-h, 0px)) * (1 - var(--fit-inv, 1)));
+  transform: scale(var(--fit-scale, 1));
+  transform-origin: 0 0;
+}
+
 /* Vidro: reflexo principal na diagonal, um segundo mais fraco vindo do lado
    oposto e a borda escurecida. A área central fica intocada — quem testa cor
    precisa ver a cor real do site. */

@@ -55,6 +55,7 @@ const state = {
   theme: 'dark',
   frameless: false,
   stretch: false,
+  fit: false,
   browser: true,
   touch: true
 };
@@ -62,7 +63,7 @@ const state = {
 const $ = (id) => document.getElementById(id);
 const els = {
   select: $('deviceSelect'), rotate: $('rotateBtn'),
-  frameless: $('framelessBtn'), stretch: $('stretchBtn'), browser: $('browserBtn'),
+  frameless: $('framelessBtn'), stretch: $('stretchBtn'), fit: $('fitBtn'), browser: $('browserBtn'),
   touch: $('touchBtn'),
   bbHostTop: $('bbHostTop'), bbHostBot: $('bbHostBot'),
   bdHost: $('bdHost'), bdTab: $('bdTab'),
@@ -130,6 +131,7 @@ async function init() {
     const keepOrientation = deviceId === last.deviceId ? last.orientation : null;
 
     state.touch = last.touch !== false;
+    state.fit = !!last.fit;
     await setDevice(deviceId, { navigate: true, orientation: keepOrientation });
     setBrowserUi(last.browser !== false, false);
     setFrameless(!!last.frameless, false);
@@ -172,6 +174,7 @@ function bindUiEvents() {
 
   els.frameless.addEventListener('click', () => setFrameless(!state.frameless, true));
   els.stretch.addEventListener('click', () => setStretch(!state.stretch, true));
+  els.fit.addEventListener('click', () => setFit(!state.fit, true));
   els.browser.addEventListener('click', () => setBrowserUi(!state.browser, true));
   els.touch.addEventListener('click', () => setTouch(!state.touch, true));
 
@@ -291,6 +294,20 @@ function dims() {
   return state.orientation === 'portrait' ? { w: small, h: large } : { w: large, h: small };
 }
 
+const FIT_CONTENT_WIDTH = 1024;
+
+function fitScale() {
+  if (!state.fit || !isHandheld()) return 1;
+  const { w } = dims();
+  return w >= FIT_CONTENT_WIDTH ? 1 : w / FIT_CONTENT_WIDTH;
+}
+
+function layoutDims() {
+  const { w, h } = dims();
+  const scale = fitScale();
+  return { w: Math.round(w / scale), h: Math.round(h / scale) };
+}
+
 async function setDevice(id, { navigate: doNavigate = false, orientation = null } = {}) {
   const next = deviceMap[id];
   if (!next) return;
@@ -348,6 +365,7 @@ async function setDevice(id, { navigate: doNavigate = false, orientation = null 
 
   // Acerta o botão e, quando o site não foi recarregado, entrega as medidas do
   // novo aparelho à sonda que já está rodando dentro dele.
+  setFit(state.fit, false);
   setTouch(state.touch, false);
   saveState();
 }
@@ -493,6 +511,10 @@ function buildFrame() {
   const s = els.mockup.style;
   s.setProperty('--vw', w + 'px');
   s.setProperty('--vh', h + 'px');
+  const scale = fitScale();
+  els.mockup.classList.toggle('fit-content', scale !== 1);
+  s.setProperty('--fit-scale', String(scale));
+  s.setProperty('--fit-inv', String(1 / scale));
   s.setProperty('--sb-h', preset.sb + 'px');
   s.setProperty('--pad-top', pads.top + 'px');
   s.setProperty('--pad-right', pads.right + 'px');
@@ -600,7 +622,7 @@ const PLATFORMS = {
 };
 
 function deviceCfg() {
-  const { w, h } = dims();
+  const { w, h } = layoutDims();
   const p = PLATFORMS[device.platform] || PLATFORMS.Linux;
   return {
     origin: location.origin,
@@ -639,6 +661,21 @@ function loadViewport(url) {
 function pushDeviceCfg() {
   if (!device) return;
   frameBroadcast({ __simulador: 'dev-cfg', cfg: deviceCfg() });
+}
+
+function setFit(on, persist) {
+  state.fit = on;
+  const supported = isHandheld();
+  els.fit.disabled = !supported;
+  els.fit.classList.toggle('on', on && supported);
+  els.fit.setAttribute('aria-pressed', String(on && supported));
+  buildFrame();
+  updateInfo();
+  pushDeviceCfg();
+  if (persist) {
+    toast(on ? t('toastFitOn') : t('toastFitOff'));
+    saveState();
+  }
 }
 
 function setTouch(on, persist) {
@@ -774,6 +811,7 @@ function saveState() {
         zoom: state.zoom,
         frameless: state.frameless,
         stretch: state.stretch,
+        fit: state.fit,
         browser: state.browser,
         touch: state.touch
       }

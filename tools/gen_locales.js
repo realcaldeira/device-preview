@@ -531,6 +531,27 @@ add('toastStretchOff', {
   fr: 'Ratio de l’appareil restauré',
   de: 'Geräte-Seitenverhältnis wiederhergestellt'
 });
+add('btnFit', {
+  en: 'Fit content: lay the site out at desktop width and scale it down to the device screen (phones and tablets only)',
+  pt_BR: 'Ajustar ao conteúdo: renderiza o site na largura de desktop e reduz a escala para caber na tela do aparelho (só celulares e tablets)',
+  es: 'Ajustar al contenido: muestra el sitio con ancho de escritorio y reduce la escala para caber en la pantalla del dispositivo (solo móviles y tabletas)',
+  fr: 'Ajuster au contenu : affiche le site en largeur bureau et réduit l’échelle pour tenir dans l’écran de l’appareil (téléphones et tablettes uniquement)',
+  de: 'An Inhalt anpassen: Seite in Desktop-Breite darstellen und auf den Gerätebildschirm verkleinern (nur Smartphones und Tablets)'
+});
+add('toastFitOn', {
+  en: 'Fit content on: site laid out at desktop width',
+  pt_BR: 'Ajuste ao conteúdo ativo: site renderizado na largura de desktop',
+  es: 'Ajuste al contenido activo: sitio con ancho de escritorio',
+  fr: 'Ajustement au contenu activé : site en largeur bureau',
+  de: 'An Inhalt anpassen aktiv: Seite in Desktop-Breite'
+});
+add('toastFitOff', {
+  en: 'Fit content off: site uses the device width',
+  pt_BR: 'Ajuste ao conteúdo desativado: site usa a largura do aparelho',
+  es: 'Ajuste al contenido desactivado: el sitio usa el ancho del dispositivo',
+  fr: 'Ajustement au contenu désactivé : le site utilise la largeur de l’appareil',
+  de: 'An Inhalt anpassen aus: Seite nutzt die Gerätebreite'
+});
 add('toastBrowserOn', {
   en: 'Browser bar visible',
   pt_BR: 'Barra do navegador visível',

@@ -1,12 +1,12 @@
 {
   "extName": {
-    "message": "Simulateur Mobile : Test Responsive sur 50 Appareils Réels"
+    "message": "Simulateur Mobile : Téléphone, Tablette, PC et Smart TV"
   },
   "extShortName": {
     "message": "Simulateur"
   },
   "extDescription": {
-    "message": "Testez n'importe quel site sur 50 téléphones, tablettes, PC et TV réels — User-Agent, tactile, clavier virtuel, FPS, capture PNG."
+    "message": "Test responsive réel : mockups téléphone, tablette, PC et TV avec cadre, tactile, clavier virtuel, UA et FPS."
   },
   "actionTitle": {
     "message": "Simulateur Mobile — ouvrir le panneau des appareils"
@@ -253,6 +253,15 @@
   },
   "toastStretchOff": {
     "message": "Ratio de l’appareil restauré"
+  },
+  "btnFit": {
+    "message": "Ajuster au contenu : affiche le site en largeur bureau et réduit l’échelle pour tenir dans l’écran de l’appareil (téléphones et tablettes uniquement)"
+  },
+  "toastFitOn": {
+    "message": "Ajustement au contenu activé : site en largeur bureau"
+  },
+  "toastFitOff": {
+    "message": "Ajustement au contenu désactivé : le site utilise la largeur de l’appareil"
   },
   "toastBrowserOn": {
     "message": "Barre du navigateur visible"

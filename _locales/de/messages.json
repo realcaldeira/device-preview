@@ -1,12 +1,12 @@
 {
   "extName": {
-    "message": "Mobile Simulator: Responsive-Test auf 50 echten Geräten"
+    "message": "Mobile Simulator: Handy, Tablet, Laptop & Smart TV"
   },
   "extShortName": {
     "message": "Simulator"
   },
   "extDescription": {
-    "message": "Teste jede Website auf 50 echten Handys, Tablets, Laptops und TVs — echter User-Agent, Touch, Tastatur, FPS, PNG-Aufnahme."
+    "message": "Echtes Responsive-Testing: Handy-, Tablet-, Laptop- und TV-Mockups mit Rahmen, Touch, Tastatur, UA und FPS."
   },
   "actionTitle": {
     "message": "Mobile Simulator — Gerätepanel öffnen"
@@ -253,6 +253,15 @@
   },
   "toastStretchOff": {
     "message": "Geräte-Seitenverhältnis wiederhergestellt"
+  },
+  "btnFit": {
+    "message": "An Inhalt anpassen: Seite in Desktop-Breite darstellen und auf den Gerätebildschirm verkleinern (nur Smartphones und Tablets)"
+  },
+  "toastFitOn": {
+    "message": "An Inhalt anpassen aktiv: Seite in Desktop-Breite"
+  },
+  "toastFitOff": {
+    "message": "An Inhalt anpassen aus: Seite nutzt die Gerätebreite"
   },
   "toastBrowserOn": {
     "message": "Browserleiste sichtbar"
